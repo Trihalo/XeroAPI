@@ -1,12 +1,12 @@
-name: Send Email Report
+name: Scheduled ATB Request
 
 on:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '20 14 * * 4'  # Runs at 2:20 PM every Thursday (UTC time)
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
-  send-email:
+  run-atb-request:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -21,9 +21,10 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run the email sending script
+      - name: Run ATB Request Script
         run: |
-          python send_email.py
+          cd FutureYou
+          python atbRequest.py
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
