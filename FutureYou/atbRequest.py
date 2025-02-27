@@ -1,5 +1,6 @@
 import sys
 import os
+from datetime import datetime
 from atbAnalysis import processAtbData
 
 # Ensure the script can find modules in the parent directory
@@ -8,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 from helpers.fetchXeroInvoices import fetchXeroInvoices
+from helpers.emailAttachment import sendEmailWithAttachment
 
 def fetch_invoices_for_client(client_name, invoice_status):
     """Fetch invoices for a given client."""
@@ -48,7 +50,15 @@ def main():
                 "xero_tenant_id": xero_tenant_id
             }
 
-        processAtbData({"Invoices": all_invoices}, client_tokens)
+        filePath = processAtbData({"Invoices": all_invoices}, client_tokens)
+
+        recipients = ["intern@future-you.com.au"]
+        subject = "ATB Report"
+        time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
+        body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
+
+        sendEmailWithAttachment(recipients, subject, body, filePath)
+
 
     except Exception as e:
         print(f"Error: {e}")

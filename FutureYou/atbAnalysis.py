@@ -6,6 +6,9 @@ from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, Alignment
 import requests
 import time
+import smtplib
+from email.message import EmailMessage
+import mimetypes
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -205,19 +208,19 @@ def processAtbData(data, client_tokens):
     date_format.number_format = "DD/MM/YYYY"
 
     wrap_alignment = Alignment(wrap_text=True)
-
     wb.add_named_style(accounting_format)
     wb.add_named_style(number_format)
     wb.add_named_style(date_format)
     
     for row in range(1, last_row + 1):
-        if row != 2: ws[f"K{row}"].style = "accounting_format"
-        ws[f"E{row}"].style = "date_format"
-        ws[f"F{row}"].style = "number_format"
-        ws[f"G{row}"].style = "date_format"
-        ws[f"H{row}"].style = "number_format"
-        ws[f"M{row}"].alignment = wrap_alignment 
-        ws[f"N{row}"].alignment = wrap_alignment 
+        if row != 2: 
+            ws[f"K{row}"].style = "accounting_format"
+            ws[f"E{row}"].style = "date_format"
+            ws[f"F{row}"].style = "number_format"
+            ws[f"G{row}"].style = "date_format"
+            ws[f"H{row}"].style = "number_format"
+            ws[f"M{row}"].alignment = wrap_alignment 
+            ws[f"N{row}"].alignment = wrap_alignment 
 
     ws["L1"].style = "accounting_format"
     ws["M1"].style = "accounting_format"
@@ -231,3 +234,5 @@ def processAtbData(data, client_tokens):
 
     wb.save(output_file)
     print(f"📂 Excel file '{output_file}' created successfully.")
+
+    return output_file
