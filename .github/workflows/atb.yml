@@ -2,7 +2,7 @@ name: Scheduled ATB Request
 
 on:
   schedule:
-    - cron: '20 3 * * 4'  # Runs at 2:20 PM Sydney time (AEDT, UTC+11)
+    - cron: '0 23 * * 0'  
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
