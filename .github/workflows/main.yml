@@ -1,0 +1,30 @@
+name: Scheduled ATB Request
+
+on:
+  schedule:
+    - cron: '20 14 * * 4'  # Runs at 2:20 PM every Thursday (UTC time)
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  run-atb-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run ATB Request Script
+        run: |
+          cd FutureYou
+          python atbRequest.py
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
