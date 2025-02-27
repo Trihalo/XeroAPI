@@ -2,7 +2,7 @@ name: Scheduled ATB Request
 
 on:
   schedule:
-    - cron: '20 3 * * 4'  # Runs at 2:20 PM every Thursday (UTC time)
+    - cron: '20 3 * * 4'  # Runs at 2:20 PM Sydney time (AEDT, UTC+11)
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -16,15 +16,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: '3.8'
-          
+
       - name: Install dependencies
         run: |
-          cd FutureYou
-          pip install -r requirements.txt
+          pip install -r FutureYou/requirements.txt
 
       - name: Run ATB Request Script
+        working-directory: FutureYou
         run: |
-          cd FutureYou
           python atbRequest.py
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
