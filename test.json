@@ -1,0 +1,89 @@
+{
+  "Id": "e2b2380a-2eb3-413e-8e6a-de0fd0202bbc",
+  "Status": "OK",
+  "ProviderName": "API Explorer",
+  "DateTimeUTC": "\/Date(1740010116410)\/",
+  "pagination": {
+    "page": 1,
+    "pageSize": 100,
+    "pageCount": 1,
+    "itemCount": 1
+  },
+  "Invoices": [
+    {
+      "Type": "ACCPAY",
+      "InvoiceID": "091c64db-38d8-4af1-95fd-c76dff94e5f7",
+      "InvoiceNumber": "HD 685892774",
+      "Reference": "",
+      "Payments": [],
+      "CreditNotes": [],
+      "Prepayments": [],
+      "Overpayments": [],
+      "AmountDue": 2808.00,
+      "AmountPaid": 0.00,
+      "AmountCredited": 0.00,
+      "Url": "https://app.hubdoc.com/user/64b1af21-e62f-4dd7-b597-60fa47a5a4ba/document/685892774",
+      "CurrencyRate": 1.0000000000,
+      "IsDiscounted": false,
+      "HasAttachments": true,
+      "InvoiceAddresses": [],
+      "HasErrors": false,
+      "InvoicePaymentServices": [],
+      "Contact": {
+        "ContactID": "c2ae6fbd-65b3-480b-971b-09b279bf38c0",
+        "ContactNumber": "9257f47ae5674867d0ab29f664b1c1c42236ffd39ef5146894",
+        "Name": "Billy Shi",
+        "Addresses": [],
+        "Phones": [],
+        "ContactGroups": [],
+        "ContactPersons": [],
+        "HasValidationErrors": false
+      },
+      "DateString": "2025-02-19T00:00:00",
+      "Date": "\/Date(1739923200000+0000)\/",
+      "DueDateString": "2025-03-14T00:00:00",
+      "DueDate": "\/Date(1741910400000+0000)\/",
+      "Status": "DRAFT",
+      "LineAmountTypes": "Inclusive",
+      "LineItems": [
+        {
+          "Description": "Golden Top Bakery - 685892774",
+          "UnitAmount": 2808.00,
+          "TaxType": "INPUT",
+          "TaxAmount": 255.27,
+          "LineAmount": 2808.00,
+          "AccountCode": "310",
+          "Tracking": [],
+          "Quantity": 1.0000,
+          "LineItemID": "e988258b-2e83-47b2-9405-8d2b96bf6551",
+          "AccountID": "f5534f92-f6fe-4001-b11e-97a62e84c261"
+        }
+      ],
+      "SubTotal": 2552.73,
+      "TotalTax": 255.27,
+      "Total": 2808.00,
+      "UpdatedDateUTC": "\/Date(1740009633207+0000)\/",
+      "CurrencyCode": "AUD"
+    }
+  ]
+}
+
+
+
+
+{
+  "Id": "1bd79ed9-a37c-4095-aaa5-707abd06706f",
+  "Status": "OK",
+  "ProviderName": "API Explorer",
+  "DateTimeUTC": "\/Date(1740010181470)\/",
+  "Attachments": [
+    {
+      "AttachmentID": "0e78f533-ae9d-4a88-94b5-1e511d0e1f2c",
+      "FileName": "Golden_Top_Bakery_2025-02-19_2808.00.pdf",
+      "Url": "https://api.xero.com/api.xro/2.0/Invoices/091c64db-38d8-4af1-95fd-c76dff94e5f7/Attachments/Golden_Top_Bakery_2025-02-19_2808.00.pdf",
+      "MimeType": "application/pdf",
+      "ContentLength": 266194
+    }
+  ]
+}
+

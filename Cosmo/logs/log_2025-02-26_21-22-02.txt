@@ -1,0 +1,33 @@
+==== LOG STARTED ====
+Date: 2025-02-26
+Time: 21:22:02
+=====================
+
+
+⚠️ Invoice OMI5891 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.38, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Could not extract amounts for Invoice 3529878818 (Contact: Gruma Oceania Pty Ltd (Mission)).
+---------------------------
+
+⚠️ Invoice OMI5900 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 2.88, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5912 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.83, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5925 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 5.01, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5941 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.56, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5947 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 0.82, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+

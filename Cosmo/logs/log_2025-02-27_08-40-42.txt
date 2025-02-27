@@ -1,0 +1,68 @@
+==== LOG STARTED ====
+Date: 2025-02-27
+Time: 08:40:42
+=====================
+
+
+✅ Updated invoice number from HD 688921426 to None for Yum Yum.
+---------------------------
+
+✅ Invoice OMI5891 (Contact: Sweet Fleur Pastries Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI5891 (Contact: Sweet Fleur Pastries Pty Ltd).
+---------------------------
+
+---------------------------
+
+⚠️ Could not extract amounts for Invoice 3529878818 (Contact: Gruma Oceania Pty Ltd (Mission)).
+---------------------------
+
+✅ Invoice OMI5900 (Contact: Sweet Fleur Pastries Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI5900 (Contact: Sweet Fleur Pastries Pty Ltd).
+---------------------------
+
+---------------------------
+
+✅ Invoice OMI5912 (Contact: Sweet Fleur Pastries Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI5912 (Contact: Sweet Fleur Pastries Pty Ltd).
+---------------------------
+
+---------------------------
+
+✅ Invoice OMI5925 (Contact: Sweet Fleur Pastries Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI5925 (Contact: Sweet Fleur Pastries Pty Ltd).
+---------------------------
+
+---------------------------
+
+✅ Invoice OMI5941 (Contact: Sweet Fleur Pastries Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI5941 (Contact: Sweet Fleur Pastries Pty Ltd).
+---------------------------
+
+---------------------------
+
+⚠️ Invoice OMI5947 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 0.82, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI26658 (Contact: Shepherds Bakehouse) validation failed: Expected GST: 0.0, Found: 7.65.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI26696 (Contact: Shepherds Bakehouse) validation failed: Expected GST: 0.0, Found: 2.05.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+✅ Invoice OMI34820 (Contact: Dolceroma Pty Ltd) approved: Amount & GST match!
+✅ Approved Invoice OMI34820 (Contact: Dolceroma Pty Ltd).
+---------------------------
+
+---------------------------
+
+⚠️ Could not extract amounts for Invoice 3529879139 (Contact: Gruma Oceania Pty Ltd (Mission)).
+---------------------------
+
+⚠️ Invoice HD 688921426 (Contact: Yum Yum) validation failed: Expected Amount: 38.91, Found: 0.0, Expected GST: 3.54, Found: 0.13.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+🗑️ Cleared downloadedInvoices folder.

@@ -1,0 +1,6 @@
+{
+    "client_id": "20B3890C7D004C9585A972948CB94042",
+    "client_secret": "c8CvCo9SO3m8qqOtUvvjhjqbQxd49qW8D2Wav0qJqcUuq5dk",
+    "redirect_url": "https://xero.com/",
+    "scope": "offline_access accounting.transactions"
+}

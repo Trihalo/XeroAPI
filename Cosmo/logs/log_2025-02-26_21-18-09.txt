@@ -1,0 +1,88 @@
+==== LOG STARTED ====
+Date: 2025-02-26
+Time: 21:18:09
+=====================
+
+
+✅ Updated invoice number from HD 688106495 to 88992644 for Bohemia Bakery.
+---------------------------
+
+✅ Updated invoice number from HD 688121955 to 00070879 for Sweet Pastries with Passion.
+---------------------------
+
+✅ Updated invoice number from HD 688757261 to 88992663 for Bohemia Bakery.
+---------------------------
+
+✅ Updated invoice number from HD 688764981 to 88992466 for Bohemia Bakery.
+---------------------------
+
+⚠️ Invoice OMI5891 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.38, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Could not extract amounts for Invoice 3529878818 (Contact: Gruma Oceania Pty Ltd (Mission)).
+---------------------------
+
+⚠️ Invoice OMI5900 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 2.88, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5912 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.83, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5925 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 5.01, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5941 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 3.56, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI5947 (Contact: Sweet Fleur Pastries Pty Ltd) validation failed: Expected GST: 0.82, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI26658 (Contact: Shepherds Bakehouse) validation failed: Expected GST: 0.0, Found: 7.65.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+✅ Invoice HD 688106495 (Contact: Bohemia Bakery) approved: Amount & GST match!
+✅ Approved Invoice 88992644 (Contact: Bohemia Bakery).
+---------------------------
+
+---------------------------
+
+✅ Invoice HD 688121955 (Contact: Sweet Pastries with Passion) approved: Amount & GST match!
+✅ Approved Invoice 00070879 (Contact: Sweet Pastries with Passion).
+---------------------------
+
+---------------------------
+
+⚠️ Invoice OMI26696 (Contact: Shepherds Bakehouse) validation failed: Expected GST: 0.0, Found: 2.05.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+⚠️ Invoice OMI34820 (Contact: Dolceroma Pty Ltd) validation failed: Expected GST: 34.54, Found: 0.0.
+Invoice number has been updated but NOT approved.
+---------------------------
+
+✅ Invoice HD 688757261 (Contact: Bohemia Bakery) approved: Amount & GST match!
+✅ Approved Invoice 88992663 (Contact: Bohemia Bakery).
+---------------------------
+
+---------------------------
+
+✅ Invoice HD 688764981 (Contact: Bohemia Bakery) approved: Amount & GST match!
+✅ Approved Invoice 88992466 (Contact: Bohemia Bakery).
+---------------------------
+
+---------------------------
+
+✅ Invoice 00070910 (Contact: Sweet Pastries with Passion) approved: Amount & GST match!
+✅ Approved Invoice 00070910 (Contact: Sweet Pastries with Passion).
+---------------------------
+
+---------------------------
+
+🗑️ Cleared downloadedInvoices folder.
