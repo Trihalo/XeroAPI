@@ -24,6 +24,7 @@ jobs:
 
       - name: Run ATB Request Script
         run: |
+          cd FutureYou
           python atbRequest.py
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
