@@ -1,0 +1,5 @@
+pandas
+openpyxl
+requests
+pytz
+email-validator
