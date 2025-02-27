@@ -52,7 +52,7 @@ def main():
 
         filePath = processAtbData({"Invoices": all_invoices}, client_tokens)
 
-        recipients = ["intern@future-you.com.au"]
+        recipients = ["leo@trihalo.com.au", "silvia@trihalo.com.au"]
         subject = "ATB Report"
         time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
         body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"

@@ -6,9 +6,6 @@ from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, Alignment
 import requests
 import time
-import smtplib
-from email.message import EmailMessage
-import mimetypes
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
