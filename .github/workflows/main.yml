@@ -19,11 +19,11 @@ jobs:
           
       - name: Install dependencies
         run: |
+          cd FutureYou
           pip install -r requirements.txt
 
       - name: Run ATB Request Script
         run: |
-          cd FutureYou
           python atbRequest.py
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
