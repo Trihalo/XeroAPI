@@ -1,1 +1,4 @@
 clientDetails/*.json
+node_modules/
+.env
+FutureYou/ATB/
