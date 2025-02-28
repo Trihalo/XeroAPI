@@ -45,7 +45,7 @@ def sendEmailWithAttachment(recipients, subject, body, file_path):
 
 
 if __name__ == "__main__":
-    recipients = ["leoshii111@gmail.com"]
+    recipients = ["leo@trihalo.com.au"]
     subject = "ATB Report"
     time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
     body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
