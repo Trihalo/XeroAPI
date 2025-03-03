@@ -1,6 +1,4 @@
 {
-    "client_id": "1C182FCA299948498B6DA1BBCC257BCA",
-    "client_secret": "9pT3ijFn5jmrtVAjCqT5d-e2FTHHHaNmpZEN2lbLzKFVJB6U",
     "redirect_url": "https://xero.com/",
     "scope": "offline_access accounting.transactions accounting.attachments"
 }

@@ -3,13 +3,15 @@ import smtplib
 from email.message import EmailMessage
 import mimetypes
 from datetime import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 
-def sendEmailWithAttachment(recipients, subject, body, file_path):
+def sendEmailWithAttachment(recipients, subject, body, file_path, provider):
     """Sends an email with an attachment to multiple recipients using Outlook SMTP."""
 
-    sender_email = os.getenv("EMAIL_SENDER")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    sender_email = os.getenv(f"EMAIL_SENDER_{provider}")
+    sender_password = os.getenv(f"EMAIL_PASSWORD_{provider}")
 
     if not sender_email or not sender_password:
         raise Exception(
@@ -32,8 +34,11 @@ def sendEmailWithAttachment(recipients, subject, body, file_path):
         msg.add_attachment(attachment.read(), maintype=mime_type.split(
             "/")[0], subtype=mime_type.split("/")[1], filename=os.path.basename(file_path))
 
+    if provider == "OUTLOOK": emailUrl = "smtp.office365.com"
+    elif provider == "GMAIL": emailUrl = "smtp.gmail.com"
+    
     try:
-        with smtplib.SMTP("smtp.office365.com", 587) as server:
+        with smtplib.SMTP(emailUrl, 587) as server:
             server.starttls()
             server.login(sender_email, sender_password)
             server.send_message(msg)
@@ -51,4 +56,4 @@ if __name__ == "__main__":
     body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
     filePath = "./invoices.xlsx"
 
-    sendEmailWithAttachment(recipients, subject, body, filePath)
+    sendEmailWithAttachment(recipients, subject, body, filePath, provider="OUTLOOK")
