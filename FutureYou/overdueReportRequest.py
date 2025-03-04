@@ -7,9 +7,6 @@ from atbRequest import fetch_invoices_for_client
 # Ensure the script can find modules in the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from xeroAuth import XeroTenants
-from xeroAuthHelper import getXeroAccessToken
-from helpers.fetchXeroInvoices import fetchXeroInvoices
 from helpers.emailAttachment import sendEmailWithAttachment
 
 
@@ -39,7 +36,7 @@ def main():
         # recipients = ["leo@trihalo.com.au", "silvia@trihalo.com.au"]
         # subject = "ATB Report"
         # time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
-        # body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
+        # body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
 
         # sendEmailWithAttachment(recipients, subject, body, filePath)
 

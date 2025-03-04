@@ -5,3 +5,4 @@ Cosmo/logs/*.txt
 refreshTokens/*.txt
 FutureYou/ATB
 FutureYou/Overdue
+.DS_Store/
