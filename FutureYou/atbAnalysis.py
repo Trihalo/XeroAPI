@@ -6,6 +6,9 @@ from openpyxl import load_workbook
 from openpyxl.styles import NamedStyle, Alignment
 import requests
 import time
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -109,8 +112,8 @@ def getNotes(invoice_id, invoice_number, client_tokens):
     return ", ".join(notes) if notes else ""
 
 
-def processAtbData(data, client_tokens):
-    """Process invoices and export to Excel."""
+def getAtbData(data, client_tokens): 
+    """Get invoices"""
     
     accrec_invoices = [
         invoice for invoice in data.get("Invoices", [])
@@ -120,6 +123,7 @@ def processAtbData(data, client_tokens):
     ]
     
     invoices = []
+    overdue_invoices = []
 
     for index, invoice in enumerate(accrec_invoices, start=1):
         invoice_id = invoice.get("InvoiceID", "")
@@ -128,6 +132,7 @@ def processAtbData(data, client_tokens):
         invoice_date = datetime.strptime(invoice["DateString"], "%Y-%m-%dT%H:%M:%S")
         due_date = datetime.strptime(invoice["DueDateString"], "%Y-%m-%dT%H:%M:%S")
 
+        overdue_days = max((date.today() - due_date.date()).days, 0)
         formatted_invoice_date = invoice_date.strftime("%d/%m/%Y")
         formatted_due_date = due_date.strftime("%d/%m/%Y")
 
@@ -145,7 +150,11 @@ def processAtbData(data, client_tokens):
         if invoice.get("CurrencyCode", "AUD") != "AUD" and currency_rate != 0:
             amount_due *= (1 / currency_rate)
 
-        print(f"📊 Processing invoice {index}/{len(accrec_invoices)} - {invoice_number}")
+        logging.info(f"📊 Processing invoice {index}/{len(accrec_invoices)} - {invoice_number}")
+        
+        comments = getNotes(invoice_id, invoice_number, client_tokens)
+        category = getCategory(invoice)
+        consultant = getConsultant(invoice)
 
         invoices.append({
             "Invoice Number": invoice_number,
@@ -159,12 +168,31 @@ def processAtbData(data, client_tokens):
             "Invoice Number.": invoice_number,
             "Invoice Reference": invoice.get("Reference", ""),
             "Total": amount_due,
-            "Category": getCategory(invoice),
-            "Consultant": getConsultant(invoice),
-            "Comments": getNotes(invoice_id, invoice_number, client_tokens),
+            "Category": category,
+            "Consultant": consultant,
+            "Comments": comments,
         })
+        
+        if overdue_days > 0:
+            overdue_invoices.append({
+                "Client": invoice.get("Contact", {}).get("Name", ""),
+                "Inv. Date": formatted_invoice_date,
+                "Due Date": formatted_due_date,
+                "Inv. #": invoice_number,
+                "Outstanding amount": amount_due,
+                "Category": category,
+                "Consultant": consultant,
+                "Comments": comments,
+            })
+
 
     print("✅ All invoices processed. Generating Excel file...")
+
+    return invoices, overdue_invoices
+
+
+def processAtbData(data, client_tokens):
+    invoices, overdue_invoices = getAtbData(data, client_tokens)
 
     df = pd.DataFrame(invoices)
     df["Invoice Date"] = pd.to_datetime(df["Invoice Date"], format="%d/%m/%Y")
