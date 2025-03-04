@@ -2,12 +2,12 @@ import sys
 import os
 from datetime import datetime
 from overdueAnalysis import processOverdueData
-from atbRequest import fetch_invoices_for_client
 
 # Ensure the script can find modules in the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.emailAttachment import sendEmailWithAttachment
+from helpers.fetchInvoicesForClient import fetchInvoicesForClient
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
 
     try:
         for client in clients:
-            invoices, access_token, xero_tenant_id = fetch_invoices_for_client(client, invoice_status)
+            invoices, access_token, xero_tenant_id = fetchInvoicesForClient(client, invoice_status)
             
             if not isinstance(invoices, list):
                 raise Exception(f"Expected a list of invoices but got {type(invoices)} for {client}")

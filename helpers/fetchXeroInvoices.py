@@ -15,7 +15,7 @@ def fetchXeroInvoices(accessToken, xeroTenantId, status):
             "Xero-tenant-id": xeroTenantId,
             "Accept": "application/json",
         },
-        params={"Statuses": [status]},
+        params={"Statuses": [status], "pageSize": 1000},
     )
 
     if response.status_code == 200:
