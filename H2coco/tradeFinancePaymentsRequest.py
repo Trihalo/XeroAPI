@@ -91,7 +91,9 @@ def main():
                 break
         poInvoiceDict[poNumber] = {
             "InvoiceID": invoiceId,
-            "supplierInvNumber": supplierInvNumber
+            "supplierInvNumber": supplierInvNumber,
+            "InvoiceDate": invoice.get("DateString", "").split('T')[0] if invoice.get("DateString", "") else "",
+            "AmountPaid": invoice.get("AmountPaid", 0)
         }
 
     paidPOs = []
@@ -99,8 +101,15 @@ def main():
 
     # Create and send individual payment requests
     for poNumber, date, currencyRate, amount in zip(poNumbers, dates, currencyRates, amounts):
+
         invoiceData = poInvoiceDict.get(poNumber)
-        if invoiceData and invoiceData["supplierInvNumber"]:
+
+        # compare the dates to see which one should be used
+        invoiceDate = datetime.strptime(invoiceData["InvoiceDate"], "%Y-%m-%d")
+        dateObj = datetime.strptime(date, "%Y-%m-%d")
+        paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
+        
+        if invoiceData and invoiceData["supplierInvNumber"] and invoiceData["AmountPaid"] == 0.0:
             payment = {
                 "Invoice": {
                     "InvoiceID": invoiceData["InvoiceID"]
@@ -108,7 +117,7 @@ def main():
                 "Account": {
                     "Code": "2010"
                 },
-                "Date": date,
+                "Date": paymentDate.strftime("%Y-%m-%d"),
                 "CurrencyRate": currencyRate,
                 "Amount": amount,
                 "Reference": f"PO{poNumber} {invoiceData['supplierInvNumber']} USD {amount}"
@@ -128,7 +137,7 @@ def main():
 
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
-                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} successfully allocated.")
+                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime("%Y-%m-%d")}.")
                 paidPOs.append(poNumber)
             else:
                 logging.error(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
@@ -138,6 +147,8 @@ def main():
         elif invoiceData and not invoiceData["supplierInvNumber"]:
             logging.error(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
             unpaidPOs.append(poNumber)
+        elif invoiceData["AmountPaid"] > 0:
+            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif not invoiceData:
             logging.error(f"PO {poNumber} not found in bills")
             unpaidPOs.append(poNumber)
