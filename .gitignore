@@ -4,3 +4,5 @@ node_modules/
 FutureYou/ATB/
 refreshTokens/
 __pycache__/
+Cosmo/logs
+FutureYou/Overdue
