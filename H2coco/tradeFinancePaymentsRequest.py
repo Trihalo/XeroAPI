@@ -42,7 +42,7 @@ def create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs):
 
 
 def main():
-    client = "H2coco"
+    client = "Futureyou_Recruitment_Perth"
     invoiceStatus = "AUTHORISED"
 
     allInvoices = []
@@ -93,7 +93,8 @@ def main():
             "InvoiceID": invoiceId,
             "supplierInvNumber": supplierInvNumber,
             "InvoiceDate": invoice.get("DateString", "").split('T')[0] if invoice.get("DateString", "") else "",
-            "AmountPaid": invoice.get("AmountPaid", 0)
+            "AmountPaid": invoice.get("AmountPaid", 0),
+            "AmountDue": invoice.get("AmountDue", 0),
         }
 
     paidPOs = []
@@ -109,13 +110,13 @@ def main():
         dateObj = datetime.strptime(date, "%Y-%m-%d")
         paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
         
-        if invoiceData and invoiceData["supplierInvNumber"] and invoiceData["AmountPaid"] == 0.0:
+        if invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
             payment = {
                 "Invoice": {
                     "InvoiceID": invoiceData["InvoiceID"]
                 },
                 "Account": {
-                    "Code": "2010"
+                    "Code": "600"
                 },
                 "Date": paymentDate.strftime("%Y-%m-%d"),
                 "CurrencyRate": currencyRate,
@@ -144,6 +145,7 @@ def main():
                 unpaidPOs.append(poNumber)
 
             logging.info("")
+            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif invoiceData and not invoiceData["supplierInvNumber"]:
             logging.error(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
             unpaidPOs.append(poNumber)
