@@ -24,8 +24,8 @@ jobs:
       - name: Run ATB Request Script
         working-directory: FutureYou
         env:
-          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER_GMAIL }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
+          EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
 
           FUTUREYOU_CONTRACTING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
           FUTUREYOU_CONTRACTING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
@@ -35,5 +35,3 @@ jobs:
         run: |
           python atbRequest.py
           python overdueRequest.py
-      - name: Debug Environment Variables
-        run: env | grep FUTUREYOU
