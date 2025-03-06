@@ -121,5 +121,5 @@ def needsFirstAuth(client_name):
     """
     Checks if the client requires first-time authentication.
     """
-    file_path = f'../refreshTokens/{client_name}.txt'
+    file_path = f'../refreshTokens/{client_name.upper()}.txt'
     return not (os.path.exists(file_path) and os.path.getsize(file_path) > 0)
