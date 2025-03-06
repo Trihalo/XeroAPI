@@ -11,8 +11,6 @@ def get_client_credentials(client_name):
     client_id = os.getenv(f"{client_name.upper()}_CLIENT_ID")
     client_secret = os.getenv(f"{client_name.upper()}_CLIENT_SECRET")
 
-    print(client_id, client_secret)
-    
     if not client_id or not client_secret:
         raise ValueError(
             f"Missing credentials for {client_name}. Ensure environment variables are set.")
@@ -124,5 +122,4 @@ def needsFirstAuth(client_name):
     Checks if the client requires first-time authentication.
     """
     file_path = f'../refreshTokens/{client_name.upper()}.txt'
-    print(file_path)
     return not (os.path.exists(file_path) and os.path.getsize(file_path) > 0)
