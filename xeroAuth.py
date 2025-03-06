@@ -11,6 +11,8 @@ def get_client_credentials(client_name):
     client_id = os.getenv(f"{client_name.upper()}_CLIENT_ID")
     client_secret = os.getenv(f"{client_name.upper()}_CLIENT_SECRET")
 
+    print(client_id, client_secret)
+    
     if not client_id or not client_secret:
         raise ValueError(
             f"Missing credentials for {client_name}. Ensure environment variables are set.")
