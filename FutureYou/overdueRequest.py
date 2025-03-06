@@ -3,12 +3,10 @@ import os
 from datetime import datetime, timedelta
 from overdueAnalysis import processOverdueData
 
-# Ensure the script can find modules in the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.emailAttachment import sendEmailWithAttachment
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
-from helpers.dateStringsHelper import getSydneyDate
 
 
 def main():
@@ -35,7 +33,7 @@ def main():
         filePath = processOverdueData({"Invoices": all_invoices}, client_tokens)
 
         recipients = ["leo@trihalo.com.au"]
-        time = (getSydneyDate(datetime.now().strftime("%Y-%m-%dT%H:%M:%S")) + timedelta(hours=13)).strftime("%d-%m-%Y %I:%M%p").lower()
+        time = (datetime.now() + timedelta(hours=24)).strftime("%d-%m-%Y %I:%M%p").lower()
         subject = f"Overdue Report at {time}"
         body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
 
