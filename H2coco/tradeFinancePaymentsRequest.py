@@ -42,7 +42,7 @@ def create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs):
 
 
 def main():
-    client = "Futureyou_Recruitment_Perth"
+    client = "H2coco"
     invoiceStatus = "AUTHORISED"
 
     allInvoices = []
@@ -116,7 +116,7 @@ def main():
                     "InvoiceID": invoiceData["InvoiceID"]
                 },
                 "Account": {
-                    "Code": "600"
+                    "Code": "2010"
                 },
                 "Date": paymentDate.strftime("%Y-%m-%d"),
                 "CurrencyRate": currencyRate,
