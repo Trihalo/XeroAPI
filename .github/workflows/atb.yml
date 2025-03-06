@@ -25,6 +25,7 @@ jobs:
         working-directory: FutureYou
         run: |
           python atbRequest.py
+          python overdueRequest.py
         env:
-          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
