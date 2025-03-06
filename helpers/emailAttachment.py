@@ -13,8 +13,6 @@ def sendEmailWithAttachment(recipients, subject, body, file_path, provider):
     sender_email = os.getenv(f"EMAIL_SENDER_{provider}")
     sender_password = os.getenv(f"EMAIL_PASSWORD_{provider}")
 
-    print(sender_email, sender_password)
-
     if not sender_email or not sender_password:
         raise Exception(
             "❌ Missing email credentials. Set EMAIL_SENDER and EMAIL_PASSWORD as environment variables.")
@@ -60,4 +58,4 @@ if __name__ == "__main__":
     body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
     filePath = "./invoices.xlsx"
 
-    sendEmailWithAttachment(recipients, subject, body, filePath, provider="OUTLOOK")
+    sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")

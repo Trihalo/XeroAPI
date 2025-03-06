@@ -31,15 +31,14 @@ def main():
                 "xero_tenant_id": xero_tenant_id
             }
 
-        # filePath = processAtbData({"Invoices": all_invoices}, client_tokens)
-        filePath = "./ATB 04-03-2025.xlsx"
+        filePath = processAtbData({"Invoices": all_invoices}, client_tokens)
 
         recipients = ["leo@trihalo.com.au"]
         time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
         subject = f"ATB Report at {time}"
         body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
 
-        sendEmailWithAttachment(recipients, subject, body, filePath, provider="OUTLOOK")
+        sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
 
     except Exception as e:
         print(f"Error: {e}")

@@ -11,7 +11,7 @@ from helpers.fetchInvoicesForClient import fetchInvoicesForClient
 
 
 def main():
-    clients = ["Futureyou_Recruitment", "Futureyou_Contracting"]
+    clients = ["FUTUREYOU_RECRUITMENT", "FUTUREYOU_CONTRACTING"]
     invoice_status = "AUTHORISED"
 
     all_invoices = []
@@ -33,12 +33,12 @@ def main():
 
         filePath = processOverdueData({"Invoices": all_invoices}, client_tokens)
 
-        # recipients = ["leo@trihalo.com.au", "silvia@trihalo.com.au"]
-        # subject = "ATB Report"
-        # time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
-        # body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
+        recipients = ["leo@trihalo.com.au"]
+        time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
+        subject = f"Overdue Report at {time}"
+        body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
 
-        # sendEmailWithAttachment(recipients, subject, body, filePath)
+        sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
 
 
     except Exception as e:
