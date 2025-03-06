@@ -11,7 +11,7 @@ def getXeroAccessToken(client):
     """
     Retrieves or refreshes the Xero access token for the given client.
     """
-    refresh_token_path = f"../refreshTokens/{client}.txt"
+    refresh_token_path = f"../refreshTokens/{client.upper()}.txt"
 
     # Load client credentials from environment variables
     client_id = os.getenv(f"{client.upper()}_CLIENT_ID")
