@@ -2,7 +2,7 @@ import os
 import smtplib
 from email.message import EmailMessage
 import mimetypes
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,8 +54,8 @@ def sendEmailWithAttachment(recipients, subject, body, file_path, provider):
 if __name__ == "__main__":
     recipients = ["leo@trihalo.com.au"]
     subject = "ATB Report"
-    time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
+    time = (datetime.now() + timedelta(hours=24)).strftime("%d-%m-%Y %I:%M%p").lower()
     body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
     filePath = "./invoices.xlsx"
 
-    sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
+    # sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")

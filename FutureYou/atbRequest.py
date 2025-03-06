@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from atbAnalysis import processAtbData
 from dotenv import load_dotenv
 
@@ -34,7 +34,7 @@ def main():
         filePath = processAtbData({"Invoices": all_invoices}, client_tokens)
 
         recipients = ["leo@trihalo.com.au"]
-        time = datetime.now().strftime("%d/%m/%Y %I:%M %p")
+        time = (datetime.now() + timedelta(hours=24)).strftime("%d-%m-%Y %I:%M%p").lower()
         subject = f"ATB Report at {time}"
         body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
 

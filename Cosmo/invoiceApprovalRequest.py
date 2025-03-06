@@ -4,6 +4,7 @@ import json
 import requests
 import shutil
 import datetime
+from dotenv import load_dotenv
 
 # Ensure the script can find modules in the parent directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -21,6 +22,8 @@ from helpers.extractInvoiceAmountFromPDF import extractInvoiceAmountAndGSTFromPD
 XERO_API_URL = "https://api.xero.com/api.xro/2.0/Invoices"
 DOWNLOAD_FOLDER = "downloadedInvoices"
 LOG_FOLDER = "logs"
+
+load_dotenv()
 
 # Generate a timestamp for log file
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -43,6 +46,7 @@ def writeLog(message, isFirstEntry=False):
 
 def getXeroTenant(client):
     """Authenticate and return Xero Tenant ID"""
+    print(client)
     accessToken = getXeroAccessToken(client)
     xeroTenantId = XeroTenants(accessToken)
 
@@ -232,7 +236,7 @@ def clearDownloadedInvoices():
 
 def main():
     """Main function to fetch, validate, update invoice numbers, and then update status in Xero"""
-    client = "Cosmopolitan_Corporation"
+    client = "COSMOPOLITAN_CORPORATION"
 
     # First log entry with date/time
     writeLog("", isFirstEntry=True)
