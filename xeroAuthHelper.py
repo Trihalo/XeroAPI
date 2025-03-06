@@ -1,6 +1,7 @@
 import base64
 import os
 import requests
+import json
 from xeroAuth import XeroFirstAuth, XeroRefreshToken
 from dotenv import load_dotenv
 
@@ -20,14 +21,20 @@ def get_github_secret(secret_name):
     }
     response = requests.get(f"{GITHUB_SECRET_URL}/{secret_name}", headers=headers)
 
+    print(f"🔍 DEBUG: GitHub API Response for {secret_name}: {response.status_code}")
+    print(f"🔍 DEBUG: Response Content: {response.text}")
+    print(f"🔍 DEBUG: Full Response JSON: {json.dumps(response.json(), indent=2)}")
+
+
     if response.status_code == 200:
-        return response.json().get("value") 
+        return response.json().get("encrypted_value")
     elif response.status_code == 404:
-        print(f"⚠️ Secret {secret_name} not found. It may not exist yet.")
+        print(f"⚠️ WARNING: Secret {secret_name} not found. Returning None.")
         return None
     else:
-        print(f"❌ Failed to fetch GitHub secret: {response.text}")
+        print(f"❌ ERROR: Failed to fetch GitHub secret: {response.text}")
         return None
+
 
 
 def get_github_public_key():
@@ -49,10 +56,13 @@ def update_github_secret(secret_name, new_value):
     """Update the refresh token in GitHub Secrets."""
     public_key_data = get_github_public_key()
     if not public_key_data:
-        print("❌ Could not retrieve GitHub public key. Cannot update secret.")
+        print("❌ ERROR: Could not retrieve GitHub public key. Cannot update secret.")
         return
+
+    public_key = public_key_data["key"]
     key_id = public_key_data["key_id"]
 
+    # ✅ GitHub requires the secret value to be Base64-encoded
     encrypted_value = base64.b64encode(new_value.encode()).decode()
 
     headers = {
@@ -60,15 +70,19 @@ def update_github_secret(secret_name, new_value):
         "Accept": "application/vnd.github.v3+json"
     }
     payload = {
-        "encrypted_value": encrypted_value, 
+        "encrypted_value": encrypted_value,
         "key_id": key_id
     }
 
+    print(f"🔍 DEBUG: Updating GitHub Secret {secret_name}")
+    print(f"🔍 DEBUG: Payload Sent: {json.dumps(payload, indent=2)}")
+
     response = requests.put(f"{GITHUB_SECRET_URL}/{secret_name}", headers=headers, json=payload)
 
-    if response.status_code in [201, 204]: print(f"✅ GitHub secret {secret_name} updated successfully!")
-    else: print(f"❌ Failed to update GitHub secret: {response.text}")
-
+    if response.status_code in [201, 204]:
+        print(f"✅ GitHub secret {secret_name} updated successfully!")
+    else:
+        print(f"❌ ERROR: Failed to update GitHub secret: {response.text}")
 
 
 def getXeroAccessToken(client):
@@ -82,19 +96,20 @@ def getXeroAccessToken(client):
         raise ValueError(f"❌ Missing environment variables for {client}. Ensure they are set.")
 
     b64_id_secret = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-    refresh_token_secret_name = f"XERO_REFRESH_TOKEN_{client.upper()}"
-    refresh_token = get_github_secret(refresh_token_secret_name)
+    
+    refresh_token = os.getenv(f"XERO_REFRESH_TOKEN_{client.upper()}")
 
-    if refresh_token is None:
+    if refresh_token is None or refresh_token == "INIT":
         print(f"🔄 No refresh token found for {client}, initiating first-time authentication.")
         tokens = XeroFirstAuth(client)
         if not tokens:
             raise Exception("❌ First authentication failed.")
 
         access_token, new_refresh_token = tokens
-        update_github_secret(refresh_token_secret_name, new_refresh_token)
+        update_github_secret(f"XERO_REFRESH_TOKEN_{client.upper()}", new_refresh_token)
 
     else:
+        print(f"🔄 Refreshing token for {client}")
         tokens = XeroRefreshToken(client, refresh_token)
 
         if not tokens:
@@ -103,6 +118,6 @@ def getXeroAccessToken(client):
         access_token, new_refresh_token = tokens
 
         if new_refresh_token and new_refresh_token != refresh_token:
-            update_github_secret(refresh_token_secret_name, new_refresh_token)
+            update_github_secret(f"XERO_REFRESH_TOKEN_{client.upper()}", new_refresh_token)
 
     return access_token

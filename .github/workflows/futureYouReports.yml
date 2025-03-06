@@ -25,7 +25,7 @@ jobs:
         working-directory: FutureYou
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          
+
           EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
           EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
 
@@ -34,6 +34,9 @@ jobs:
 
           FUTUREYOU_RECRUITMENT_CLIENT_ID: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}
           FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
+
+          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ secrets.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}  
+          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ secrets.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}  
         run: |
           python atbRequest.py
           python overdueRequest.py
