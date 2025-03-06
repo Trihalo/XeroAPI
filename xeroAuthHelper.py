@@ -17,6 +17,8 @@ def getXeroAccessToken(client):
     client_id = os.getenv(f"{client.upper()}_CLIENT_ID")
     client_secret = os.getenv(f"{client.upper()}_CLIENT_SECRET")
 
+    print(client_id, client_secret)
+
     if not client_id or not client_secret:
         raise ValueError(
             f"Missing environment variables for {client}. Ensure they are set.")
@@ -47,7 +49,8 @@ def getXeroAccessToken(client):
             raise Exception("Refresh token file not found.")
 
         tokens = XeroRefreshToken(
-            client, old_refresh_token)  # Pass client name
+            client, old_refresh_token)
+        
         if not tokens:
             raise Exception("Token refresh failed.")
 
