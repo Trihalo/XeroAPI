@@ -9,3 +9,5 @@ H2coco/*.xlsx
 H2coco/*.json
 H2coco/logs
 H2coco/PO_Payment_Status
+helpers/__pycache__/
+FutureYou/__pycache__/
