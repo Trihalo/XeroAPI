@@ -49,11 +49,12 @@ def processOverdueData(data, client_tokens):
     wb.add_named_style(date_format)
     
     for row in range(1, last_row + 1):
-        ws[f"B{row}"].style = "date_format"
-        ws[f"C{row}"].style = "date_format"
-        ws[f"E{row}"].style = "accounting_format"
-        ws[f"G{row}"].alignment = wrap_alignment 
-        ws[f"H{row}"].alignment = wrap_alignment 
+        if row != 2: 
+            ws[f"B{row}"].style = "date_format"
+            ws[f"C{row}"].style = "date_format"
+            ws[f"E{row}"].style = "accounting_format"
+            ws[f"G{row}"].alignment = wrap_alignment 
+            ws[f"H{row}"].alignment = wrap_alignment 
 
     column_widths = {"A": 60, "B": 12, "C": 12, "D": 15, "E": 15, "F": 12, "G": 30, "H": 70}
 
