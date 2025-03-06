@@ -75,9 +75,9 @@ def getNotes(invoice_id, invoice_number, client_tokens):
     
     # Determine which credentials to use
     if invoice_number.startswith("TC"):
-        client_key = "Futureyou_Contracting"
+        client_key = "FUTUREYOU_CONTRACTING"
     else:
-        client_key = "Futureyou_Recruitment"
+        client_key = "FUTUREYOU_RECRUITMENT"
 
     if client_key not in client_tokens:
         raise Exception(f"❌ No credentials found for {client_key}")

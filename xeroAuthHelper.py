@@ -1,7 +1,11 @@
 import base64
 import os
 from xeroAuth import XeroFirstAuth, XeroRefreshToken, needsFirstAuth
-from clientHelper import load_client_config
+
+# Constants for redirect URL and scope
+REDIRECT_URL = "https://xero.com/"
+SCOPE = "offline_access accounting.transactions accounting.attachments"
+
 
 def getXeroAccessToken(client):
     """
@@ -9,22 +13,24 @@ def getXeroAccessToken(client):
     """
     refresh_token_path = f"../refreshTokens/{client}.txt"
 
-    # Load client-specific config
-    config = load_client_config(client)
+    # Load client credentials from environment variables
+    client_id = os.getenv(f"{client.upper()}_CLIENT_ID")
+    client_secret = os.getenv(f"{client.upper()}_CLIENT_SECRET")
 
-    client_id = config["client_id"]
-    client_secret = config["client_secret"]
-    redirect_url = config["redirect_url"]
-    scope = config["scope"]
+    if not client_id or not client_secret:
+        raise ValueError(
+            f"Missing environment variables for {client}. Ensure they are set.")
 
     # Encode credentials
-    b64_id_secret = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+    b64_id_secret = base64.b64encode(
+        f"{client_id}:{client_secret}".encode()).decode()
 
     if needsFirstAuth(client):
-        tokens = XeroFirstAuth(client_id, redirect_url, scope, b64_id_secret)
+        # Pass client name, not client_id, to XeroFirstAuth
+        tokens = XeroFirstAuth(client)
         if not tokens:
             raise Exception("First authentication failed.")
-        
+
         access_token, refresh_token = tokens
 
         # Save the refresh token
@@ -40,7 +46,8 @@ def getXeroAccessToken(client):
         else:
             raise Exception("Refresh token file not found.")
 
-        tokens = XeroRefreshToken(old_refresh_token, b64_id_secret)
+        tokens = XeroRefreshToken(
+            client, old_refresh_token)  # Pass client name
         if not tokens:
             raise Exception("Token refresh failed.")
 
