@@ -205,7 +205,7 @@ def validateAndApproveInvoices(accessToken, xeroTenantId, invoices, extractedFil
             extractedGSTFloat = float(extractedGST)
 
             amountMatches = (extractedAmountFloat == expectedAmount)
-            gstMatches = abs(extractedGSTFloat - expectedGST) <= 0.01
+            gstMatches = abs(extractedGSTFloat - expectedGST) <= 0.025
 
             if amountMatches and gstMatches:
                 writeLog(f"✅ Invoice {invoiceNumber} (Contact: {contactName}) approved: Amount & GST match!")

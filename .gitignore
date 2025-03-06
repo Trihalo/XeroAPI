@@ -1,4 +1,5 @@
 clientDetails/*.json
+<<<<<<< HEAD
 node_modules/
 .env
 FutureYou/ATB/
@@ -6,3 +7,16 @@ refreshTokens/
 __pycache__/
 Cosmo/logs
 FutureYou/Overdue
+=======
+__pycache__/
+.env
+Cosmo/logs/*.txt
+refreshTokens/*.txt
+FutureYou/ATB
+FutureYou/Overdue
+.DS_Store/
+H2coco/*.xlsx
+H2coco/*.json
+H2coco/logs
+H2coco/PO_Payment_Status
+>>>>>>> origin/main
