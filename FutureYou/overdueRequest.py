@@ -33,7 +33,7 @@ def main():
         filePath = processOverdueData({"Invoices": all_invoices}, client_tokens)
 
         recipients = ["leo@trihalo.com.au"]
-        time = (datetime.now() + timedelta(hours=24)).strftime("%d-%m-%Y %I:%M%p").lower()
+        time = (datetime.now() + timedelta(hours=13)).strftime("%d-%m-%Y %I:%M%p").lower()
         subject = f"Overdue Report at {time}"
         body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
 
