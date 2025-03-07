@@ -2,7 +2,7 @@ name: Scheduled ATB Request
 
 on:
   schedule:
-    - cron: '40 22 * * 4'
+    - cron: '15 22 * * 4'
   workflow_dispatch:  # Allows manual trigger
 
 jobs:
@@ -24,6 +24,9 @@ jobs:
       - name: Run ATB Request Script
         working-directory: FutureYou
         env:
+          # 🔹 Secrets (These remain unchanged)
+          GH_PAT: ${{ secrets.GH_PAT }}
+
           EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
           EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
 
@@ -32,6 +35,10 @@ jobs:
 
           FUTUREYOU_RECRUITMENT_CLIENT_ID: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}
           FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
+
+          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
+          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}  
+          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}  
         run: |
           python atbRequest.py
           python overdueRequest.py

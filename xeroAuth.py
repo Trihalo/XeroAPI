@@ -3,6 +3,11 @@ import webbrowser
 import requests
 import base64
 
+# Static values
+REDIRECT_URL = os.getenv("XERO_REDIRECT_URL", "https://xero.com/")
+SCOPE = os.getenv(
+    "XERO_SCOPE", "offline_access accounting.transactions accounting.attachments")
+
 
 def getClientCredentials(client_name):
     """
@@ -13,18 +18,13 @@ def getClientCredentials(client_name):
 
     if not client_id or not client_secret:
         raise ValueError(
-            f"Missing credentials for {client_name}. Ensure environment variables are set.")
+            f"❌ ERROR: Missing credentials for {client_name}. Ensure environment variables are set.")
 
-    b64_id_secret = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
-    print(f"🔑 Encoded credentials: {b64_id_secret}")
+    # Correctly encode client ID and secret as required by Xero
+    credentials = f"{client_id}:{client_secret}"
+    b64_id_secret = base64.b64encode(credentials.encode()).decode()
 
     return client_id, client_secret, b64_id_secret
-
-
-# Static values for all clients
-REDIRECT_URL = os.getenv("XERO_REDIRECT_URL", "https://xero.com/")
-SCOPE = os.getenv(
-    "XERO_SCOPE", "offline_access accounting.transactions accounting.attachments")
 
 
 def XeroFirstAuth(client_name):
@@ -52,7 +52,10 @@ def XeroFirstAuth(client_name):
     exchange_code_url = "https://identity.xero.com/connect/token"
     response = requests.post(
         exchange_code_url,
-        headers={"Authorization": f"Basic {b64_id_secret}"},
+        headers={
+            "Authorization": f"Basic {b64_id_secret}",  # ✅ Ensure correct encoding
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
         data={
             "grant_type": "authorization_code",
             "code": auth_code,
@@ -62,7 +65,7 @@ def XeroFirstAuth(client_name):
 
     if response.status_code != 200:
         print(
-            f"Error exchanging code: {response.status_code} - {response.text}")
+            f"❌ Error exchanging code: {response.status_code} - {response.text}")
         return None
 
     json_response = response.json()
@@ -73,21 +76,21 @@ def XeroRefreshToken(client_name, refresh_token):
     """
     Refreshes the Xero access token for a given client.
     """
-    print(client_name)
+    print(f"🔄 Refreshing token for {client_name}...")
     _, _, b64_id_secret = getClientCredentials(client_name)
 
     token_refresh_url = "https://identity.xero.com/connect/token"
     response = requests.post(
         token_refresh_url,
         headers={
-            "Authorization": f"Basic {b64_id_secret}",
-            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+            "Authorization": f"Basic {b64_id_secret}",  # ✅ Fix: Ensure correct encoding
+            "Content-Type": "application/x-www-form-urlencoded",
         },
         data={"grant_type": "refresh_token", "refresh_token": refresh_token},
     )
 
     if response.status_code != 200:
-        print(f"Error refreshing token: {response.status_code} - {response.text}")
+        print(f"❌ Error refreshing token: {response.status_code} - {response.text}")
         return None
 
     json_response = response.json()
@@ -108,16 +111,8 @@ def XeroTenants(access_token):
     )
 
     if response.status_code != 200:
-        print(f"Error fetching tenants: {response.status_code} - {response.text}")
+        print(f"❌ Error fetching tenants: {response.status_code} - {response.text}")
         return None
 
     json_response = response.json()
     return json_response[0]["tenantId"] if json_response else None
-
-
-def needsFirstAuth(client_name):
-    """
-    Checks if the client requires first-time authentication.
-    """
-    file_path = f'../refreshTokens/{client_name.upper()}.txt'
-    return not (os.path.exists(file_path) and os.path.getsize(file_path) > 0)
