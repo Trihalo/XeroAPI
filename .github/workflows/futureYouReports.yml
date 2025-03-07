@@ -1,4 +1,4 @@
-name: Scheduled ATB Request
+name: Scheduled FutureYou Reports
 
 on:
   schedule:
