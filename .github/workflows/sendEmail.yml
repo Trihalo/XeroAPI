@@ -1,0 +1,33 @@
+name: Send Email
+
+on:
+  workflow_dispatch:
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install -r helpers/requirements.txt
+
+      - name: Run Email Script
+        working-directory: FutureYou
+        env:
+          # 🔹 Secrets
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
+
+        run: |
+          python emailAttachment.py
