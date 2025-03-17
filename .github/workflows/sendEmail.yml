@@ -21,7 +21,7 @@ jobs:
           pip install -r helpers/requirements.txt
 
       - name: Run Email Script
-        working-directory: FutureYou
+        working-directory: helpers
         env:
           # 🔹 Secrets
           GH_PAT: ${{ secrets.GH_PAT }}
