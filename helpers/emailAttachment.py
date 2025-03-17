@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def sendEmailWithAttachment(recipients, subject, body, file_path, provider):
-    """Sends an email with an attachment to multiple recipients using Outlook SMTP."""
+def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None):
+    """Sends an email with an attachment to multiple recipients using an SMTP Provider."""
 
     sender_email = os.getenv(f"EMAIL_SENDER_{provider}")
     sender_password = os.getenv(f"EMAIL_PASSWORD_{provider}")
@@ -55,7 +55,6 @@ if __name__ == "__main__":
     recipients = ["leo@trihalo.com.au"]
     subject = "ATB Report"
     time = (datetime.now() + timedelta(hours=11)).strftime("%d-%m-%Y %I:%M%p").lower()
-    body = f"Hi Silvia,\nPlease find the attached ATB report as of {time}.\n\nThanks"
-    filePath = "./invoices.xlsx"
+    body = f"Hi Leo,\n\n This is a test email{time}.\n\nThanks"
 
-    # sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
+    sendEmailWithAttachment(recipients, subject, body, provider="GMAIL")
