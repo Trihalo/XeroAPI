@@ -53,8 +53,8 @@ def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None)
 
 if __name__ == "__main__":
     recipients = ["leo@trihalo.com.au"]
-    subject = "ATB Report"
+    subject = "Test Email"
     time = (datetime.now() + timedelta(hours=11)).strftime("%d-%m-%Y %I:%M%p").lower()
-    body = f"Hi Leo,\n\n This is a test email{time}.\n\nThanks"
+    body = f"Hi Leo,\n\n This is a test email that was sent at {time}.\n\nThanks"
 
     sendEmailWithAttachment(recipients, subject, body, provider="GMAIL")
