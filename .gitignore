@@ -11,3 +11,4 @@ H2coco/logs
 H2coco/PO_Payment_Status
 helpers/__pycache__/
 FutureYou/__pycache__/
+dashboardWebsite/frontend/node_modules
