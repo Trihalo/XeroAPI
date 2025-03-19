@@ -1,0 +1,6 @@
+requests
+dotenv
+re
+fitz
+datetime
+shutil
