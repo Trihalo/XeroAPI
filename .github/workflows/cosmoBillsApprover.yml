@@ -1,0 +1,34 @@
+name: Cosmo Supplier Bills Approver
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-atb-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install -r Cosmo/requirements.txt
+
+      - name: Run Cosmo Bills Approver
+        working-directory: Cosmo
+        env:
+          # 🔹 Secrets (These remain unchanged)
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          COSMOPOLITAN_CORPORATION_CLIENT_ID: ${{ secrets.COSMOPOLITAN_CORPORATION_CLIENT_ID }}
+          COSMOPOLITAN_CORPORATION_CLIENT_SECRET: ${{ secrets.COSMOPOLITAN_CORPORATION_CLIENT_SECRET }}
+
+          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
+          XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION: ${{ vars.XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION }}
+        run: |
+          python invoiceApprovalRequest.py
