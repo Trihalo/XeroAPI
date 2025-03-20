@@ -38,13 +38,14 @@ export const triggerWorkflow = async (workflowKey, authUser) => {
 };
 
 // 🔹 Specific API calls mapped to workflow keys
-export const triggerTestEmail = () => triggerWorkflow("test-email");
-export const triggerFutureYouReports = () =>
-  triggerWorkflow("futureyou-reports");
-export const triggerH2cocoTradeFinance = () =>
-  triggerWorkflow("h2coco-trade-finance");
-export const triggerCosmoBillsApprover = () =>
-  triggerWorkflow("cosmo-bills-approver");
+export const triggerTestEmail = (userData) =>
+  triggerWorkflow("test-email", userData);
+export const triggerFutureYouReports = (userData) =>
+  triggerWorkflow("futureyou-reports", userData);
+export const triggerH2cocoTradeFinance = (userData) =>
+  triggerWorkflow("h2coco-trade-finance", userData);
+export const triggerCosmoBillsApprover = (userData) =>
+  triggerWorkflow("cosmo-bills-approver", userData);
 
 export const testApiCall = async () => {
   try {

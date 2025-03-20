@@ -258,9 +258,9 @@ def main():
     
     recipients = ["leo@trihalo.com.au"]
     subject = f"ATB Report"
-    body = f"Hi Silvia,\nPlease find the attached ATB report as of.\n\nThanks"
+    body = f"Hi Leo,\nYou're weird.\n\nThanks"
 
-    sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
+    sendEmailWithAttachment(recipients, subject, body, filePath=None, provider="GMAIL")
 
 
 if __name__ == "__main__":

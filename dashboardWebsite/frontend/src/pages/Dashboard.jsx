@@ -179,8 +179,7 @@ export default function Dashboard() {
       }, 1000);
 
       try {
-        const response = await script.action();
-        apiResponse = response;
+        apiResponse = await script.action(authResponse.user);
       } catch (error) {
         apiResponse = {
           success: false,
