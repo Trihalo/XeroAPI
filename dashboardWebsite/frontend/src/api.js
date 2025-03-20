@@ -1,50 +1,84 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "http://localhost:8080"; // Update if using a different host
 
-export const triggerTestEmail = async () => {
+// 🔹 Reusable function to trigger any workflow
+export const triggerWorkflow = async (workflowKey) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/test-email`);
+    const response = await axios.post(`${API_BASE_URL}/trigger/${workflowKey}`);
 
     if (response.data.success) {
       return {
         success: true,
-        message: "✅ Test Email sent successfully!",
+        message: response.data.message,
       };
     } else {
-      console.error(response.data.error);
-      return { success: false, message: "❌ Failed to trigger action." };
+      console.error("API Error:", response.data.error);
+      return { success: false, message: `❌ ${response.data.error}` };
     }
   } catch (error) {
-    console.error("Error triggering GitHub Action:", error);
-    return { success: false, message: "❌ Error contacting the backend." };
+    console.error("Request failed:", error);
+
+    let errorMessage = "❌ Error contacting the backend.";
+    if (error.response) {
+      // Backend responded with an error status code
+      console.error("Backend Error:", error.response.data);
+      errorMessage = `❌ Server error: ${error.response.status} - ${error.response.statusText}`;
+    } else if (error.request) {
+      // No response received
+      errorMessage =
+        "❌ No response from the backend. Check if the server is running.";
+    }
+
+    return { success: false, message: errorMessage };
   }
 };
 
+// 🔹 Specific API calls mapped to workflow keys
+export const triggerTestEmail = () => triggerWorkflow("test-email");
+export const triggerFutureYouReports = () =>
+  triggerWorkflow("futureyou-reports");
+export const triggerH2cocoTradeFinance = () =>
+  triggerWorkflow("h2coco-trade-finance");
+export const triggerCosmoBillsApprover = () =>
+  triggerWorkflow("cosmo-bills-approver");
+
 export const testApiCall = async () => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      // Simulating API delay (5 seconds)
-      await new Promise((res) => setTimeout(res, 5000));
-
-      // Randomly simulate success/failure (for testing)
-      const isSuccess = Math.random() > 0.5;
-      console.log("isSuccess:", isSuccess);
-
-      // Making API request
-      let response = null;
-      if (isSuccess) {
-        response = await axios.get(`${API_BASE_URL}/test-api`);
-      }
-
-      if (isSuccess) {
-        resolve(response.data.message || "✅ API call was successful!");
-      } else {
-        reject("❌ Simulated API failure!");
-      }
-    } catch (error) {
-      console.error("Error calling test API:", error);
-      reject("❌ Test API failed due to network error.");
+  try {
+    await new Promise((res) => setTimeout(res, 5000));
+    if (Math.random() > 0.5) {
+      throw new Error("❌ Simulated API failure.");
     }
-  });
+
+    const response = await axios.get(`${API_BASE_URL}/test-api`);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error calling test API:", error);
+    throw new Error(
+      error.message || "❌ Test API failed due to network error."
+    );
+  }
+};
+
+export const uploadFile = async (uploadedFile, setStatusMessage) => {
+  if (!uploadedFile) {
+    setStatusMessage("❌ No file selected.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", uploadedFile);
+
+  try {
+    const response = await axios.post(`${API_BASE_URL}/upload-file`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    setStatusMessage(response.data.message);
+  } catch (error) {
+    setStatusMessage("❌ Upload failed.");
+  }
 };

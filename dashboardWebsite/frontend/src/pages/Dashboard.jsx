@@ -1,21 +1,30 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import RequestButton from "../components/RequestButton";
-import { triggerTestEmail, testApiCall } from "../api";
+import {
+  testApiCall,
+  triggerTestEmail,
+  triggerFutureYouReports,
+  triggerH2cocoTradeFinance,
+  triggerCosmoBillsApprover,
+  uploadFile,
+} from "../api";
 import credentials from "../login/credentials.json"; // Import stored credentials
 
 export default function Dashboard() {
-  const [statusMessage, setStatusMessage] = useState("");
   const [selectedScript, setSelectedScript] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedDescription, setSelectedDescription] = useState("");
   const [isAuthScreen, setIsAuthScreen] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [globalAlert, setGlobalAlert] = useState(null); // Floating alert on root
   const [alertVisible, setAlertVisible] = useState(false); // Controls fade-out animation
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState(0);
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   // 🔹 Clients and their scripts (dynamic data)
   const clients = [
@@ -26,11 +35,15 @@ export default function Dashboard() {
           name: "Test Email Script",
           description: "Sends a test email to verify SMTP settings.",
           action: triggerTestEmail,
+          estimatedTime: 3,
+          requiresFileUpload: false,
         },
         {
           name: "Test API Script",
           description: "Tests the API connection with a sample request.",
           action: testApiCall,
+          estimatedTime: 5,
+          requiresFileUpload: false,
         },
       ],
     },
@@ -39,8 +52,37 @@ export default function Dashboard() {
       scripts: [
         {
           name: "ATB & Overdue Request",
-          description: "Generates an overdue accounts report.",
-          action: testApiCall,
+          description:
+            "Generates an Aged Trial Balance report that includes both FutureYou Recruitment and Contracting Invoices",
+          action: triggerFutureYouReports,
+          estimatedTime: 240,
+          requiresFileUpload: false,
+        },
+      ],
+    },
+    {
+      clientName: "H2coco",
+      scripts: [
+        {
+          name: "Trade Finance Supplier Bill Payment Allocator",
+          description:
+            "Allocates payment of declared amount on certain date with specific exchange rate (if specified) to the POs. Returns a Excel file with the successfully allocated POs.\n\nExcel file needs the following headers: PO, Date, CurrencyRate, Amount",
+          action: triggerH2cocoTradeFinance,
+          estimatedTime: 30,
+          requiresFileUpload: true,
+        },
+      ],
+    },
+    {
+      clientName: "Cosmopolitan Corporation",
+      scripts: [
+        {
+          name: "Bills Approver",
+          description:
+            "Approves all draft bills within the Cosmopolitan Corporation Xero account if they meet the criteria. Updates any incorrect Invoice IDs.",
+          action: triggerCosmoBillsApprover,
+          estimatedTime: 20,
+          requiresFileUpload: false,
         },
       ],
     },
@@ -52,7 +94,7 @@ export default function Dashboard() {
     setSelectedScript(script.name);
     setSelectedDescription(script.description);
     setIsAuthScreen(false);
-    setLoginError("");
+    setStatusMessage("");
     setUsername("");
     setPassword("");
     document.getElementById("scriptModal").showModal();
@@ -61,47 +103,85 @@ export default function Dashboard() {
   // 🔹 Switch to login screen
   const handleExecute = () => {
     setIsAuthScreen(true);
-    setLoginError("");
+    setStatusMessage("");
   };
 
   // 🔹 Handle API Execution
   const handleConfirm = async () => {
     setIsLoading(true);
-    setLoginError("");
+    setStatusMessage("");
+    setElapsedTime(0);
 
     const user = credentials.users.find(
       (user) => user.username === username && user.password === password
     );
 
-    if (!user) {
-      setIsLoading(false);
-      setLoginError("❌ Invalid username or password");
-      return;
-    }
-
-    setStatusMessage(`✅ Executing ${selectedScript}...`);
-
     const script = clients
       .flatMap((client) => client.scripts)
       .find((script) => script.name === selectedScript);
 
-    if (script && script.action) {
-      try {
-        const response = await script.action();
-        showGlobalAlert({
-          success: response.success,
-          message: response.message,
-        });
-      } catch (error) {
-        showGlobalAlert({
-          success: false,
-          message: "❌ API call failed. Please try again.",
-        });
-      }
+    if (script?.requiresFileUpload && !uploadedFile) {
+      setIsLoading(false);
+      setStatusMessage("❌ Please upload an Excel file.");
+      return;
     }
 
-    setIsLoading(false);
-    document.getElementById("scriptModal").close(); // ✅ Close modal after API completes
+    if (!user) {
+      setIsLoading(false);
+      setStatusMessage("❌ Invalid username or password");
+      return;
+    }
+
+    if (script?.requiresFileUpload) {
+      // Call the file upload API first
+      const uploadResponse = await uploadFile(uploadedFile);
+
+      if (!uploadResponse.success) {
+        setIsLoading(false);
+        setStatusMessage(uploadResponse.message);
+        return;
+      }
+
+      setStatusMessage("✅ File uploaded successfully. Executing script...");
+    }
+
+    setIsAuthScreen(false);
+
+    if (script) {
+      setEstimatedTime(script.estimatedTime || 10);
+      let timeElapsed = 0;
+      let apiResponse = null; // Store API response for later
+
+      // Simulate progress update every second
+      const interval = setInterval(() => {
+        timeElapsed++;
+        setElapsedTime(timeElapsed);
+        if (timeElapsed >= script.estimatedTime) {
+          clearInterval(interval);
+
+          setTimeout(() => {
+            setIsLoading(false);
+            document.getElementById("scriptModal").close();
+            if (apiResponse) {
+              showGlobalAlert({
+                success: apiResponse.success,
+                message: apiResponse.message,
+              });
+            }
+          }, 1000);
+        }
+      }, 1000);
+
+      try {
+        const response = await script.action();
+        apiResponse = response;
+      } catch (error) {
+        apiResponse = {
+          success: false,
+          message: "❌ API call failed. Please try again.",
+        };
+      }
+    }
   };
 
   // 🔹 Function to Show Global Alert with Auto-Fade
@@ -110,7 +190,7 @@ export default function Dashboard() {
     setAlertVisible(true);
 
     setTimeout(() => {
-      setAlertVisible(false); // Start fade-out
+      setAlertVisible(false);
       setTimeout(() => setGlobalAlert(null), 500);
     }, 5000);
   };
@@ -173,7 +253,25 @@ export default function Dashboard() {
                 <strong>Description:</strong> {selectedDescription}
               </p>
 
-              <div className="form-control">
+              {selectedScript &&
+                clients.some((client) =>
+                  client.scripts.some(
+                    (script) =>
+                      script.name === selectedScript &&
+                      script.requiresFileUpload
+                  )
+                ) && (
+                  <div className="form-control">
+                    <input
+                      type="file"
+                      accept=".xls,.xlsx"
+                      className="file-input file-input-bordered"
+                      onChange={(e) => setUploadedFile(e.target.files[0])}
+                    />
+                  </div>
+                )}
+
+              <div className="form-control mt-4">
                 <input
                   type="text"
                   placeholder="Username"
@@ -193,7 +291,9 @@ export default function Dashboard() {
                 />
               </div>
 
-              {loginError && <p className="text-red-500 mt-2">{loginError}</p>}
+              {statusMessage && (
+                <p className="text-neutral mt-2">{statusMessage}</p>
+              )}
 
               <div className="modal-action">
                 <button
@@ -217,11 +317,24 @@ export default function Dashboard() {
             </div>
           ) : isLoading ? (
             // 🔹 Loading Spinner While API Runs
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center w-full">
               <span className="loading loading-spinner loading-lg text-primary"></span>
               <p className="text-center mt-4">
                 Executing script, please wait...
               </p>
+
+              {/* 🔹 Progress Bar Section */}
+              <div className="w-full max-w-xs mt-4">
+                <p className="text-center text-sm text-gray-500">
+                  Estimated time remaining:{" "}
+                  {Math.max(0, estimatedTime - elapsedTime)}s
+                </p>
+                <progress
+                  className="progress progress-primary w-full"
+                  value={(elapsedTime / estimatedTime) * 100}
+                  max="100"
+                ></progress>
+              </div>
             </div>
           ) : (
             // 🔹 Initial Script Request Screen
