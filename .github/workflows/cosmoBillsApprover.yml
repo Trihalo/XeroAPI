@@ -11,7 +11,7 @@ on:
         required: true
 
 jobs:
-  run-atb-request:
+  cosmo-bills-approver:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
