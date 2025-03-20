@@ -4,6 +4,8 @@ import requests
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from flask_cors import CORS
+from urllib.parse import quote
+from user_database import get_user
 
 load_dotenv()
 
@@ -28,6 +30,9 @@ WORKFLOWS = {
 # 🔹 Reusable function to trigger GitHub Actions
 def trigger_github_action(workflow_id):
     try:
+        auth_user = request.json.get("user")
+        if not auth_user: return jsonify({"success": False, "message": "❌ No user data provided."}), 400
+        
         url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/actions/workflows/{workflow_id}/dispatches"
         headers = {
             "Authorization": f"token {GITHUB_TOKEN}",
@@ -35,7 +40,10 @@ def trigger_github_action(workflow_id):
         }
         payload = {
             "ref": BRANCH,
-            "inputs": {}
+            "inputs": {
+                "name": auth_user.get("name"),
+                "email": auth_user.get("email")
+            }
         }
 
         response = requests.post(url, headers=headers, json=payload)
@@ -84,20 +92,21 @@ def upload_file():
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     file.save(file_path)
-
+    
     # Read file in base64 format for GitHub API
     with open(file_path, "rb") as f:
         file_content = base64.b64encode(f.read()).decode("utf-8")
 
     # GitHub API URL
-    github_api_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/uploads/{file.filename}"
+    file_name_encoded = quote(file.filename)
+    github_api_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/uploads/{file_name_encoded}"
 
     # Check if file exists in GitHub
     sha = None
     existing_file_response = requests.get(
-        github_api_url, headers={"Authorization": f"token {GITHUB_TOKEN}"}
+        github_api_url, headers={"Authorization": f"token {GITHUB_TOKEN}"}, params={"ref":BRANCH}
     )
-
+    print(existing_file_response)
     if existing_file_response.status_code == 200:
         sha = existing_file_response.json().get("sha")
     
@@ -112,15 +121,14 @@ def upload_file():
         "content": file_content,
         "branch": BRANCH,
     }
-    if sha:
-        payload["sha"] = sha  # Include SHA if updating existing file
+    if sha: payload["sha"] = sha
 
     # Push file to GitHub
     response = requests.put(github_api_url, json=payload, headers={"Authorization": f"token {GITHUB_TOKEN}"})
 
     # **DEBUG: Log response from GitHub**
-    print("GitHub API Response Status Code:", response.status_code)
-    print("GitHub API Response JSON:", response.json())
+    # print("GitHub API Response Status Code:", response.status_code)
+    # print("GitHub API Response JSON:", response.json())
 
     if response.status_code in [200, 201]:
         return jsonify({"success": True, "message": f"File {file.filename} replaced on GitHub"})
@@ -128,6 +136,28 @@ def upload_file():
         return jsonify({"success": False, "message": response.json()}), 500
 
 
+@app.route("/authenticate", methods=["POST"])
+def authenticate():
+    try:
+        data = request.json
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:
+            return jsonify({"success": False, "message": "Missing username or password"}), 400
+
+        user = get_user(username)  # Fetch user data
+
+        if user and user["password"] == password:
+            # Return user data excluding password
+            user_data = {key: value for key, value in user.items() if key != "password"}
+            return jsonify({"success": True, "message": "Authentication successful", "user": user_data})
+        else:
+            return jsonify({"success": False, "message": "Invalid username or password"}), 401
+
+
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
 
 
 if __name__ == "__main__":

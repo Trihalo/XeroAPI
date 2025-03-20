@@ -3,9 +3,12 @@ import axios from "axios";
 const API_BASE_URL = "http://localhost:8080"; // Update if using a different host
 
 // 🔹 Reusable function to trigger any workflow
-export const triggerWorkflow = async (workflowKey) => {
+export const triggerWorkflow = async (workflowKey, authUser) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/trigger/${workflowKey}`);
+    const response = await axios.post(
+      `${API_BASE_URL}/trigger/${workflowKey}`,
+      { user: authUser }
+    );
 
     if (response.data.success) {
       return {
@@ -78,5 +81,30 @@ export const uploadFile = async (file) => {
   } catch (error) {
     console.error("Upload failed:", error.response?.data || error.message);
     return { success: false, message: "❌ Upload failed." };
+  }
+};
+
+export const authenticateUser = async (username, password) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/authenticate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Authentication failed");
+    }
+
+    const data = await response.json();
+    return {
+      success: data.success,
+      message: data.message,
+      user: data.user || null,
+    };
+  } catch (error) {
+    return { success: false, message: "Authentication request failed" };
   }
 };

@@ -8,8 +8,8 @@ import {
   triggerH2cocoTradeFinance,
   triggerCosmoBillsApprover,
   uploadFile,
+  authenticateUser,
 } from "../api";
-import credentials from "../login/credentials.json"; // Import stored credentials
 
 export default function Dashboard() {
   const [selectedScript, setSelectedScript] = useState(null);
@@ -112,9 +112,13 @@ export default function Dashboard() {
     setStatusMessage("");
     setElapsedTime(0);
 
-    const user = credentials.users.find(
-      (user) => user.username === username && user.password === password
-    );
+    let authResponse = null;
+    try {
+      authResponse = await authenticateUser(username, password);
+    } catch (error) {
+      setIsLoading(false);
+      setStatusMessage("❌ Error during authentication.");
+    }
 
     const script = clients
       .flatMap((client) => client.scripts)
@@ -126,11 +130,13 @@ export default function Dashboard() {
       return;
     }
 
-    if (!user) {
+    if (!authResponse.success) {
       setIsLoading(false);
       setStatusMessage("❌ Invalid username or password");
       return;
     }
+
+    console.log("Authenticated User:", authResponse.user);
 
     if (script?.requiresFileUpload) {
       // Call the file upload API first

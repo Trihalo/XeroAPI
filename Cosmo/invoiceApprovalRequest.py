@@ -18,6 +18,7 @@ from helpers.fetchInvoiceAttachment import (
 )
 from helpers.extractInvoiceNumberFromPDF import extractInvoiceNumberFromPDF
 from helpers.extractInvoiceAmountFromPDF import extractInvoiceAmountAndGSTFromPDF
+from helpers.emailAttachment import sendEmailWithAttachment
 
 XERO_API_URL = "https://api.xero.com/api.xro/2.0/Invoices"
 DOWNLOAD_FOLDER = "downloadedInvoices"
@@ -254,6 +255,12 @@ def main():
     validateAndApproveInvoices(accessToken, xeroTenantId, invoices, extractedFiles)
 
     clearDownloadedInvoices()
+    
+    recipients = ["leo@trihalo.com.au"]
+    subject = f"ATB Report"
+    body = f"Hi Silvia,\nPlease find the attached ATB report as of.\n\nThanks"
+
+    sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
 
 
 if __name__ == "__main__":
