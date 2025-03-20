@@ -260,7 +260,7 @@ def main():
     subject = f"ATB Report"
     body = f"Hi Leo,\nYou're weird.\n\nThanks"
 
-    sendEmailWithAttachment(recipients, subject, body, filePath=None, provider="GMAIL")
+    sendEmailWithAttachment(recipients, subject, body, file_path=None, provider="GMAIL")
 
 
 if __name__ == "__main__":
