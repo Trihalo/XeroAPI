@@ -237,6 +237,12 @@ def clearDownloadedInvoices():
 
 def main():
     """Main function to fetch, validate, update invoice numbers, and then update status in Xero"""
+    if len(sys.argv) < 3:
+        print("Usage: python3 invoiceApprovalRequest.py <Recipient Name> <Recipient Email>")
+        sys.exit(1)
+    recipient_name = sys.argv[1]
+    recipient_email = sys.argv[2] 
+    
     client = "COSMOPOLITAN_CORPORATION"
 
     # First log entry with date/time
@@ -257,10 +263,10 @@ def main():
     clearDownloadedInvoices()
     
     recipients = ["leo@trihalo.com.au"]
-    subject = f"ATB Report"
-    body = f"Hi Leo,\nYou're weird.\n\nThanks"
+    subject = f"Cosmo Bills Approver Run"
+    body = f"Hi {recipient_name},\n\nYou're weird.\n\nThanks"
 
-    sendEmailWithAttachment(recipients, subject, body, file_path=None, provider="GMAIL")
+    sendEmailWithAttachment([recipient_email], subject, body, file_path=LOG_FILE, provider="GMAIL")
 
 
 if __name__ == "__main__":

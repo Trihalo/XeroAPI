@@ -39,6 +39,4 @@ jobs:
 
           XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION: ${{ vars.XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION }}
         run: |
-          python invoiceApprovalRequest.py
-          echo "Triggered by: ${{ github.event.inputs.username }}"
-          echo "User email: ${{ github.event.inputs.email }}"
+          python invoiceApprovalRequest.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}
