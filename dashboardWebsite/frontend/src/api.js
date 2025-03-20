@@ -61,24 +61,22 @@ export const testApiCall = async () => {
   }
 };
 
-export const uploadFile = async (uploadedFile, setStatusMessage) => {
-  if (!uploadedFile) {
-    setStatusMessage("❌ No file selected.");
-    return;
+export const uploadFile = async (file) => {
+  if (!file) {
+    return { success: false, message: "❌ No file selected." };
   }
 
   const formData = new FormData();
-  formData.append("file", uploadedFile);
+  formData.append("file", file);
 
   try {
     const response = await axios.post(`${API_BASE_URL}/upload-file`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      headers: { "Content-Type": "multipart/form-data" },
     });
 
-    setStatusMessage(response.data.message);
+    return response.data; // Return success or failure message
   } catch (error) {
-    setStatusMessage("❌ Upload failed.");
+    console.error("Upload failed:", error.response?.data || error.message);
+    return { success: false, message: "❌ Upload failed." };
   }
 };

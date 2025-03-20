@@ -15,6 +15,7 @@ GITHUB_TOKEN = os.getenv("GH_PAT")
 GITHUB_OWNER = "Trihalo"
 GITHUB_REPO = "XeroAPI"
 BRANCH = "website"
+UPLOAD_FOLDER = "uploads"
 
 # Workflow Mapping (Name -> GitHub Workflow File)
 WORKFLOWS = {
@@ -71,31 +72,39 @@ def trigger_workflow(workflow_key):
 
     return trigger_github_action(workflow_id)
 
-
 @app.route("/upload-file", methods=["POST"])
 def upload_file():
-    upload_folder = "uploads"
-    if "file" not in request.files: return jsonify({"success": False, "message": "No file uploaded"}), 400
-    file = request.files["file"]
-    if file.filename == "": return jsonify({"success": False, "message": "No selected file"}), 400
+    if "file" not in request.files:
+        return jsonify({"success": False, "message": "No file uploaded"}), 400
 
-    file_path = os.path.join(upload_folder, file.filename)
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"success": False, "message": "No selected file"}), 400
+
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     file.save(file_path)
 
     # Read file in base64 format for GitHub API
     with open(file_path, "rb") as f:
         file_content = base64.b64encode(f.read()).decode("utf-8")
 
-    # GitHub API URL to create/update a file
+    # GitHub API URL
     github_api_url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/uploads/{file.filename}"
 
-    # Check if file already exists in GitHub
+    # Check if file exists in GitHub
+    sha = None
     existing_file_response = requests.get(
         github_api_url, headers={"Authorization": f"token {GITHUB_TOKEN}"}
     )
 
-    sha = None  # SHA is required if updating an existing file
-    if existing_file_response.status_code == 200: sha = existing_file_response.json().get("sha")
+    if existing_file_response.status_code == 200:
+        sha = existing_file_response.json().get("sha")
+    
+    # **Check if SHA was successfully retrieved**
+    if existing_file_response.status_code == 200 and not sha:
+        return jsonify({"success": False, "message": "❌ Unable to fetch file SHA from GitHub."}), 500
+
 
     # Prepare payload for GitHub API
     payload = {
@@ -103,14 +112,21 @@ def upload_file():
         "content": file_content,
         "branch": BRANCH,
     }
+    if sha:
+        payload["sha"] = sha  # Include SHA if updating existing file
 
-    if sha: payload["sha"] = sha
+    # Push file to GitHub
     response = requests.put(github_api_url, json=payload, headers={"Authorization": f"token {GITHUB_TOKEN}"})
+
+    # **DEBUG: Log response from GitHub**
+    print("GitHub API Response Status Code:", response.status_code)
+    print("GitHub API Response JSON:", response.json())
 
     if response.status_code in [200, 201]:
         return jsonify({"success": True, "message": f"File {file.filename} replaced on GitHub"})
     else:
         return jsonify({"success": False, "message": response.json()}), 500
+
 
 
 
