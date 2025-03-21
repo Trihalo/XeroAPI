@@ -1,0 +1,42 @@
+name: H2coco TF Supplier Payment Allocator
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "User's name"
+        required: true
+      email:
+        description: "User's email"
+        required: true
+
+jobs:
+  TF-supplier-payment-allocator:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install -r H2coco/requirements.txt
+
+      - name: Run Cosmo Bills Approver
+        working-directory: Cosmo
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
+
+          H2COCO_CLIENT_ID: ${{ secrets.H2COCO_CLIENT_ID }}
+          H2COCO_CLIENT_SECRET: ${{ secrets.H2COCO_CLIENT_SECRET }}
+
+          XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
+        run: |
+          python tradeFinancePaymentsRequest ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}

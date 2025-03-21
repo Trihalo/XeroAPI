@@ -2,6 +2,7 @@ clientDetails/*.json
 __pycache__/
 .env
 Cosmo/logs/*.txt
+Cosmo/logs/*.log
 FutureYou/ATB
 FutureYou/Overdue
 .DS_Store/
@@ -12,3 +13,4 @@ H2coco/PO_Payment_Status
 helpers/__pycache__/
 FutureYou/__pycache__/
 dashboardWebsite/frontend/node_modules
+node_modules/
