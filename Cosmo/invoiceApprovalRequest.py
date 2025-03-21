@@ -263,7 +263,7 @@ def main():
     clearDownloadedInvoices()
     
     subject = f"Cosmo Bills Approver Run"
-    body = f"Hi {recipient_name},\n\nYou're weird.\n\nThanks"
+    body = f"Hi {recipient_name},\n\nPlease find the attached output files.\n\nThanks"
 
     # print(f"Log file exists: {os.path.exists(LOG_FILE)}")
     print(LOG_FILE)

@@ -10,6 +10,7 @@ from openpyxl import Workbook  # Add this import
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
+from helpers.emailAttachment import sendEmailWithAttachment
 
 if not os.path.exists('logs'): os.makedirs('logs')
 log_filename = datetime.now().strftime('logs/payment_%Y%m%d_%H%M%S.log')
@@ -39,10 +40,17 @@ def create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs):
 
     wb.save(file_name)
     logging.info(f"Payment status Excel file has been saved to {file_name}")
+    return file_name
 
 
 def main():
-    client = "H2coco"
+    if len(sys.argv) < 3:
+        print("Usage: python3 tradeFinancePaymentsRequest.py <Recipient Name> <Recipient Email>")
+        sys.exit(1)
+    recipient_name = sys.argv[1]
+    recipient_email = sys.argv[2] 
+    
+    client = "H2COCO"
     invoiceStatus = "AUTHORISED"
 
     allInvoices = []
@@ -70,7 +78,7 @@ def main():
     ]
 
     # Ask for the file path
-    filePath = 'test.xlsx'
+    filePath = '../dashboardWebsite/backend/uploads/PO.xlsx'
 
     # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
     df = pd.read_excel(filePath)
@@ -162,7 +170,12 @@ def main():
     logging.info("PO to Invoice ID mapping has been saved to poInvoiceMapping.json")
 
     # Create the Excel file with payment status
-    create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs)
+    file_path = create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs)
+    
+    subject = f"Trade Finance Supplier Payment Allocator"
+    body = f"Hi {recipient_name},\n\nPlease find the attached output files.\n\nThanks"
+    
+    sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", file_path)
 
 if __name__ == "__main__":
     main()
