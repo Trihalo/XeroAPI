@@ -2,6 +2,13 @@ name: Send Email
 
 on:
   workflow_dispatch:
+    inputs:
+      name:
+        description: "User's name"
+        required: true
+      email:
+        description: "User's email"
+        required: true
 
 jobs:
   send-email:
@@ -14,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Install dependencies
         run: |

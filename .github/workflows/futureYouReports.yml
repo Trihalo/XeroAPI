@@ -2,8 +2,15 @@ name: Scheduled FutureYou Reports
 
 on:
   schedule:
-    - cron: '10 22 * * 0'
-  workflow_dispatch:  # Allows manual trigger
+    - cron: "10 22 * * 0"
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "User's name"
+        required: true
+      email:
+        description: "User's email"
+        required: true
 
 jobs:
   run-atb-request:
@@ -15,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Install dependencies
         run: |
@@ -37,8 +44,8 @@ jobs:
           FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
 
           # 🔹 Variables (Now using GitHub Variables instead of Secrets)
-          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}  
-          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}  
+          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
+          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
         run: |
           python atbRequest.py
           python overdueRequest.py
