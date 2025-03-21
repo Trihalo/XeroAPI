@@ -22,7 +22,7 @@ UPLOAD_FOLDER = "uploads"
 # Workflow Mapping (Name -> GitHub Workflow File)
 WORKFLOWS = {
     "test-email": "sendEmail.yml",
-    "futureyou-reports": "futureYouReports",
+    "futureyou-reports": "futureYouReports.yml",
     "h2coco-trade-finance": "tradeFinance.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
 }
