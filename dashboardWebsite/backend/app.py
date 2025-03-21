@@ -131,6 +131,7 @@ def upload_file():
     # print("GitHub API Response JSON:", response.json())
 
     if response.status_code in [200, 201]:
+        print("ITSD ONE ITS DONE ITS DONE ITS DONEITS DONE")
         return jsonify({"success": True, "message": f"File {file.filename} replaced on GitHub"})
     else:
         return jsonify({"success": False, "message": response.json()}), 500
