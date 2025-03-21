@@ -23,7 +23,7 @@ UPLOAD_FOLDER = "uploads"
 WORKFLOWS = {
     "test-email": "sendEmail.yml",
     "futureyou-reports": "futureYouReports",
-    "h2coco-trade-finance": "tradeFinanceAllocator.yml",
+    "h2coco-trade-finance": "tradeFinance.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
 }
 
