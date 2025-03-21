@@ -68,8 +68,8 @@ export default function Dashboard() {
           description:
             "Allocates payment of declared amount on certain date with specific exchange rate (if specified) to the POs. Returns a Excel file with the successfully allocated POs.\n\nExcel file needs the following headers: PO, Date, CurrencyRate, Amount",
           action: triggerH2cocoTradeFinance,
-          estimatedTime: 3,
-          requiresFileUpload: false,
+          estimatedTime: 30,
+          requiresFileUpload: true,
         },
       ],
     },
