@@ -28,7 +28,7 @@ load_dotenv()
 
 # Generate a timestamp for log file
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-LOG_FILE = os.path.join(LOG_FOLDER, f"log_{timestamp}.txt")
+LOG_FILE = os.path.join(LOG_FOLDER, f"log_{timestamp}.log")
 
 # Ensure log directory exists
 os.makedirs(LOG_FOLDER, exist_ok=True)
@@ -262,11 +262,14 @@ def main():
 
     clearDownloadedInvoices()
     
-    recipients = ["leo@trihalo.com.au"]
     subject = f"Cosmo Bills Approver Run"
     body = f"Hi {recipient_name},\n\nYou're weird.\n\nThanks"
 
-    sendEmailWithAttachment([recipient_email], subject, body, file_path=LOG_FILE, provider="GMAIL")
+    # print(f"Log file exists: {os.path.exists(LOG_FILE)}")
+    print(LOG_FILE)
+    filePath = LOG_FILE
+    sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", filePath)
+
 
 
 if __name__ == "__main__":

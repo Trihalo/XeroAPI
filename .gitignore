@@ -2,6 +2,7 @@ clientDetails/*.json
 __pycache__/
 .env
 Cosmo/logs/*.txt
+Cosmo/logs/*.log
 FutureYou/ATB
 FutureYou/Overdue
 .DS_Store/

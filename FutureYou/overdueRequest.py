@@ -37,7 +37,7 @@ def main():
         subject = f"Overdue Report at {time}"
         body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
 
-        sendEmailWithAttachment(recipients, subject, body, filePath, provider="GMAIL")
+        sendEmailWithAttachment(recipients, subject, body, "GMAIL", filePath)
 
 
     except Exception as e:

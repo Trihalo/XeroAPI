@@ -27,7 +27,7 @@ def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None)
     msg["Subject"] = subject
     msg.set_content(body)
 
-    if file_path is not None and not os.path.exists(file_path):
+    if file_path is not None and os.path.exists(file_path):
         mime_type, _ = mimetypes.guess_type(file_path)
         mime_type = mime_type or "application/octet-stream"
         with open(file_path, "rb") as attachment:
