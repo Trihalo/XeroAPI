@@ -146,7 +146,7 @@ def main():
 
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
-                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime("%Y-%m-%d")}.")
+                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
                 paidPOs.append(poNumber)
             else:
                 logging.error(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
