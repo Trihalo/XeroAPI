@@ -2,9 +2,16 @@ name: Cosmo Supplier Bills Approver
 
 on:
   workflow_dispatch:
+    inputs:
+      name:
+        description: "User's name"
+        required: true
+      email:
+        description: "User's email"
+        required: true
 
 jobs:
-  run-atb-request:
+  cosmo-bills-approver:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,13 +29,14 @@ jobs:
       - name: Run Cosmo Bills Approver
         working-directory: Cosmo
         env:
-          # 🔹 Secrets (These remain unchanged)
           GH_PAT: ${{ secrets.GH_PAT }}
+
+          EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
 
           COSMOPOLITAN_CORPORATION_CLIENT_ID: ${{ secrets.COSMOPOLITAN_CORPORATION_CLIENT_ID }}
           COSMOPOLITAN_CORPORATION_CLIENT_SECRET: ${{ secrets.COSMOPOLITAN_CORPORATION_CLIENT_SECRET }}
 
-          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
           XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION: ${{ vars.XERO_REFRESH_TOKEN_COSMOPOLITAN_CORPORATION }}
         run: |
-          python invoiceApprovalRequest.py
+          python invoiceApprovalRequest.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}

@@ -18,6 +18,7 @@ from helpers.fetchInvoiceAttachment import (
 )
 from helpers.extractInvoiceNumberFromPDF import extractInvoiceNumberFromPDF
 from helpers.extractInvoiceAmountFromPDF import extractInvoiceAmountAndGSTFromPDF
+from helpers.emailAttachment import sendEmailWithAttachment
 
 XERO_API_URL = "https://api.xero.com/api.xro/2.0/Invoices"
 DOWNLOAD_FOLDER = "downloadedInvoices"
@@ -27,7 +28,7 @@ load_dotenv()
 
 # Generate a timestamp for log file
 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-LOG_FILE = os.path.join(LOG_FOLDER, f"log_{timestamp}.txt")
+LOG_FILE = os.path.join(LOG_FOLDER, f"log_{timestamp}.log")
 
 # Ensure log directory exists
 os.makedirs(LOG_FOLDER, exist_ok=True)
@@ -236,6 +237,12 @@ def clearDownloadedInvoices():
 
 def main():
     """Main function to fetch, validate, update invoice numbers, and then update status in Xero"""
+    if len(sys.argv) < 3:
+        print("Usage: python3 invoiceApprovalRequest.py <Recipient Name> <Recipient Email>")
+        sys.exit(1)
+    recipient_name = sys.argv[1]
+    recipient_email = sys.argv[2] 
+    
     client = "COSMOPOLITAN_CORPORATION"
 
     # First log entry with date/time
@@ -254,6 +261,15 @@ def main():
     validateAndApproveInvoices(accessToken, xeroTenantId, invoices, extractedFiles)
 
     clearDownloadedInvoices()
+    
+    subject = f"Cosmo Bills Approver Run"
+    body = f"Hi {recipient_name},\n\nPlease find the attached output files.\n\nThanks"
+
+    # print(f"Log file exists: {os.path.exists(LOG_FILE)}")
+    print(LOG_FILE)
+    filePath = LOG_FILE
+    sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", filePath)
+
 
 
 if __name__ == "__main__":

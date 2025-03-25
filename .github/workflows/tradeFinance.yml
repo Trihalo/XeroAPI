@@ -26,8 +26,8 @@ jobs:
         run: |
           pip install -r H2coco/requirements.txt
 
-      - name: Run Cosmo Bills Approver
-        working-directory: Cosmo
+      - name: Run TF Supplier Payment Allocator
+        working-directory: H2coco
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
 
@@ -39,4 +39,4 @@ jobs:
 
           XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
         run: |
-          python tradeFinancePaymentsRequest ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}
+          python tradeFinancePaymentsRequest.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}

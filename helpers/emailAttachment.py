@@ -27,12 +27,12 @@ def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None)
     msg["Subject"] = subject
     msg.set_content(body)
 
-    mime_type, _ = mimetypes.guess_type(file_path)
-    mime_type = mime_type or "application/octet-stream"
-
-    with open(file_path, "rb") as attachment:
-        msg.add_attachment(attachment.read(), maintype=mime_type.split(
-            "/")[0], subtype=mime_type.split("/")[1], filename=os.path.basename(file_path))
+    if file_path is not None and os.path.exists(file_path):
+        mime_type, _ = mimetypes.guess_type(file_path)
+        mime_type = mime_type or "application/octet-stream"
+        with open(file_path, "rb") as attachment:
+            msg.add_attachment(attachment.read(), maintype=mime_type.split(
+                "/")[0], subtype=mime_type.split("/")[1], filename=os.path.basename(file_path))
 
     if provider == "OUTLOOK": emailUrl = "smtp.office365.com"
     elif provider == "GMAIL": emailUrl = "smtp.gmail.com"
