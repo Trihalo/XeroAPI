@@ -34,7 +34,7 @@ def log_api_call(workflow_id, auth_user, status_code):
     history_entry = {
         "workflow": workflow_id,
         "name": auth_user,
-        "called_at": datetime.now().strftime("%H:%M | %d-%m-%Y"),
+        "called_at": (datetime.now() + timedelta(hours=11)).strftime("%H:%M | %d-%m-%Y"),
         "success": "Success" if status_code == 200 or 204 else "Fail"
     }
 
