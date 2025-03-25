@@ -1,0 +1,28 @@
+[
+  {
+    "workflow": "sendEmail.yml",
+    "name": {
+      "email": "leo@trihalo.com.au",
+      "name": "Leo",
+      "username": "admin"
+    },
+    "called_at": "22:10 | 25-03-2025",
+    "success": "Success"
+  },
+  {
+    "workflow": "test",
+    "name": "anonymous",
+    "called_at": "10:11 | 25-03-2025",
+    "success": "Success"
+  },
+  {
+    "workflow": "futureYouReports.yml",
+    "name": {
+      "email": "leo@trihalo.com.au",
+      "name": "Leo",
+      "username": "admin"
+    },
+    "called_at": "10:26 | 25-03-2025",
+    "success": "Success"
+  }
+]

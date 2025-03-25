@@ -42,7 +42,7 @@ export default function Dashboard() {
           name: "Test API Script",
           description: "Tests the API connection with a sample request.",
           action: testApiCall,
-          estimatedTime: 5,
+          estimatedTime: 2,
           requiresFileUpload: false,
         },
       ],
@@ -69,7 +69,7 @@ export default function Dashboard() {
             "Allocates payment of declared amount on certain date with specific exchange rate (if specified) to the POs. Returns a Excel file with the successfully allocated POs.\n\nExcel file needs the following headers: PO, Date, CurrencyRate, Amount",
           action: triggerH2cocoTradeFinance,
           estimatedTime: 30,
-          requiresFileUpload: true,
+          requiresFileUpload: false,
         },
       ],
     },
@@ -83,6 +83,18 @@ export default function Dashboard() {
           action: triggerCosmoBillsApprover,
           estimatedTime: 20,
           requiresFileUpload: false,
+        },
+      ],
+    },
+    {
+      clientName: "Helpers",
+      scripts: [
+        {
+          name: "Upload File",
+          description: "Upload a document to use for other functions",
+          action: null,
+          estimatedTime: 5,
+          requiresFileUpload: true,
         },
       ],
     },
@@ -178,12 +190,19 @@ export default function Dashboard() {
         }
       }, 1000);
 
-      try {
-        apiResponse = await script.action(authResponse.user);
-      } catch (error) {
+      if (script.action) {
+        try {
+          apiResponse = await script.action(authResponse.user);
+        } catch (error) {
+          apiResponse = {
+            success: false,
+            message: "❌ API call failed. Please try again.",
+          };
+        }
+      } else {
         apiResponse = {
-          success: false,
-          message: "❌ API call failed. Please try again.",
+          success: true,
+          message: "✅ File uploaded successfully.",
         };
       }
     }
@@ -222,7 +241,7 @@ export default function Dashboard() {
 
         {/* Requests Section */}
         <div className="mt-6 mr-10 bg-base-100 text-primary-content shadow-lg rounded-box">
-          <div className="card-body">
+          <div className="card-body overflow-auto">
             <h2 className="card-title text-2xl">Requests</h2>
 
             {/* 🔹 Dynamic Client Sections */}

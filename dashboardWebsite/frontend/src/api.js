@@ -47,14 +47,16 @@ export const triggerH2cocoTradeFinance = (userData) =>
 export const triggerCosmoBillsApprover = (userData) =>
   triggerWorkflow("cosmo-bills-approver", userData);
 
-export const testApiCall = async () => {
+export const testApiCall = async (userData) => {
   try {
     await new Promise((res) => setTimeout(res, 5000));
-    if (Math.random() > 0.5) {
+    if (Math.random() > 1) {
       throw new Error("❌ Simulated API failure.");
     }
 
-    const response = await axios.get(`${API_BASE_URL}/test-api`);
+    const response = await axios.post(`${API_BASE_URL}/test-api`, {
+      ...userData,
+    });
 
     return response.data;
   } catch (error) {

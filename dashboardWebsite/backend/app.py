@@ -1,6 +1,8 @@
 import os
 import base64
 import requests
+import json
+from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from flask_cors import CORS
@@ -18,6 +20,7 @@ GITHUB_OWNER = "Trihalo"
 GITHUB_REPO = "XeroAPI"
 BRANCH = "website"
 UPLOAD_FOLDER = "uploads"
+HISTORY_FILE = "history.json"
 
 # Workflow Mapping (Name -> GitHub Workflow File)
 WORKFLOWS = {
@@ -26,6 +29,28 @@ WORKFLOWS = {
     "h2coco-trade-finance": "tradeFinance.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
 }
+
+def log_api_call(workflow_id, auth_user, status_code):
+    history_entry = {
+        "workflow": workflow_id,
+        "name": auth_user,
+        "called_at": datetime.now().strftime("%H:%M | %d-%m-%Y"),
+        "success": "Success" if status_code == 200 or 204 else "Fail"
+    }
+
+    # Load existing history
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r") as f:
+            history = json.load(f)
+    else:
+        history = []
+
+    # Append new entry
+    history.append(history_entry)
+
+    # Save back to file
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(history, f, indent=2)
 
 # 🔹 Reusable function to trigger GitHub Actions
 def trigger_github_action(workflow_id):
@@ -47,6 +72,9 @@ def trigger_github_action(workflow_id):
         }
 
         response = requests.post(url, headers=headers, json=payload)
+        
+        print(response.status_code)
+        log_api_call(workflow_id, auth_user, response.status_code)
 
         if response.status_code in [200, 204]:
             return jsonify({"success": True, "message": f"GitHub Action '{workflow_id}' triggered successfully!"})
@@ -65,9 +93,26 @@ def home():
 
 
 # 🔹 Test API Route
-@app.route("/test-api", methods=["GET"])
+@app.route("/test-api", methods=["POST"])
 def test_api():
-    return jsonify({"success": True, "message": "✅ Test API is working!"})
+    try:
+        try:
+            json_data = request.get_json(force=True)
+        except Exception:
+            json_data = {}
+
+        auth_user = json_data.get("user", "anonymous")
+        workflow_id = "test"
+        status_code = 200
+
+        log_api_call(workflow_id, auth_user, status_code)
+
+        return jsonify({"success": True, "message": "✅ Test API is working!"})
+    except Exception as e:
+        print("❌ Error in test_api:", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 
 # 🔹 Unified API for triggering workflows dynamically
@@ -131,7 +176,6 @@ def upload_file():
     # print("GitHub API Response JSON:", response.json())
 
     if response.status_code in [200, 201]:
-        print("ITSD ONE ITS DONE ITS DONE ITS DONEITS DONE")
         return jsonify({"success": True, "message": f"File {file.filename} replaced on GitHub"})
     else:
         return jsonify({"success": False, "message": response.json()}), 500
@@ -159,6 +203,13 @@ def authenticate():
 
     except Exception as e:
         return jsonify({"success": False, "message": f"Server error: {str(e)}"}), 500
+    
+    
+@app.route("/history", methods=["GET"])
+def get_history():
+    with open(os.path.join(os.path.dirname(__file__), "history.json"), "r") as f:
+        data = json.load(f)
+    return jsonify(data)
 
 
 if __name__ == "__main__":
