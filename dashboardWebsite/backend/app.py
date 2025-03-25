@@ -18,7 +18,7 @@ CORS(app)
 GITHUB_TOKEN = os.getenv("GH_PAT") 
 GITHUB_OWNER = "Trihalo"
 GITHUB_REPO = "XeroAPI"
-BRANCH = "website"
+BRANCH = "main"
 UPLOAD_FOLDER = "uploads"
 HISTORY_FILE = "history.json"
 
