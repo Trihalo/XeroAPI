@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080"; // Update if using a different host
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // 🔹 Reusable function to trigger any workflow
 export const triggerWorkflow = async (workflowKey, authUser) => {
