@@ -14,3 +14,6 @@ helpers/__pycache__/
 FutureYou/__pycache__/
 dashboardWebsite/frontend/node_modules
 node_modules/
+dashboardWebsite/backend/service-account.json
+dashboardWebsite/.DS_Store
+dashboardWebsite/backend/.DS_Store

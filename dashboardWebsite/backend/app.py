@@ -8,8 +8,12 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 from urllib.parse import quote
 from user_database import get_user
+from google.cloud import firestore
+import time
 
 load_dotenv()
+if os.getenv("ENV") == "production": db = firestore.Client()
+else: db = firestore.Client.from_service_account_json("/Users/leo/Github/XeroAPI/dashboardWebsite/backend/service-account.json")
 
 app = Flask(__name__)
 CORS(app)
@@ -20,7 +24,6 @@ GITHUB_OWNER = "Trihalo"
 GITHUB_REPO = "XeroAPI"
 BRANCH = "main"
 UPLOAD_FOLDER = "uploads"
-HISTORY_FILE = "history.json"
 
 # Workflow Mapping (Name -> GitHub Workflow File)
 WORKFLOWS = {
@@ -31,26 +34,17 @@ WORKFLOWS = {
 }
 
 def log_api_call(workflow_id, auth_user, status_code):
+    doc_ref = db.collection("api_call_history").document()
+    now = firestore.SERVER_TIMESTAMP
+
     history_entry = {
         "workflow": workflow_id,
         "name": auth_user,
-        "called_at": (datetime.now() + timedelta(hours=11)).strftime("%H:%M | %d-%m-%Y"),
-        "success": "Success" if status_code == 200 or 204 else "Fail"
+        "called_at": now,
+        "success": "Success" if status_code in (200, 204) else "Fail"
     }
-
-    # Load existing history
-    if os.path.exists(HISTORY_FILE):
-        with open(HISTORY_FILE, "r") as f:
-            history = json.load(f)
-    else:
-        history = []
-
-    # Append new entry
-    history.append(history_entry)
-
-    # Save back to file
-    with open(HISTORY_FILE, "w") as f:
-        json.dump(history, f, indent=2)
+    print("logging")
+    doc_ref.set(history_entry)
 
 # 🔹 Reusable function to trigger GitHub Actions
 def trigger_github_action(workflow_id):
@@ -207,9 +201,19 @@ def authenticate():
     
 @app.route("/history", methods=["GET"])
 def get_history():
-    with open(os.path.join(os.path.dirname(__file__), "history.json"), "r") as f:
-        data = json.load(f)
-    return jsonify(data)
+    docs = db.collection("api_call_history") \
+             .order_by("called_at", direction=firestore.Query.DESCENDING) \
+             .limit(100).stream()
+
+    history = []
+    for doc in docs:
+        entry = doc.to_dict()
+        if entry.get("called_at"):
+            entry["called_at"] = entry["called_at"].astimezone().strftime("%H:%M | %d-%m-%Y")
+        history.append(entry)
+
+    return jsonify(history)
+
 
 
 if __name__ == "__main__":
