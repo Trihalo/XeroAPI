@@ -13,7 +13,10 @@ export default function History() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const API_BASE_URL = import.meta.env.VITE_API_URL;
+    const API_BASE_URL =
+      import.meta.env.MODE === "development"
+        ? "http://localhost:8080"
+        : import.meta.env.VITE_API_URL;
 
     fetch(`${API_BASE_URL}/history`)
       .then((res) => res.json())
