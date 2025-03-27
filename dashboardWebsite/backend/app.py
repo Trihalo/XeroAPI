@@ -207,8 +207,6 @@ def get_history():
     history = []
     for doc in docs:
         entry = doc.to_dict()
-        if entry.get("called_at"):
-            entry["called_at"] = entry["called_at"].astimezone().strftime("%H:%M | %d-%m-%Y")
         history.append(entry)
 
     return jsonify(history)
