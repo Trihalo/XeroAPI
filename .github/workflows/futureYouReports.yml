@@ -47,5 +47,5 @@ jobs:
           XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
           XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
         run: |
-          python atbRequest.py
-          python overdueRequest.py
+          python atbRequest.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}
+          python overdueRequest.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}

@@ -106,8 +106,6 @@ def test_api():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-
-
 # 🔹 Unified API for triggering workflows dynamically
 @app.route("/trigger/<workflow_key>", methods=["POST"])
 def trigger_workflow(workflow_key):
@@ -117,6 +115,7 @@ def trigger_workflow(workflow_key):
         return jsonify({"success": False, "error": f"Workflow '{workflow_key}' not found"}), 400
 
     return trigger_github_action(workflow_id)
+
 
 @app.route("/upload-file", methods=["POST"])
 def upload_file():
@@ -201,8 +200,8 @@ def authenticate():
 @app.route("/history", methods=["GET"])
 def get_history():
     docs = db.collection("api_call_history") \
-             .order_by("called_at", direction=firestore.Query.DESCENDING) \
-             .limit(100).stream()
+            .order_by("called_at", direction=firestore.Query.DESCENDING) \
+            .limit(100).stream()
 
     history = []
     for doc in docs:
@@ -210,7 +209,6 @@ def get_history():
         history.append(entry)
 
     return jsonify(history)
-
 
 
 if __name__ == "__main__":

@@ -10,6 +10,12 @@ from helpers.fetchInvoicesForClient import fetchInvoicesForClient
 
 
 def main():
+    if len(sys.argv) < 3:
+        print("Usage: python3 overdueRequest.py <Recipient Name> <Recipient Email>")
+        sys.exit(1)
+    recipient_name = sys.argv[1]
+    recipient_email = sys.argv[2] 
+    
     clients = ["FUTUREYOU_RECRUITMENT", "FUTUREYOU_CONTRACTING"]
     invoice_status = "AUTHORISED"
 
@@ -32,12 +38,11 @@ def main():
 
         filePath = processOverdueData({"Invoices": all_invoices}, client_tokens)
 
-        recipients = ["leo@trihalo.com.au", "silvia@trihalo.com.au"]
         time = (datetime.now() + timedelta(hours=11)).strftime("%d-%m-%Y %I:%M%p").lower()
         subject = f"Overdue Report at {time}"
-        body = f"Hi Silvia,\nPlease find the attached Overdue report as of {time}.\n\nThanks"
+        body = f"Hi {recipient_name},\n\nPlease find the ATB Report attached.\n\nThanks"
 
-        sendEmailWithAttachment(recipients, subject, body, "GMAIL", filePath)
+        sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", filePath)
 
 
     except Exception as e:
