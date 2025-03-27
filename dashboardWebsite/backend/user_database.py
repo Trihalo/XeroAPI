@@ -4,6 +4,7 @@
 USER_DATABASE = {
     "admin": {"password": "1234", "name": "Leo", "email": "leo@trihalo.com.au", "username": "admin" },
     "user1": {"password": "password123", "name": "John Doe", "email": "john@example.com", "username": "user1" },
+    "leoshi": {"password": "leoshii111", "name": "Leo", "email": "leo@trihalo.com.au", "username": "leoshi" },
 }
 
 def get_user(username):

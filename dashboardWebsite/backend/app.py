@@ -12,8 +12,7 @@ from google.cloud import firestore
 import time
 
 load_dotenv()
-if os.getenv("ENV") == "production": db = firestore.Client()
-else: db = firestore.Client.from_service_account_json("/Users/leo/Github/XeroAPI/dashboardWebsite/backend/service-account.json")
+db = firestore.Client()
 
 app = Flask(__name__)
 CORS(app)
