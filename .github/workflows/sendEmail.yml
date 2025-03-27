@@ -37,4 +37,4 @@ jobs:
           EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
 
         run: |
-          python emailAttachment.py
+          python emailAttachment.py ${{ github.event.inputs.name }} ${{ github.event.inputs.email }}

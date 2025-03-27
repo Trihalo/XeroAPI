@@ -1,4 +1,5 @@
 import os
+import sys
 import smtplib
 from email.message import EmailMessage
 import mimetypes
@@ -52,9 +53,14 @@ def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None)
 
 
 if __name__ == "__main__":
-    recipients = ["leo@trihalo.com.au"]
+    if len(sys.argv) < 3:
+        print("Usage: python3 emailAttachment.py <Recipient Name> <Recipient Email>")
+        sys.exit(1)
+    recipient_name = sys.argv[1]
+    recipient_email = sys.argv[2]
+    
     subject = "Test Email"
     time = (datetime.now() + timedelta(hours=11)).strftime("%d-%m-%Y %I:%M%p").lower()
-    body = f"Hi Leo,\n\n This is a test email that was sent at {time}.\n\nThanks"
+    body = f"Hi {recipient_name},\n\n This is a test email that was sent at {time}.\n\nThanks"
 
-    sendEmailWithAttachment(recipients, subject, body, provider="GMAIL")
+    sendEmailWithAttachment([recipient_email], subject, body, provider="GMAIL")
