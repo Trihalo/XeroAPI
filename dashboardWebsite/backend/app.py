@@ -47,6 +47,7 @@ def log_api_call(workflow_id, auth_user, status_code):
 
 # 🔹 Reusable function to trigger GitHub Actions
 def trigger_github_action(workflow_id):
+    print("🔥 Received POST request from frontend")
     try:
         auth_user = request.json.get("user")
         if not auth_user: return jsonify({"success": False, "message": "❌ No user data provided."}), 400
@@ -66,7 +67,6 @@ def trigger_github_action(workflow_id):
 
         response = requests.post(url, headers=headers, json=payload)
         
-        print(response.status_code)
         log_api_call(workflow_id, auth_user, response.status_code)
 
         if response.status_code in [200, 204]:
