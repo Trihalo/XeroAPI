@@ -4,7 +4,7 @@ const API_BASE_URL =
   // import.meta.env.MODE === "development"
   //   ? "http://localhost:8080"
   //   : import.meta.env.VITE_API_URL;
-  import.meta.env.VITE_API_IRL;
+  import.meta.env.VITE_API_URL;
 
 // 🔹 Reusable function to trigger any workflow
 export const triggerWorkflow = async (workflowKey, authUser) => {
