@@ -1,8 +1,6 @@
 name: Scheduled FutureYou Reports
 
 on:
-  schedule:
-    - cron: "10 22 * * 0"
   workflow_dispatch:
     inputs:
       name:
