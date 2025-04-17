@@ -5,6 +5,8 @@ Cosmo/logs/*.txt
 Cosmo/logs/*.log
 FutureYou/ATB
 FutureYou/Overdue
+FutureYou/*.csv
+FutureYou/*.json
 .DS_Store/
 H2coco/*.xlsx
 H2coco/*.json
@@ -17,3 +19,4 @@ node_modules/
 dashboardWebsite/backend/service-account.json
 dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
+dashboardWebsite/backend/uploads/*.xlsx
