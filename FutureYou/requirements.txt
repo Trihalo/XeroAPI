@@ -4,3 +4,4 @@ requests
 pytz
 email-validator
 dotenv
+pyodbc
