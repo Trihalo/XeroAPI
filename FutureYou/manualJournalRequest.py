@@ -116,7 +116,8 @@ def fetch_manual_journals(access_token, xero_tenant_id):
     while True:
         params = {
             "where": 'Date>=DateTime(2024, 7, 1) AND Status=="POSTED"',
-            "page": page
+            "page": page,
+            "pageSize": 1000,
         }
 
         response = requests.get(url, headers=headers, params=params)

@@ -527,7 +527,7 @@ def extract_credit_note_lines(cn):
 # --- API Fetch ---
 def fetch_all(endpoint, access_token, tenant_id, params=None):
     all_results = []
-    params = params or {"page": 1, "pageSize": 100}
+    params = params or {"page": 1, "pageSize": 1000}
     while True:
         res = requests.get(f"https://api.xero.com/api.xro/2.0/{endpoint}",
                            headers={"Authorization": f"Bearer {access_token}", "Xero-tenant-id": tenant_id, "Accept": "application/json"},
@@ -572,8 +572,8 @@ def main():
         access_token = getXeroAccessToken(client)
         tenant_id = XeroTenants(access_token)
 
-        invoice_params = {"where": 'Type=="ACCREC" AND Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 100}
-        credit_params = {"where": 'Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 100}
+        invoice_params = {"where": 'Type=="ACCREC" AND Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
+        credit_params = {"where": 'Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
 
         invoices = fetch_all("Invoices", access_token, tenant_id, invoice_params)
         credit_notes = fetch_all("CreditNotes", access_token, tenant_id, credit_params)
