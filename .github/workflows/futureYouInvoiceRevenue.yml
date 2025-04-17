@@ -1,0 +1,41 @@
+name: FutureYou Invoice Revenue SQL Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  future-you-invoice-revenue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install -r FutureYou/requirements.txt
+
+      - name: Run FutureYou Revenue SQL update
+        working-directory: FutureYou
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          FUTUREYOU_CONTRACTING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
+          FUTUREYOU_CONTRACTING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
+
+          FUTUREYOU_RECRUITMENT_CLIENT_ID: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}
+          FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
+
+          FUTUREYOU_DATABASE_PASSWORD: ${{ secrets.FUTUREYOU_DATABASE_PASSWORD }}
+          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
+          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
+          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
+
+        run: |
+          python databaseInvoiceRequest.py
