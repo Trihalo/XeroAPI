@@ -4,12 +4,21 @@ import requests
 import csv
 import pandas as pd
 from datetime import datetime, timezone, timedelta
-import re
 import pyodbc
 import numpy as np
 from manualJournalRequest import get_manual_journal_data
+from databaseHelpers import (
+    parse_xero_date,
+    get_company_month,
+    week_of_company_month,
+    get_financial_year,
+    delete_existing_records,
+)
+from databaseMappings import (
+    account_code_mapping,
+    consultant_area_mapping   
+)
 from dotenv import load_dotenv
-
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -41,7 +50,8 @@ def export_to_azure_sql(rows):
         "Currency Code": "CurrencyCode",
         "Currency Rate": "CurrencyRate",
         "To": "ToClient",
-        "Key": "KeyVal"
+        "Key": "KeyVal",
+        "Invoice ID": "InvoiceID",
     }, inplace=True)
 
     # --- Ensure None instead of NaN for SQL compatibility ---
@@ -63,7 +73,8 @@ def export_to_azure_sql(rows):
     try:
         with pyodbc.connect(conn_str) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM FutureYouInvoices;")
+            existing_keys = [row["InvoiceNumber"] for row in rows if row.get("InvoiceNumber")]
+            delete_existing_invoices(cursor, existing_keys)
             for i, row in df.iterrows():
                 try:
                     values = [
@@ -91,7 +102,7 @@ def export_to_azure_sql(rows):
                         str(row["CurrencyCode"]) if row["CurrencyCode"] else None,
                         float(row["CurrencyRate"]) if pd.notnull(row["CurrencyRate"]) else None,
                         row["UpdatedDate"].to_pydatetime().date() if pd.notnull(row["UpdatedDate"]) else None,
-                        str(row["FinancialYear"]) if row.get("FinancialYear") else None
+                        str(row["FinancialYear"]) if row.get("FinancialYear") else None,
                     ]
 
                     cursor.execute("""
@@ -113,134 +124,9 @@ def export_to_azure_sql(rows):
     except Exception as e:
         print(f"❌ Upload failed: {e}")
 
-
-# --- Area Mapping ---
-consultant_area_mapping = {
-    "SMC003 Neha Jain": "Accounting & Finance",
-    "SMB002 Kate Stephenson": "Accounting & Finance",
-    "SMC005 Bianca Hirschowitz": "Accounting & Finance",
-    "SCB010 Ashley Duffy": "Business Support",
-    "SCE010 Matthew Walker": "SC, Eng & Manufacturing",
-    "SEA001 Emily Wilson": "Executive",
-    "SEL001 Suzie Large": "Legal",
-    "SRM001 Lisa Chesterman": "Sales, Marketing & Digital",
-    "SRA002 Dale Hackney": "Sales, Marketing & Digital",
-    "SCA001 Corin Roberts": "Technology",
-    "SCA002 Tamsin Clark": "Business Support",
-    "SEL007 Emma McGuigan": "Legal",
-    "SMC008 Julien Dreschel": "Accounting & Finance",
-    "SEL009 Tarryn Kaufmann": "Executive",
-    "SRM006 Tarryn Kaufmann": "Sales, Marketing & Digital",
-    "SEL010 Shazer Barino": "Legal",
-    "SMB007 Samaira Bohjani": "Accounting & Finance",
-    "PEK002 Tapiwa Utete": "Technology",
-    "SMC010 Chloe Crewdson": "Accounting & Finance",
-    "SMC004 Melise Hasip": "Accounting & Finance",
-    "SMC004 Mel Hasip": "Accounting & Finance",
-    "SMA001 Chris Martin": "Accounting & Finance",
-    "SCB013 Sharon Callaghan": "Business Support",
-    "PEK001 Kevin Howell": "Technology",
-}
-
-# --- Account Mapping ---
-account_code_mapping = {
-    "200": "Revenue - Permanent",
-    "210": "Revenue - Temporary and contracts",
-    "215": "Revenue - Temp to Perm",
-    "220": "Revenue - Fixed term contract",
-    "225": "Revenue - Retained - Initial",
-    "226": "Revenue - Retained - Shortlist",
-    "227": "Revenue - Retained - Completion",
-    "228": "Revenue - internal",
-    "229": "Perm Candidate Reimbursement",
-    "230": "Advertising revenue",
-    "240": "Revenue - Advisory Consulting HR",
-    "241": "Revenue - Advisory HR outsourced services",
-    "245": "Revenue - Advisory - EVP",
-    "249": "Revenue - Advisory Search",
-    "250": "Revenue - Advisory Transition Services",
-    "251": "Revenue - Advisory Leadership Program",
-    "260": "Revenue - Other Revenue",
-    "611": "Doubtful Debts Provision",
-}
-
 # --- Utilities ---
-def get_month_cutoffs(year):
-    if year == 2025:
-        return {
-            "Jan": datetime(year, 1, 26),
-            "Feb": datetime(year, 2, 23),
-            "Mar": datetime(year, 3, 31),
-            "Apr": datetime(year, 4, 27),
-            "May": datetime(year, 5, 25),
-            "Jun": datetime(year, 6, 30),
-            "Jul": datetime(year, 7, 27),
-            "Aug": datetime(year, 8, 24),
-            "Sep": datetime(year, 9, 30),
-            "Oct": datetime(year, 10, 26),
-            "Nov": datetime(year, 11, 23),
-            "Dec": datetime(year, 12, 31),
-        }
-    elif year == 2024:
-        return {
-            "Jan": datetime(year, 1, 28),
-            "Feb": datetime(year, 2, 25),
-            "Mar": datetime(year, 3, 31),
-            "Apr": datetime(year, 4, 28),
-            "May": datetime(year, 5, 26),
-            "Jun": datetime(year, 6, 30),
-            "Jul": datetime(year, 7, 28),
-            "Aug": datetime(year, 8, 25),
-            "Sep": datetime(year, 9, 30),
-            "Oct": datetime(year, 10, 27),
-            "Nov": datetime(year, 11, 24),
-            "Dec": datetime(year, 12, 31),     
-        }
-
-def get_company_month(invoice_date):
-    cutoffs = get_month_cutoffs(invoice_date.year)
-    for month, cutoff in cutoffs.items():
-        if invoice_date <= cutoff.date():
-            return month
-    return "Dec"
-
-def get_financial_year(date):
-    if date.month >= 7: return f"FY{str(date.year + 1)[-2:]}"
-    else: return f"FY{str(date.year)[-2:]}"
-
-
-def parse_xero_date(xero_date_str):
-    match = re.search(r"/Date\((\d+)", xero_date_str)
-    if match:
-        timestamp_ms = int(match.group(1))
-        return datetime.fromtimestamp(timestamp_ms / 1000, tz=timezone.utc).date()
-    return None
-
 def build_key(year, month, week, contractor):
     return f"{year}:{month}:{week}:{contractor.strip().lower()}"
-
-def week_of_company_month(date):
-    year = date.year
-    cutoffs = get_month_cutoffs(year)
-
-    company_month = get_company_month(date)
-
-    # Determine the start of the business month (day after previous cutoff)
-    month_names = list(cutoffs.keys())
-    current_index = month_names.index(company_month)
-
-    if current_index == 0:  # If it's January, go back to previous year's Dec cutoff
-        prev_cutoffs = get_month_cutoffs(year - 1)
-        start_date = prev_cutoffs["Dec"].date() + timedelta(days=1)
-    else:
-        prev_month = month_names[current_index - 1]
-        start_date = cutoffs[prev_month].date() + timedelta(days=1)
-
-    # Now calculate the week number relative to start_date
-    delta_days = (date - start_date).days
-    adjusted_day = delta_days + start_date.weekday()
-    no = (adjusted_day // 7) + 1
-    return no if no < 6 else 5
 
 def is_valid_line(line):
     tracking = line.get("Tracking", [])
@@ -285,6 +171,7 @@ def get_consultant_info_from_reference(reference):
 def get_office_from_consultant_code(code):
     if not code: return ""
     return "Sydney" if code.startswith("S") else "Perth" if code.startswith("P") else "Unknown"
+    
 
 # --- Extractors ---
 def extract_invoice_lines(invoice, journal_totals):
@@ -332,6 +219,7 @@ def extract_invoice_lines(invoice, journal_totals):
                         if consultant_code and " " in consultant_code: consultant = consultant_code.split(" ", 1)[1]
 
                 area = consultant_area_mapping.get(consultant_code, "")
+                invoice_id = invoice.get("InvoiceID", "")
                 subtotal = line.get("LineAmount", 0)
                 description = line.get("Description", "")
                 tax = line.get("TaxAmount", 0)
@@ -339,12 +227,9 @@ def extract_invoice_lines(invoice, journal_totals):
                 contractor = (extract_contractor(invoice_type, description) or "").lower()
 
                 proportion = subtotal / total_exgst if total_exgst != 0 else 0
-                if "program fee" in description.lower():
-                    margin = subtotal
-                elif journal_deduction != 0:
-                    margin = subtotal + (proportion * journal_deduction)
-                else:
-                    margin = ""
+                if "program fee" in description.lower(): margin = subtotal
+                elif journal_deduction != 0: margin = subtotal + (proportion * journal_deduction)
+                else: margin = ""
 
                 if currency_rate and currency_rate != 1:
                     subtotal /= currency_rate
@@ -381,7 +266,8 @@ def extract_invoice_lines(invoice, journal_totals):
                     "# Placement": 1 / 3 if account_code in ["225", "226", "227"] else 1,
                     "Currency Code": currency_code,
                     "Currency Rate": currency_rate,
-                    "Updated Date": updated_date_str
+                    "Updated Date": updated_date_str,
+                    "Invoice ID": invoice_id
                 })
 
     else:
@@ -445,7 +331,8 @@ def extract_invoice_lines(invoice, journal_totals):
                 "# Placement": 1 / 3 if account_code in ["225", "226", "227"] else 1,
                 "Currency Code": currency_code,
                 "Currency Rate": currency_rate,
-                "Updated Date": updated_date_str
+                "Updated Date": updated_date_str,
+                "Invoice ID": invoice.get("InvoiceID", "")
             })
     return rows
 
@@ -541,59 +428,79 @@ def fetch_all(endpoint, access_token, tenant_id, params=None):
     return all_results
 
 # # --- Export ---
-# def export_to_csv(rows, filename="all_clients_formatted_invoices.csv"):
-#     if not rows:
-#         print("❌ No rows to export")
-#         return
-#     df = pd.DataFrame(rows)
-#     df["Invoice Date (Sortable)"] = pd.to_datetime(df["Invoice Date"], format="%d/%m/%Y")
-#     df.sort_values("Invoice Date (Sortable)", inplace=True)
-#     df.drop(columns=["Invoice Date (Sortable)"], inplace=True)
-#     df.to_csv(filename, index=False)
-#     print(f"✅ Exported {len(df)} rows to {filename}")
+def export_to_csv(rows, filename="all_clients_formatted_invoices.csv"):
+    if not rows:
+        print("❌ No rows to export")
+        return
+    df = pd.DataFrame(rows)
+    df["Invoice Date (Sortable)"] = pd.to_datetime(df["Invoice Date"], format="%d/%m/%Y")
+    df.sort_values("Invoice Date (Sortable)", inplace=True)
+    df.drop(columns=["Invoice Date (Sortable)"], inplace=True)
+    df.to_csv(filename, index=False)
+    print(f"✅ Exported {len(df)} rows to {filename}")
 
 # --- Main ---
 def main():
     clients = ["FUTUREYOU_CONTRACTING", "FUTUREYOU_RECRUITMENT"]
     all_rows = []
+    invoice_ids = []
+    credit_note_ids = []
+    manual_journal_ids = []
+
+    # --- Get journal data ---
     manual_data = get_manual_journal_data()
-    # FUTUREYOU_CONTRACTING -> journal_totals dict by key
+
+    # Build journal deduction totals
     journal_totals = {}
     for row in manual_data["FUTUREYOU_CONTRACTING"]:
         key = build_key(row["Year"], row["Month"], row["Week"], row.get("Contractor", ""))
         amt = float(row.get("Line Amount", 0) or 0)
         journal_totals[key] = journal_totals.get(key, 0) + amt
+        manual_journal_ids.append(row.get("Journal ID"))
 
-    # FUTUREYOU_RECRUITMENT -> add_on_lines as list of dicts
     add_on_lines = manual_data["FUTUREYOU_RECRUITMENT"]
+    for row in add_on_lines:
+        manual_journal_ids.append(row.get("Journal ID"))
 
+    now = datetime.now(timezone.utc)
+    since = now - timedelta(days=1)
+    updated_str = since.strftime("DateTime(%Y, %m, %d, %H, %M, %S)")
 
     for client in clients:
         access_token = getXeroAccessToken(client)
         tenant_id = XeroTenants(access_token)
 
-        invoice_params = {"where": 'Type=="ACCREC" AND Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
-        credit_params = {"where": 'Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
+        invoice_params = {
+            "where": f'Type=="ACCREC" AND UpdatedDateUTC >= {updated_str}',
+            "page": 1,
+            "pageSize": 1000
+        }
+        credit_params = {
+            "where": f'UpdatedDateUTC >= {updated_str}',
+            "page": 1,
+            "pageSize": 1000
+        }
 
         invoices = fetch_all("Invoices", access_token, tenant_id, invoice_params)
         credit_notes = fetch_all("CreditNotes", access_token, tenant_id, credit_params)
+
+        invoice_ids += [inv.get("InvoiceID") for inv in invoices if inv.get("InvoiceID")]
+        credit_note_ids += [cn.get("CreditNoteID") for cn in credit_notes if cn.get("CreditNoteID")]
 
         for inv in invoices:
             all_rows.extend(extract_invoice_lines(inv, journal_totals))
         for cn in credit_notes:
             all_rows.extend(extract_credit_note_lines(cn))
-            
+
     for row in add_on_lines:
         date = row.get("Date")
         if isinstance(date, str):
             date = pd.to_datetime(date, dayfirst=True, errors="coerce")
         if pd.isna(date):
             continue
-        
+
         financial_year = get_financial_year(date)
-        currency_rate = 1
         subtotal = float(row["Line Amount"] or 0)
-        total = subtotal
         if subtotal == 0:
             continue
 
@@ -610,7 +517,7 @@ def main():
             "Description": row["Description"],
             "Contractor": row["Contractor"] or "",
             "Invoice Date": date,
-            "Invoice Total": round(total, 2),
+            "Invoice Total": round(subtotal, 2),
             "EX GST": round(subtotal, 2),
             "Margin": round(subtotal, 2),
             "Office": row.get("Category", ""),
@@ -621,11 +528,34 @@ def main():
             "Account Name": account_code_mapping.get(str(row.get("Account Code", "")), ""),
             "# Placement": "",
             "Currency Code": "AUD",
-            "Currency Rate": currency_rate,
-            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else ""
+            "Currency Rate": 1,
+            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else "",
+            "Invoice ID": "",  # Not present for journals
+            "ManualJournalID": row.get("Journal ID")
         })
 
-    # export_to_csv(all_rows)
+    # Delete existing rows by InvoiceID and ManualJournalID
+    server_password = os.getenv("FUTUREYOU_DATABASE_PASSWORD")
+    conn_str = (
+        "Driver={ODBC Driver 17 for SQL Server};"
+        "Server=tcp:futureyou-trihalo.database.windows.net,1433;"
+        "Database=FutureYou Database;"
+        "Uid=CloudSAb09ebc32;"
+        f"Pwd={server_password};"
+        "Encrypt=yes;"
+        "TrustServerCertificate=no;"
+        "Connection Timeout=30;"
+    )
+
+    try:
+        with pyodbc.connect(conn_str) as conn:
+            cursor = conn.cursor()
+            delete_existing_records(cursor, invoice_ids + credit_note_ids, manual_journal_ids)
+            conn.commit()
+    except Exception as e:
+        print(f"❌ Failed to delete old records: {e}")
+
+    export_to_csv(all_rows)
     export_to_azure_sql(all_rows)
 
 if __name__ == "__main__":
