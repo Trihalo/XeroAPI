@@ -5,6 +5,7 @@ import csv
 import pandas as pd
 import pyodbc
 import numpy as np
+from datetime import datetime, timedelta, timezone
 from manualJournalRequest import get_manual_journal_data
 from databaseHelpers import parse_xero_date, get_company_month, get_financial_year, week_of_company_month
 from databaseMappings import account_code_mapping, consultant_area_mapping
@@ -16,36 +17,14 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
+FULL_RESET = False 
+
 # --- SQL ---
 def export_to_azure_sql(rows):
-    if not rows: return
-    df = pd.DataFrame(rows)
+    if not rows:
+        print("❌ No rows to upload")
+        return
 
-    df["Invoice Date"] = pd.to_datetime(df["Invoice Date"], errors="coerce", dayfirst=True)
-    df["Updated Date"] = pd.to_datetime(df["Updated Date"], errors="coerce", dayfirst=True)
-    float_fields = ["Invoice Total", "EX GST", "Margin", "# Placement", "Currency Rate"]
-    for field in float_fields:
-        df[field] = pd.to_numeric(df[field], errors="coerce").replace([np.inf, -np.inf], None).round(6)
-    # --- Rename columns to match SQL table ---
-    df.rename(columns={
-        "FutureYou Month": "FutureYouMonth",
-        "Invoice #": "InvoiceNumber",
-        "# Placement": "PlacementCount",
-        "Invoice Date": "InvoiceDate",
-        "Updated Date": "UpdatedDate",
-        "Invoice Total": "InvoiceTotal",
-        "EX GST": "EXGST",
-        "Consultant Code": "ConsultantCode",
-        "Account Name": "AccountName",
-        "Currency Code": "CurrencyCode",
-        "Currency Rate": "CurrencyRate",
-        "To": "ToClient",
-        "Key": "KeyVal"
-    }, inplace=True)
-
-    # --- Ensure None instead of NaN for SQL compatibility ---
-    df = df.where(pd.notnull(df), None)
-    
     server_password = os.getenv("FUTUREYOU_DATABASE_PASSWORD")
 
     conn_str = (
@@ -62,7 +41,64 @@ def export_to_azure_sql(rows):
     try:
         with pyodbc.connect(conn_str) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM FutureYouInvoices;")
+
+            # --- 1. Handle deletions first ---
+            deleted_ids = [
+                r["InvoiceID"] for r in rows
+                if r.get("__deleted__") and r.get("InvoiceID")
+            ]
+            if deleted_ids:
+                placeholders = ",".join("?" for _ in deleted_ids)
+                cursor.execute(f"DELETE FROM FutureYouInvoices WHERE InvoiceID IN ({placeholders})", deleted_ids)
+                print(f"🗑️ Deleted {len(deleted_ids)} voided/deleted invoices from DB.")
+
+            # --- 2. Filter out deleted rows before continuing ---
+            filtered_rows = [r for r in rows if not r.get("__deleted__")]
+            if not filtered_rows:
+                print("ℹ️ No valid rows to upload after filtering.")
+                return
+
+            df = pd.DataFrame(filtered_rows)
+
+            # --- 3. Parse and clean up ---
+            df["Invoice Date"] = pd.to_datetime(df["Invoice Date"], errors="coerce", dayfirst=True)
+            df["Updated Date"] = pd.to_datetime(df["Updated Date"], errors="coerce", dayfirst=True)
+
+            float_fields = ["Invoice Total", "EX GST", "Margin", "# Placement", "Currency Rate"]
+            for field in float_fields:
+                df[field] = pd.to_numeric(df[field], errors="coerce").replace([np.inf, -np.inf], None).round(6)
+
+            df.rename(columns={
+                "FutureYou Month": "FutureYouMonth",
+                "Invoice #": "InvoiceNumber",
+                "# Placement": "PlacementCount",
+                "Invoice Date": "InvoiceDate",
+                "Updated Date": "UpdatedDate",
+                "Invoice Total": "InvoiceTotal",
+                "EX GST": "EXGST",
+                "Consultant Code": "ConsultantCode",
+                "Account Name": "AccountName",
+                "Currency Code": "CurrencyCode",
+                "Currency Rate": "CurrencyRate",
+                "To": "ToClient",
+                "Key": "KeyVal"
+            }, inplace=True)
+
+            # Replace NaNs with None for SQL compatibility
+            df = df.where(pd.notnull(df), None)
+
+            # --- 4. Delete existing records by InvoiceID ---
+            if FULL_RESET:
+                cursor.execute("DELETE FROM FutureYouInvoices;")
+                print("⚠️ Full reset: all rows deleted.")
+            else:
+                updated_ids = df["InvoiceID"].dropna().astype(str).tolist()
+                if updated_ids:
+                    placeholders = ",".join("?" for _ in updated_ids)
+                    cursor.execute(f"DELETE FROM FutureYouInvoices WHERE InvoiceID IN ({placeholders})", updated_ids)
+                    print(f"✅ Deleted {len(updated_ids)} updated invoices from DB.")
+
+            # --- 5. Insert fresh data ---
             for i, row in df.iterrows():
                 try:
                     values = [
@@ -112,6 +148,7 @@ def export_to_azure_sql(rows):
 
     except Exception as e:
         print(f"❌ Upload failed: {e}")
+
 
 # --- Utilities ---
 def build_key(year, month, week, contractor):
@@ -165,7 +202,12 @@ def get_office_from_consultant_code(code):
 def extract_invoice_lines(invoice, journal_totals):
     rows = []
     if invoice.get("Status") in ["DELETED", "VOIDED"]:
-        return rows
+        return [{
+            "InvoiceID": invoice.get("InvoiceID"),
+            "Status": invoice.get("Status"),
+            "Updated Date": parse_xero_date(invoice.get("UpdatedDateUTC", "")),
+            "__deleted__": True
+        }]
 
     invoice_number = invoice.get("InvoiceNumber", "")
     invoice_type = "Temp" if invoice_number.startswith("TC-") else "Perm"
@@ -419,16 +461,14 @@ def fetch_all(endpoint, access_token, tenant_id, params=None):
     return all_results
 
 # # --- Export ---
-def export_to_csv(rows, filename="all_clients_formatted_invoices.csv"):
-    if not rows:
-        print("❌ No rows to export")
-        return
-    df = pd.DataFrame(rows)
-    df["Invoice Date (Sortable)"] = pd.to_datetime(df["Invoice Date"], format="%d/%m/%Y")
-    df.sort_values("Invoice Date (Sortable)", inplace=True)
-    df.drop(columns=["Invoice Date (Sortable)"], inplace=True)
-    df.to_csv(filename, index=False)
-    print(f"✅ Exported {len(df)} rows to {filename}")
+# def export_to_csv(rows, filename="all_clients_formatted_invoices.csv"):
+#     if not rows:
+#         print("❌ No rows to export")
+#         return
+#     df = pd.DataFrame(rows)
+#     df.to_csv(filename, index=False)
+#     print(f"✅ Exported {len(df)} rows to {filename}")
+
 
 # --- Main ---
 def main():
@@ -444,14 +484,33 @@ def main():
 
     # FUTUREYOU_RECRUITMENT -> add_on_lines as list of dicts
     add_on_lines = manual_data["FUTUREYOU_RECRUITMENT"]
-
-
+    updated_since = datetime.now(timezone.utc) - timedelta(days=1)
+    updated_date_str = f'DateTime({updated_since.year},{updated_since.month:02},{updated_since.day:02})'
     for client in clients:
         access_token = getXeroAccessToken(client)
         tenant_id = XeroTenants(access_token)
-
-        invoice_params = {"where": 'Type=="ACCREC" AND Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
-        credit_params = {"where": 'Date>=DateTime(2024, 7, 1)', "page": 1, "pageSize": 1000}
+        if FULL_RESET:
+            invoice_params = {
+                "where": 'Type=="ACCREC" AND Date>=DateTime(2024,07,01)',
+                "page": 1,
+                "pageSize": 1000
+            }
+            credit_params = {
+                "where": 'Date>=DateTime(2024,07,01)',
+                "page": 1,
+                "pageSize": 1000
+            }
+        else:
+            invoice_params = {
+                "where": f'Type=="ACCREC" AND UpdatedDateUTC>={updated_date_str}',
+                "page": 1,
+                "pageSize": 1000
+            }
+            credit_params = {
+                "where": f'UpdatedDateUTC>={updated_date_str}',
+                "page": 1,
+                "pageSize": 1000
+            }
 
         invoices = fetch_all("Invoices", access_token, tenant_id, invoice_params)
         credit_notes = fetch_all("CreditNotes", access_token, tenant_id, credit_params)
@@ -460,6 +519,8 @@ def main():
         for cn in credit_notes: all_rows.extend(extract_credit_note_lines(cn))
             
     for row in add_on_lines:
+        if not FULL_RESET and row.get("Updated Date") and row["Updated Date"] < updated_since.date():
+            continue
         date = row.get("Date")
         if isinstance(date, str): date = pd.to_datetime(date, dayfirst=True, errors="coerce")
         if pd.isna(date): continue
@@ -497,7 +558,7 @@ def main():
             "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else ""
         })
 
-    export_to_csv(all_rows)
+    # export_to_csv(all_rows)
     export_to_azure_sql(all_rows)
 
 if __name__ == "__main__":
