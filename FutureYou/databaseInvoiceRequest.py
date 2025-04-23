@@ -35,7 +35,7 @@ def export_to_azure_sql(rows):
         f"Pwd={server_password};"
         "Encrypt=yes;"
         "TrustServerCertificate=no;"
-        "Connection Timeout=30;"
+        "Connection Timeout=300;"
     )
 
     try:
