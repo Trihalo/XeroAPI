@@ -4,4 +4,8 @@ requests
 pytz
 email-validator
 dotenv
-pyodbc
+python-dotenv
+numpy
+google-cloud-bigquery
+google-auth
+pandas-gbq
