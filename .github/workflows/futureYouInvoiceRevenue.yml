@@ -25,7 +25,7 @@ jobs:
       - name: Set up Google Cloud credentials
         run: |
           echo "${{ secrets.BQACCESS }}" > /tmp/key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/key.json" >> $GITHUB_ENV
+          echo "BQACCESS=/tmp/key.json" >> $GITHUB_ENV
         shell: bash
 
       - name: Run FutureYou Revenue BigQuery upload
