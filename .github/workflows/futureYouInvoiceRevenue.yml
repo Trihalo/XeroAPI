@@ -24,7 +24,7 @@ jobs:
 
       - name: Set up Google Cloud credentials
         run: |
-          echo "${{ secrets.BQACCESS }}" > /tmp/key.json
+          echo '${{ secrets.BQACCESS }}' > /tmp/key.json
           echo "BQACCESS=/tmp/key.json" >> $GITHUB_ENV
         shell: bash
 
