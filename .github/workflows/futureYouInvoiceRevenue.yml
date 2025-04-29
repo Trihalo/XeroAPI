@@ -8,41 +8,35 @@ on:
 jobs:
   future-you-invoice-revenue:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.8"
-
-      - name: Install ODBC Driver for SQL Server
-        run: |
-          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-          sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/ubuntu/22.04/prod jammy main"
-          sudo apt-get update
-          sudo ACCEPT_EULA=Y apt-get install -y unixodbc-dev msodbcsql17
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           pip install -r FutureYou/requirements.txt
 
-      - name: Run FutureYou Revenue SQL update
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.BQACCESS }}' > /tmp/key.json
+          echo "BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Run FutureYou Revenue BigQuery upload
         working-directory: FutureYou
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-
           FUTUREYOU_CONTRACTING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
           FUTUREYOU_CONTRACTING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
-
           FUTUREYOU_RECRUITMENT_CLIENT_ID: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}
           FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
-
-          FUTUREYOU_DATABASE_PASSWORD: ${{ secrets.FUTUREYOU_DATABASE_PASSWORD }}
-          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
           XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
           XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
-
         run: |
-          python databaseInvoiceRequest.py
+          python databaseInvoiceRequestv2.py
