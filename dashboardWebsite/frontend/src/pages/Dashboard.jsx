@@ -7,6 +7,7 @@ import {
   triggerFutureYouReports,
   triggerH2cocoTradeFinance,
   triggerCosmoBillsApprover,
+  triggerUpdateRevenueDatabase,
   uploadFile,
   authenticateUser,
 } from "../api";
@@ -56,6 +57,14 @@ export default function Dashboard() {
             "Generates an Aged Trial Balance report that includes both FutureYou Recruitment and Contracting Invoices",
           action: triggerFutureYouReports,
           estimatedTime: 240,
+          requiresFileUpload: false,
+        },
+        {
+          name: "Update Revenue Database",
+          description:
+            "Updates the Invoice Revenue BigQuery Database by updating invoices that have been changed within the last 24 hours.",
+          action: triggerUpdateRevenueDatabase,
+          estimatedTime: 30,
           requiresFileUpload: false,
         },
       ],

@@ -27,9 +27,15 @@ export const triggerWorkflow = async (workflowKey, authUser) => {
 
     let errorMessage = "❌ Error contacting the backend.";
     if (error.response) {
-      // Backend responded with an error status code
-      console.error("Backend Error:", error.response.data);
-      errorMessage = `❌ Server error: ${error.response.status} - ${error.response.statusText}`;
+      const backendData = error.response.data;
+      console.error("Backend Error:", backendData);
+
+      if (backendData.error) {
+        // Use error message from backend JSON
+        errorMessage = `❌ ${backendData.error}`;
+      } else {
+        errorMessage = `❌ Server error: ${error.response.status} - ${error.response.statusText}`;
+      }
     } else if (error.request) {
       // No response received
       errorMessage =
@@ -49,6 +55,8 @@ export const triggerH2cocoTradeFinance = (userData) =>
   triggerWorkflow("h2coco-trade-finance", userData);
 export const triggerCosmoBillsApprover = (userData) =>
   triggerWorkflow("cosmo-bills-approver", userData);
+export const triggerUpdateRevenueDatabase = (userData) =>
+  triggerWorkflow("update-revenue-database", userData);
 
 export const testApiCall = async (userData) => {
   try {
