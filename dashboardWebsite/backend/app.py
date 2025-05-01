@@ -30,6 +30,7 @@ WORKFLOWS = {
     "futureyou-reports": "futureYouReports.yml",
     "h2coco-trade-finance": "tradeFinance.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
+    "update-revenue-database": "futureYouInvoiceRevenue.yml",
 }
 
 def log_api_call(workflow_id, auth_user, status_code):
@@ -50,33 +51,45 @@ def trigger_github_action(workflow_id):
     print("🔥 Received POST request from frontend")
     try:
         auth_user = request.json.get("user")
-        if not auth_user: return jsonify({"success": False, "message": "❌ No user data provided."}), 400
-        
+        if not auth_user:
+            return jsonify({"success": False, "message": "❌ No user data provided."}), 400
+
+        # Workflows that DO require inputs
+        workflows_with_inputs = {
+            "test-email",
+            "futureyou-reports",
+            "cosmo-bills-approver",
+            "h2coco-trade-finance"
+        }
+
         url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/actions/workflows/{workflow_id}/dispatches"
         headers = {
             "Authorization": f"token {GITHUB_TOKEN}",
             "Accept": "application/vnd.github.v3+json"
         }
-        payload = {
-            "ref": BRANCH,
-            "inputs": {
+
+        payload = {"ref": BRANCH}
+
+        # Only add inputs if the workflow expects them
+        if workflow_id in workflows_with_inputs:
+            payload["inputs"] = {
                 "name": auth_user.get("name"),
                 "email": auth_user.get("email")
             }
-        }
 
         response = requests.post(url, headers=headers, json=payload)
-        
+
         log_api_call(workflow_id, auth_user, response.status_code)
 
         if response.status_code in [200, 204]:
-            return jsonify({"success": True, "message": f"GitHub Action '{workflow_id}' triggered successfully!"})
+            return jsonify({"success": True, "message": f"✅ GitHub Action '{workflow_id}' triggered successfully!"})
         else:
-            error_message = response.json().get("message", "Unknown error")
-            return jsonify({"success": False, "error": error_message}), response.status_code
+            error_detail = response.json()
+            return jsonify({"success": False, "error": error_detail}), response.status_code
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 # 🔹 Home Route
