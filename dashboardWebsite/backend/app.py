@@ -49,6 +49,7 @@ def log_api_call(workflow_id, auth_user, status_code):
 # 🔹 Reusable function to trigger GitHub Actions
 def trigger_github_action(workflow_id):
     print("🔥 Received POST request from frontend")
+    print("Workflow ID:", workflow_id)
     try:
         auth_user = request.json.get("user")
         if not auth_user:
@@ -56,10 +57,10 @@ def trigger_github_action(workflow_id):
 
         # Workflows that DO require inputs
         workflows_with_inputs = {
-            "test-email",
-            "futureyou-reports",
-            "cosmo-bills-approver",
-            "h2coco-trade-finance"
+            "sendEmail.yml",
+            "futureYouReports.yml",
+            "tradeFinance.yml",
+            "cosmoBillsApprover.yml",
         }
 
         url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/actions/workflows/{workflow_id}/dispatches"
