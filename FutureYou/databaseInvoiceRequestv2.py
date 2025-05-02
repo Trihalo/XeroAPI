@@ -279,19 +279,22 @@ def extract_invoice_lines(invoice, journal_totals):
                     "Area": area,
                     "Account": account_code,
                     "Account Name": account_code_mapping.get(account_code, ""),
-                    "# Placement": 1 / 3 if account_code in ["225", "226", "227"] else 1,
+                    "# Placement": 0,
                     "Currency Code": currency_code,
                     "Currency Rate": currency_rate,
                     "Updated Date": updated_date_str,
                     "InvoiceID": invoice.get("InvoiceID", ""),
                 })
-
     else:
-        # Perm invoice - same as before
-        for line in line_items:
-            if not is_valid_line(line):
-                continue
+        valid_lines = [line for line in line_items if is_valid_line(line)]
+        if not valid_lines:
+            return rows
 
+        account_code = str(valid_lines[0].get("AccountCode", ""))
+        placement_total = 1 / 3 if account_code in ["225", "226", "227"] else 1
+        total_exgst = sum(line.get("LineAmount", 0) for line in valid_lines)
+
+        for line in valid_lines:
             tracking = line.get("Tracking", [])
             office = consultant_code = consultant = area = ""
             for t in tracking:
@@ -310,14 +313,17 @@ def extract_invoice_lines(invoice, journal_totals):
             contractor = ""  # not used for perm
             key = f"{parsed_date.year}:{company_month}:{invoice_week}:{contractor}"
 
+            # placement proportion
+            proportion = subtotal / total_exgst if total_exgst != 0 else 0
+            placement = proportion * placement_total
             margin = subtotal
 
             if currency_rate and currency_rate != 1:
                 subtotal /= currency_rate
                 total /= currency_rate
                 margin /= currency_rate
+                placement /= currency_rate  # optional: if you want to show placement in base currency terms
 
-            account_code = str(line.get("AccountCode", ""))
             if account_code not in account_code_mapping:
                 print(f"⚠️ Unknown account code: {account_code} in invoice {invoice_number}")
                 continue
@@ -337,14 +343,14 @@ def extract_invoice_lines(invoice, journal_totals):
                 "Invoice Date": parsed_date.strftime("%-d/%-m/%Y"),
                 "Invoice Total": round(total, 2),
                 "EX GST": round(subtotal, 2),
-                "Margin": round(margin, 2) if isinstance(margin, (int, float)) else "",
+                "Margin": round(margin, 2),
                 "Office": office,
                 "Consultant Code": consultant_code,
                 "Consultant": consultant,
                 "Area": area,
                 "Account": account_code,
                 "Account Name": account_code_mapping.get(account_code, ""),
-                "# Placement": 1 / 3 if account_code in ["225", "226", "227"] else 1,
+                "# Placement": round(placement, 6),
                 "Currency Code": currency_code,
                 "Currency Rate": currency_rate,
                 "Updated Date": updated_date_str,
