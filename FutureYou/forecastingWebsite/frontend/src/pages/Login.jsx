@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login } from "../api";
 import { useNavigate } from "react-router-dom";
+import { fetchAndStoreInvoiceData } from "../utils/getInvoiceInfo.js";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -19,7 +20,9 @@ function Login() {
       console.log("User role:", result.role);
       console.log("User name:", result.name);
       localStorage.setItem("name", result.name);
-      navigate("/dashboard");
+      navigate("/forecasts");
+
+      await fetchAndStoreInvoiceData();
     } else {
       setMessage(result.message);
     }

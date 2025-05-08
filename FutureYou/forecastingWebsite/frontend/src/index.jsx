@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Upload from "./pages/Upload.jsx";
+import ForecastMain from "./pages/ForecastMain.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import "./index.css";
 
@@ -17,7 +18,8 @@ function App() {
         {/* Protected routes */}
         <Route element={<PrivateRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/upload" element={<Upload />} />
+          <Route path="/forecasts/:recruiterName" element={<Upload />} />
+          <Route path="/forecasts" element={<ForecastMain />} />
           {/* Add more protected routes here */}
         </Route>
       </Routes>

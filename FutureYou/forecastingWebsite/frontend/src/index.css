@@ -4,4 +4,6 @@
   name: "light";
   default: true;
   --color-primary: "#003464";
+  --color-secondary: "#ED5C5B";
+  --color-accent: "#FFEBEB";
 }

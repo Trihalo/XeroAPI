@@ -40,17 +40,14 @@ export const login = async (username, password) => {
   }
 };
 
-export const uploadForecastToBQ = async (rows, username, password) => {
+export const uploadForecastToBQ = async (rows) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/forecasts`, {
-      username,
-      password,
       forecasts: rows,
     });
 
     if (response.data.success) {
-      alert("✅ Forecast uploaded to BigQuery!");
-      return { success: true };
+      return { success: true, message: response.data.message };
     } else {
       console.error("Upload error:", response.data);
       alert(`❌ Upload failed: ${response.data.error || "Unknown error"}`);
@@ -60,5 +57,56 @@ export const uploadForecastToBQ = async (rows, username, password) => {
     console.error("Request failed:", error);
     alert("❌ Failed to connect to backend.");
     return { success: false };
+  }
+};
+
+export const fetchForecastForRecruiter = async (
+  recruiterName,
+  fy,
+  month,
+  weeksInMonth
+) => {
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/forecasts/${encodeURIComponent(recruiterName)}`,
+      {
+        params: { fy, month },
+      }
+    );
+
+    const existing = res.data;
+    console.log("Fetched existing forecasts:", existing);
+    return weeksInMonth.map((entry) => {
+      const match = existing.find((e) => String(e.week) === String(entry.week));
+      return {
+        ...entry,
+        revenue: match?.revenue != null ? String(match.revenue) : "",
+        notes: match?.notes ?? "",
+        name: recruiterName,
+      };
+    });
+  } catch (error) {
+    console.error("❌ Forecast fetch failed:", error);
+
+    // Return fallback empty rows
+    return weeksInMonth.map((entry) => ({
+      ...entry,
+      revenue: "",
+      notes: "",
+      name: recruiterName,
+    }));
+  }
+};
+
+export const fetchForecastSummary = async (fy, month) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/forecasts/view`, {
+      params: { fy, month },
+    });
+
+    return res.data; // array of { name, week, total_revenue }
+  } catch (error) {
+    console.error("❌ Failed to fetch forecast summary:", error);
+    return [];
   }
 };
