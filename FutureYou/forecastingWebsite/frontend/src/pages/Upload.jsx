@@ -1,4 +1,3 @@
-// src/pages/Upload.jsx
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import TopNavbar from "../components/TopNavbar.jsx";
@@ -18,15 +17,28 @@ function Upload() {
   const { currentFY, currentMonth, weeksInMonth, currentWeekIndex } =
     getCurrentMonthInfo(calendar);
 
+  // For testing purposes
+  // const { weeksInMonth } = getCurrentMonthInfo(calendar);
+  // const currentFY = "FY25";
+  // const currentMonth = "May";
+  // const currentWeekIndex = 2;
+
   const actualsByWeek = useMemo(() => {
-    const map = {};
+    const map = {
+      Perm: {},
+      Temp: {},
+    };
+
     invoiceData.forEach((inv) => {
       if (inv.Consultant === recruiterName) {
         const weekNum = Number(inv.Week);
-        if (!map[weekNum]) map[weekNum] = 0;
-        map[weekNum] += Number(inv.Margin || 0);
+        const type = inv.Type;
+        if (!map[type]) return;
+        if (!map[type][weekNum]) map[type][weekNum] = 0;
+        map[type][weekNum] += Number(inv.Margin || 0);
       }
     });
+
     return map;
   }, [invoiceData, recruiterName]);
 
@@ -34,11 +46,6 @@ function Upload() {
     .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
     .sort((a, b) => Number(a.Week) - Number(b.Week));
 
-  const tempInvoices = invoiceData.filter(
-    (inv) => inv.Consultant === recruiterName && inv.Type === "Temp"
-  );
-
-  console.log("Perm Invoices:", permInvoices);
   useEffect(() => {
     const fetchData = async () => {
       setFetching(true);
@@ -48,12 +55,38 @@ function Upload() {
         currentMonth,
         weeksInMonth
       );
-      setRows(populatedRows);
+
+      const enrichedRows = populatedRows.map((row) => ({
+        ...row,
+        revenue: row.revenue ?? 0,
+        tempRevenue: row.tempRevenue ?? 0,
+        uploadMonth: currentMonth,
+        uploadWeek: currentWeekIndex,
+        uploadYear: currentFY,
+        name: recruiterName,
+        key: `${row.fy}:${row.month}:${row.week}:${recruiterName}`,
+      }));
+
+      setRows(enrichedRows);
       setFetching(false);
     };
 
     fetchData();
   }, [recruiterName, currentFY, currentMonth]);
+
+  console.log("Rows for latestUpload check:", rows);
+
+  const latestUpload = useMemo(() => {
+    if (!rows.length) return null;
+    const validRows = rows.filter((r) => r.uploadTimestamp && r.uploadUser);
+    if (!validRows.length) return null;
+    const latest = validRows[0];
+
+    return {
+      time: latest.uploadTimestamp,
+      user: latest.uploadUser,
+    };
+  }, [rows]);
 
   const handleChange = (index, field, value) => {
     const updated = [...rows];
@@ -107,8 +140,11 @@ function Upload() {
                   <tr>
                     <th>Week</th>
                     <th>Date Range</th>
-                    <th>Actual Perm Rev</th>
-                    <th>Forecasted Perm Rev</th>
+                    <th>Forecast Perm</th>
+                    <th>Forecast Temp</th>
+                    <th>Actual Perm</th>
+                    <th>Actual Temp</th>
+                    <th>Total Variance</th>
                     <th>Notes</th>
                   </tr>
                 </thead>
@@ -120,13 +156,6 @@ function Upload() {
                       <tr key={idx}>
                         <td>Wk {row.week}</td>
                         <td className="text-sm text-gray-500">{row.range}</td>
-                        <td>
-                          {actualsByWeek[row.week]
-                            ? `$${Math.round(
-                                actualsByWeek[row.week]
-                              ).toLocaleString()}`
-                            : "-"}
-                        </td>
                         <td>
                           <input
                             type="number"
@@ -142,6 +171,36 @@ function Upload() {
                             disabled={!isEditable}
                           />
                         </td>
+                        <td>
+                          <input
+                            type="number"
+                            className={`w-full bg-transparent focus:outline-none ${
+                              !isEditable ? "opacity-60 cursor-not-allowed" : ""
+                            }`}
+                            placeholder="$"
+                            value={row.tempRevenue ?? ""}
+                            onChange={(e) => {
+                              if (!isEditable) return;
+                              handleChange(idx, "tempRevenue", e.target.value);
+                            }}
+                            disabled={!isEditable}
+                          />
+                        </td>
+                        <td>
+                          {actualsByWeek["Perm"][row.week]
+                            ? `$${Math.round(
+                                actualsByWeek["Perm"][row.week]
+                              ).toLocaleString()}`
+                            : "-"}
+                        </td>
+                        <td>
+                          {actualsByWeek["Temp"][row.week]
+                            ? `$${Math.round(
+                                actualsByWeek["Temp"][row.week]
+                              ).toLocaleString()}`
+                            : "-"}
+                        </td>
+                        <td>hello!</td>
                         <td>
                           <input
                             type="text"
@@ -168,8 +227,16 @@ function Upload() {
                 </tbody>
               </table>
 
+              {latestUpload && (
+                <div className="text-sm text-gray-400 mb-2 mt-4">
+                  Last updated at{" "}
+                  <span className="font-medium">{latestUpload.time}</span> by{" "}
+                  <span className="font-medium">{latestUpload.user}</span>.
+                </div>
+              )}
+
               <button
-                className="btn btn-secondary mt-6 flex items-center gap-2"
+                className="btn btn-secondary mt-4 flex items-center gap-2"
                 onClick={handleSubmit}
                 disabled={loading}
               >
@@ -197,7 +264,6 @@ function Upload() {
                           <th>Week</th>
                           <th>Inv. #</th>
                           <th>Client</th>
-                          <th>Description</th>
                           <th>Margin</th>
                         </tr>
                       </thead>
@@ -207,56 +273,11 @@ function Upload() {
                             <td>Wk {inv.Week}</td>
                             <td>{inv.InvoiceNumber}</td>
                             <td>{inv.ToClient || "-"}</td>
-                            <td className="w-[300px]">
-                              {inv.Description || "-"}
-                            </td>
                             <td>
                               ${Math.round(inv.Margin || 0).toLocaleString()}
                             </td>
                           </tr>
                         ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                {/* TEMP SECTION */}
-                <div>
-                  <h3 className="text-base font-semibold text-primary">
-                    Actual Temp Invoiced Revenue for{" "}
-                    <span className="text-secondary">{currentMonth}</span>
-                  </h3>
-
-                  {tempInvoices.length === 0 ? (
-                    <p className="text-sm text-gray-500 mt-2">
-                      No temp invoices for {currentMonth}.
-                    </p>
-                  ) : (
-                    <table className="table w-auto mt-2">
-                      <thead>
-                        <tr className="text-gray-500">
-                          <th>Week</th>
-                          <th>Margin</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(() => {
-                          const weeklySums = {};
-                          tempInvoices.forEach((inv) => {
-                            const w = inv.Week;
-                            if (!weeklySums[w]) weeklySums[w] = 0;
-                            weeklySums[w] += Number(inv.Margin || 0);
-                          });
-
-                          return Object.entries(weeklySums).map(
-                            ([week, margin]) => (
-                              <tr key={week}>
-                                <td>Wk {week}</td>
-                                <td>${Math.round(margin).toLocaleString()}</td>
-                              </tr>
-                            )
-                          );
-                        })()}
                       </tbody>
                     </table>
                   )}

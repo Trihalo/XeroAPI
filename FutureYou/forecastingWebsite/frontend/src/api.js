@@ -42,8 +42,15 @@ export const login = async (username, password) => {
 
 export const uploadForecastToBQ = async (rows) => {
   try {
+    const uploadUser = localStorage.getItem("name") || "Unknown User";
+
+    const enrichedRows = rows.map((row) => ({
+      ...row,
+      uploadUser,
+    }));
+
     const response = await axios.post(`${API_BASE_URL}/forecasts`, {
-      forecasts: rows,
+      forecasts: enrichedRows,
     });
 
     if (response.data.success) {
@@ -76,13 +83,21 @@ export const fetchForecastForRecruiter = async (
 
     const existing = res.data;
     console.log("Fetched existing forecasts:", existing);
+
     return weeksInMonth.map((entry) => {
       const match = existing.find((e) => String(e.week) === String(entry.week));
       return {
         ...entry,
         revenue: match?.revenue != null ? String(match.revenue) : "",
+        tempRevenue:
+          match?.tempRevenue != null ? String(match.tempRevenue) : "",
         notes: match?.notes ?? "",
         name: recruiterName,
+        uploadTimestamp: match?.uploadTimestamp ?? "",
+        uploadUser: match?.uploadUser ?? "",
+        uploadMonth: match?.uploadMonth ?? "",
+        uploadWeek: match?.uploadWeek ?? "",
+        uploadYear: match?.uploadYear ?? "",
       };
     });
   } catch (error) {
@@ -92,6 +107,7 @@ export const fetchForecastForRecruiter = async (
     return weeksInMonth.map((entry) => ({
       ...entry,
       revenue: "",
+      tempRevenue: "",
       notes: "",
       name: recruiterName,
     }));

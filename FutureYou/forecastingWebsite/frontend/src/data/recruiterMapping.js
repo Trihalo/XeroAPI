@@ -22,8 +22,8 @@ export const summaryMapping = {
   Executive: recruiterMapping["Executive"],
   "Sales, Marketing & Digital": recruiterMapping["Sales, Marketing & Digital"],
   Technology: ["Corin Roberts"],
-  "Business Support": ["Ashley Duffy", "Matthew Walker"],
-  "SC, Eng & Manufacturing": ["Tamsin Clark"],
+  "Business Support": ["Ashley Duffy", "Tamsin Clark"],
+  "SC, Eng & Manufacturing": ["Matthew Walker"],
 };
 
 export const headcountByArea = {

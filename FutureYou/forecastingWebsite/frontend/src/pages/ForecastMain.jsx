@@ -13,9 +13,7 @@ import { getStoredInvoiceData } from "../utils/getInvoiceInfo";
 
 function ForecastMain() {
   const [activeTab, setActiveTab] = useState("input");
-
-  const invoices = getStoredInvoiceData();
-
+  const [rawForecastRows, setRawForecastRows] = useState([]);
   const {
     currentMonth,
     currentFY,
@@ -23,13 +21,52 @@ function ForecastMain() {
     currentWeekIndex,
   } = getCurrentMonthInfo(calendar);
 
+  // For testing purposes
+  // const { weeksInMonth: currentWeeks } = getCurrentMonthInfo(calendar);
+  // const currentFY = "FY25";
+  // const currentMonth = "May";
+  // const currentWeekIndex = 3;
+
+  const invoices = getStoredInvoiceData();
+
+  const actualsByRecruiterWeek = {};
+  const actualsByArea = {};
+
+  invoices.forEach((inv) => {
+    const {
+      Consultant: name,
+      Area: area,
+      Week,
+      Margin,
+      FutureYouMonth,
+      FinancialYear,
+    } = inv;
+
+    if (FutureYouMonth === currentMonth && FinancialYear === currentFY) {
+      const week = Number(Week);
+      const margin = Number(Margin || 0);
+
+      // Recruiter-level map
+      if (!actualsByRecruiterWeek[name]) actualsByRecruiterWeek[name] = {};
+      if (!actualsByRecruiterWeek[name][week])
+        actualsByRecruiterWeek[name][week] = 0;
+      actualsByRecruiterWeek[name][week] += margin;
+
+      // Area-level map
+      if (!actualsByArea[area]) actualsByArea[area] = {};
+      if (!actualsByArea[area][week]) actualsByArea[area][week] = 0;
+      actualsByArea[area][week] += margin;
+    }
+  });
+
   const [forecastData, setForecastData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       const summary = await fetchForecastSummary(currentFY, currentMonth);
+      setRawForecastRows(summary);
 
-      // Build weeks array for each recruiter
+      // Still needed for "view" tab
       const structured = Object.entries(recruiterMapping).map(
         ([category, recruiters]) => {
           return {
@@ -43,12 +80,25 @@ function ForecastMain() {
                 return match ? Number(match.total_revenue) : 0;
               });
 
-              return { name, weeks };
+              const latestUpload = summary
+                .filter((entry) => entry.name === name)
+                .reduce(
+                  (max, curr) =>
+                    Number(curr.uploadWeek) > Number(max.uploadWeek)
+                      ? curr
+                      : max,
+                  { uploadWeek: 0 }
+                );
+
+              return {
+                name,
+                weeks,
+                uploadWeek: latestUpload.uploadWeek,
+              };
             }),
           };
         }
       );
-
       setForecastData(structured);
     };
 
@@ -115,33 +165,65 @@ function ForecastMain() {
               ))}
             </div>
           )}
-
           {activeTab === "view" && (
             <div className="text-gray-800 text-sm space-y-8">
               <h2 className="text-xl font-semibold text-primary">
-                {currentFY} {currentMonth} Forecasts
+                {currentFY} {currentMonth} Latest Forecasts
               </h2>
               {forecastData.map((section) => {
-                const totals = Array(currentWeeks.length).fill(0);
-                section.data.forEach((row) => {
-                  const paddedWeeks = [...row.weeks];
-                  while (paddedWeeks.length < currentWeeks.length)
-                    paddedWeeks.push(0);
-                  if (paddedWeeks.length > currentWeeks.length)
-                    paddedWeeks.length = currentWeeks.length;
+                const sectionRows = section.data.map(({ name }) => {
+                  // Find all uploads for this recruiter
+                  const allForecasts = rawForecastRows.filter(
+                    (r) => r.name === name
+                  );
 
-                  paddedWeeks.forEach((value, index) => {
-                    totals[index] += value;
+                  // Pick the rows from the highest uploadWeek
+                  const maxUploadWeek = Math.max(
+                    ...allForecasts.map((r) => Number(r.uploadWeek || 0))
+                  );
+
+                  const latestRows = allForecasts.filter(
+                    (r) => Number(r.uploadWeek) === maxUploadWeek
+                  );
+
+                  // Build padded forecast array from those latest rows
+                  const paddedWeeks = currentWeeks.map((w) => {
+                    const matching = latestRows.find(
+                      (r) => Number(r.week) === w.week
+                    );
+                    return matching ? Number(matching.total_revenue) : 0;
                   });
-                });
-                const totalSum = totals.reduce((a, b) => a + b, 0);
 
+                  // Override with actuals for past weeks
+                  const finalWeeks = paddedWeeks.map((forecastAmt, i) => {
+                    const weekNumber = i + 1;
+                    if (weekNumber < currentWeekIndex) {
+                      const actual =
+                        actualsByRecruiterWeek[name]?.[weekNumber] || 0;
+                      return actual;
+                    }
+                    return forecastAmt;
+                  });
+
+                  const rowTotal = finalWeeks.reduce((a, b) => a + b, 0);
+
+                  return { name, finalWeeks, rowTotal };
+                });
+
+                // compute section totals from finalWeeks
+                const totals = currentWeeks.map((_, i) =>
+                  sectionRows.reduce(
+                    (sum, row) => sum + (row.finalWeeks[i] || 0),
+                    0
+                  )
+                );
+                const totalSum = totals.reduce((a, b) => a + b, 0);
                 return (
                   <div key={section.title}>
-                    <h3 className="text-lg font-semibold mb-2">
+                    <h3 className="text-lg font-semibold mb-5">
                       {section.title}
                     </h3>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto mb-10">
                       <table className="min-w-full text-left border-collapse text-sm">
                         <thead className="bg-gray-100 text-gray-700">
                           <tr>
@@ -158,51 +240,38 @@ function ForecastMain() {
                           </tr>
                         </thead>
                         <tbody>
-                          {section.data.map(({ name, weeks }) => {
-                            const paddedWeeks = [...weeks];
-                            while (paddedWeeks.length < currentWeeks.length)
-                              paddedWeeks.push(0);
-                            if (paddedWeeks.length > currentWeeks.length)
-                              paddedWeeks.length = currentWeeks.length;
-
-                            const rowTotal = paddedWeeks.reduce(
-                              (a, b) => a + b,
-                              0
-                            );
-                            return (
-                              <tr
-                                key={name}
-                                className="border-b border-gray-200"
-                              >
-                                <td className="py-2 px-4">{name}</td>
-                                {paddedWeeks.map((amt, i) => (
-                                  <td
-                                    key={i}
-                                    className={`py-2 px-4 ${
-                                      i + 1 < currentWeekIndex
-                                        ? "bg-accent font-semibold"
-                                        : ""
-                                    }`}
-                                  >
-                                    {amt > 0 ? `${amt.toLocaleString()}` : "0"}
-                                  </td>
-                                ))}
-                                <td className="py-2 px-4 font-medium">
-                                  {rowTotal.toLocaleString()}
+                          {sectionRows.map(({ name, finalWeeks, rowTotal }) => (
+                            <tr key={name} className="border-b border-gray-200">
+                              <td className="py-2 px-4">{name}</td>
+                              {finalWeeks.map((amt, i) => (
+                                <td
+                                  key={i}
+                                  className={`py-2 px-4 ${
+                                    i + 1 < currentWeekIndex
+                                      ? "bg-accent font-semibold"
+                                      : ""
+                                  }`}
+                                >
+                                  {amt > 0
+                                    ? Math.round(amt).toLocaleString()
+                                    : "-"}
                                 </td>
-                              </tr>
-                            );
-                          })}
+                              ))}
+                              <td className="py-2 px-4 font-medium">
+                                {Math.round(rowTotal).toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
 
                           <tr className="font-semibold text-black bg-gray-100">
                             <td className="py-2 px-4">Total</td>
                             {totals.map((amt, i) => (
                               <td key={i} className="py-2 px-4">
-                                {amt.toLocaleString()}
+                                {Math.round(amt).toLocaleString()}
                               </td>
                             ))}
                             <td className="py-2 px-4">
-                              {totalSum.toLocaleString()}
+                              {Math.round(totalSum).toLocaleString()}
                             </td>
                           </tr>
                         </tbody>
@@ -214,11 +283,11 @@ function ForecastMain() {
             </div>
           )}
           {activeTab === "summary" && (
-            <div className="text-gray-800 text-sm space-y-6">
+            <div className="text-gray-800 text-md space-y-6">
               <h2 className="text-xl font-semibold text-primary">
                 {currentMonth}
               </h2>
-              <p className="text-sm text-gray-600 font-medium">
+              <p className="text-md text-gray-600 font-medium">
                 Target <span className="font-bold">550k</span>
               </p>
 
@@ -232,98 +301,138 @@ function ForecastMain() {
                           Wk {w.week}
                         </th>
                       ))}
-                      <th className="text-left py-2 px-4">Total</th>
+                      <th className="text-left py-2 px-4">MTD Invoiced</th>
                       <th className="text-left py-2 px-4">Headcount</th>
                       <th className="text-left py-2 px-4">Productivity</th>
-                      <th className="text-left py-2 px-4">MTD Invoiced</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.entries(summaryMapping).map(
                       ([area, recruiters]) => {
-                        const rows = recruiters.map((name) => {
-                          return (
-                            forecastData
-                              .flatMap((s) => s.data)
-                              .find((r) => r.name === name) || {
-                              name,
-                              weeks: Array(currentWeeks.length).fill(0),
-                            }
+                        // MTD invoiced (weeks already completed)
+                        const mtdInvoiced = Array.from(
+                          { length: currentWeekIndex },
+                          (_, i) => {
+                            const week = i + 1;
+                            return actualsByArea[area]?.[week] || 0;
+                          }
+                        ).reduce((a, b) => a + b, 0);
+
+                        // Weekly forecast+actual row
+                        const row = currentWeeks.map((w) => {
+                          if (w.week > currentWeekIndex) return "-";
+
+                          const forecastRows = rawForecastRows.filter(
+                            (r) =>
+                              recruiters.includes(r.name) &&
+                              Number(r.uploadWeek) === w.week &&
+                              Number(r.week) >= w.week
                           );
-                        });
 
-                        const areaTotals = Array(currentWeeks.length).fill(0);
-                        rows.forEach((r) => {
-                          r.weeks.forEach((v, i) => {
-                            areaTotals[i] += v;
-                          });
-                        });
+                          const actualRows = invoices.filter(
+                            (inv) =>
+                              recruiters.includes(inv.Consultant) &&
+                              inv.FutureYouMonth === currentMonth &&
+                              inv.FinancialYear === currentFY &&
+                              Number(inv.Week) < w.week
+                          );
 
-                        const totalSum = areaTotals.reduce((a, b) => a + b, 0);
+                          const forecastSum = forecastRows.reduce(
+                            (acc, r) => acc + Number(r.total_revenue || 0),
+                            0
+                          );
+
+                          const actualSum = actualRows.reduce(
+                            (acc, r) => acc + Number(r.Margin || 0),
+                            0
+                          );
+
+                          return forecastSum + actualSum;
+                        });
 
                         return (
                           <tr key={area} className="border-b border-gray-100">
-                            <td className="py-2 px-4 font-medium">{area}</td>
-                            {areaTotals.map((v, i) => (
-                              <td key={i} className="py-2 px-4">
-                                {v > 0 ? `${Math.round(v / 1000)}` : "-"}
+                            <td className="py-2 px-4 font-medium text-sm">
+                              {area}
+                            </td>
+                            {row.map((val, idx) => (
+                              <td key={idx} className="py-2 px-4 text-sm">
+                                {val === "-" ? "-" : Math.round(val / 1000)}
                               </td>
                             ))}
-                            <td className="py-2 px-4 font-medium">
-                              {Math.round(totalSum / 1000)}
+                            <td className="py-2 px-4 text-sm">
+                              {mtdInvoiced > 0
+                                ? Math.round(mtdInvoiced / 1000)
+                                : "-"}
                             </td>
-                            <td className="py-2 px-4">
+                            <td className="py-2 px-4 text-sm">
                               {headcountByArea[area] ?? "-"}
                             </td>
-                            <td className="py-2 px-4">
-                              {Math.floor(totalSum / 1000)}
+                            <td className="py-2 px-4 text-sm">
+                              {row[0] !== "-" && headcountByArea[area]
+                                ? Math.round(
+                                    row[0] / headcountByArea[area] / 1000
+                                  )
+                                : "-"}
                             </td>
-                            <td className="py-2 px-4">0</td>
                           </tr>
                         );
                       }
                     )}
 
-                    {/* Total row */}
+                    {/* Totals Row */}
                     <tr className="font-semibold bg-gray-100 border-t border-gray-300">
-                      <td className="py-2 px-4">Total</td>
-                      {(() => {
-                        const totals = Array(currentWeeks.length).fill(0);
-                        Object.values(summaryMapping).forEach((recruiters) => {
-                          recruiters.forEach((name) => {
-                            const r = forecastData
-                              .flatMap((s) => s.data)
-                              .find((r) => r.name === name);
-                            if (r) {
-                              r.weeks.forEach((v, i) => (totals[i] += v));
-                            }
-                          });
-                        });
+                      <td className="py-2 px-4 text-sm">Total</td>
+                      {currentWeeks.map((w) => {
+                        if (w.week > currentWeekIndex) {
+                          return (
+                            <td
+                              key={w.week}
+                              className="py-2 px-4 text-gray-400 text-sm"
+                            >
+                              -
+                            </td>
+                          );
+                        }
 
-                        const grandTotal = totals.reduce((a, b) => a + b, 0);
+                        const forecastRows = rawForecastRows.filter(
+                          (r) =>
+                            Number(r.uploadWeek) === w.week &&
+                            Number(r.week) >= w.week
+                        );
+
+                        const actualRows = invoices.filter(
+                          (inv) =>
+                            Number(inv.Week) < w.week &&
+                            inv.FutureYouMonth === currentMonth &&
+                            inv.FinancialYear === currentFY
+                        );
+
+                        const forecastSum = forecastRows.reduce(
+                          (acc, r) => acc + Number(r.total_revenue || 0),
+                          0
+                        );
+
+                        const actualSum = actualRows.reduce(
+                          (acc, r) => acc + Number(r.Margin || 0),
+                          0
+                        );
+
+                        const total = forecastSum + actualSum;
 
                         return (
-                          <>
-                            {totals.map((v, i) => (
-                              <td key={i} className="py-2 px-4">
-                                {v > 0 ? `${Math.round(v / 1000)}` : "-"}
-                              </td>
-                            ))}
-                            <td className="py-2 px-4 font-semibold">
-                              {Math.round(grandTotal / 1000)}
-                            </td>
-                          </>
+                          <td key={w.week} className="py-2 px-4">
+                            {total > 0 ? Math.round(total / 1000) : "-"}
+                          </td>
                         );
-                      })()}
-
-                      <td className="py-2 px-4 font-bold">
+                      })}
+                      <td className="py-2 px-4 text-sm">FILLER</td>
+                      <td className="py-2 px-4 text-sm">
                         {Object.values(headcountByArea)
                           .reduce((a, b) => a + b, 0)
                           .toFixed(1)}
                       </td>
-
-                      <td className="py-2 px-4">FILLER</td>
-                      <td className="py-2 px-4">FILLER</td>
+                      <td className="py-2 px-4 text-sm">FILLER</td>
                     </tr>
                   </tbody>
                 </table>

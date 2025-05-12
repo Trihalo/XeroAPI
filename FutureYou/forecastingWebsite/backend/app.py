@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
+from datetime import datetime
+import pytz
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -96,40 +98,54 @@ def test_receive_forecasts():
         forecasts = data.get("forecasts")
         recruiterName = forecasts[0]["name"] if forecasts else None
 
-        # ✅ Add "key" to each row
+        # ✅ Add "key" and sanitize fields
         for entry in forecasts:
             entry["key"] = f"{entry['fy']}:{entry['month']}:{entry['week']}:{entry['name']}"
-            try:
-                entry["revenue"] = int(entry["revenue"]) if entry["revenue"] else 0
-            except (ValueError, TypeError):
-                entry["revenue"] = 0
+            entry["revenue"] = int(entry.get("revenue", 0) or 0)
+            entry["tempRevenue"] = int(entry.get("tempRevenue", 0) or 0)
+            entry["uploadMonth"] = entry.get("uploadMonth", "")
+            entry["uploadWeek"] = int(entry.get("uploadWeek", 0) or 0)
+            entry["uploadYear"] = entry.get("uploadYear", 0) or 0
+            
+            aest = pytz.timezone("Australia/Sydney")
+            entry["uploadTimestamp"] = datetime.now(aest).strftime("%-I:%M%p %-d/%-m/%Y").lower()
+            entry['uploadUser'] = entry.get("uploadUser", "Kermit the Frog")
+
 
         print(f"✅ Received {len(forecasts)} rows for {recruiterName}.")
 
-        # ✅ Insert into staging table
         insert_errors = client.insert_rows_json(STAGING_TABLE, forecasts)
         if insert_errors:
             print("❌ BigQuery insert errors:", insert_errors)
             return jsonify({"error": insert_errors}), 400
 
-        # ✅ Merge into main table
         merge_query = f"""
-        MERGE `{MAIN_TABLE}` T
-        USING `{STAGING_TABLE}` S
-        ON T.key = S.key
-        WHEN MATCHED THEN
-          UPDATE SET
-            fy = S.fy,
-            month = S.month,
-            week = S.week,
-            `range` = S.`range`,
-            revenue = S.revenue,
-            notes = S.notes,
-            name = S.name
-        WHEN NOT MATCHED THEN
-        INSERT (`key`, fy, month, week, `range`, revenue, notes, name)
-        VALUES (S.`key`, S.fy, S.month, S.week, S.`range`, S.revenue, S.notes, S.name)
+            MERGE `{MAIN_TABLE}` T
+            USING `{STAGING_TABLE}` S
+            ON T.key = S.key
+            AND T.uploadMonth = S.uploadMonth
+            AND T.uploadWeek = S.uploadWeek
+            AND T.uploadYear = S.uploadYear
+            WHEN MATCHED THEN
+            UPDATE SET
+                fy = S.fy,
+                month = S.month,
+                week = S.week,
+                `range` = S.`range`,
+                revenue = S.revenue,
+                tempRevenue = S.tempRevenue,
+                notes = S.notes,
+                name = S.name,
+                uploadMonth = S.uploadMonth,
+                uploadWeek = S.uploadWeek,
+                uploadYear = S.uploadYear,
+                uploadTimestamp = S.uploadTimestamp,
+                uploadUser = S.uploadUser
+            WHEN NOT MATCHED THEN
+            INSERT (`key`, fy, month, week, `range`, revenue, tempRevenue, notes, name, uploadMonth, uploadWeek, uploadYear, uploadTimestamp, uploadUser)
+            VALUES (S.`key`, S.fy, S.month, S.week, S.`range`, S.revenue, S.tempRevenue, S.notes, S.name, S.uploadMonth, S.uploadWeek, S.uploadYear, S.uploadTimestamp, S.uploadUser)
         """
+
         client.query(merge_query).result()
 
         return jsonify({
@@ -142,6 +158,8 @@ def test_receive_forecasts():
         return jsonify({"error": str(e)}), 500
 
 
+from collections import defaultdict
+
 @app.route("/forecasts/<recruiter_name>", methods=["GET"])
 def get_forecast_for_recruiter(recruiter_name):
     fy = request.args.get("fy")
@@ -151,9 +169,11 @@ def get_forecast_for_recruiter(recruiter_name):
         return jsonify({"error": "Missing 'fy' or 'month' parameter"}), 400
 
     query = f"""
-        SELECT fy, month, week, `range`, revenue, notes, name
+        SELECT fy, month, week, `range`, revenue, tempRevenue, notes, name,
+               uploadMonth, uploadWeek, uploadYear, uploadTimestamp, uploadUser
         FROM `{MAIN_TABLE}`
         WHERE name = @name AND fy = @fy AND month = @month
+        ORDER BY week ASC, uploadWeek DESC, uploadTimestamp DESC
     """
 
     job_config = bigquery.QueryJobConfig(
@@ -165,12 +185,51 @@ def get_forecast_for_recruiter(recruiter_name):
     )
 
     try:
-        results = client.query(query, job_config=job_config).result()
-        rows = [dict(row) for row in results]
-        return jsonify(rows)
+        results = list(client.query(query, job_config=job_config).result())
+        week_map = defaultdict(list)
+        for row in results:
+            week_map[row.week].append(dict(row))
+
+        final_result = []
+        for week in sorted(week_map.keys()):
+            if week_map[week]:
+                final_result.append(week_map[week][0])  # latest entry
+            else:
+                # ⬇️ Fallback: use most recent from earlier weeks
+                fallback = None
+                for w in range(week - 1, 0, -1):
+                    if week_map[w]:
+                        fallback = week_map[w][0]
+                        break
+                if fallback:
+                    fallback_copy = fallback.copy()
+                    fallback_copy["week"] = week
+                    fallback_copy["range"] = f""
+                    final_result.append(fallback_copy)
+                else:
+                    # ❌ No data at all
+                    final_result.append({
+                        "fy": fy,
+                        "month": month,
+                        "week": week,
+                        "range": "",
+                        "revenue": 0,
+                        "tempRevenue": 0,
+                        "notes": "",
+                        "name": recruiter_name,
+                        "uploadMonth": "",
+                        "uploadWeek": 0,
+                        "uploadYear": 0,
+                        "uploadTimestamp": "",
+                        "uploadUser": "",
+                    })
+
+        return jsonify(final_result)
+
     except Exception as e:
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500
+
 
 
 @app.route("/forecasts/view", methods=["GET"])
@@ -182,10 +241,14 @@ def get_forecast_summary():
         return jsonify({"error": "Missing 'fy' or 'month' parameter"}), 400
 
     query = f"""
-        SELECT name, week, SUM(revenue) as total_revenue
+        SELECT
+        name,
+        week,
+        SUM(IFNULL(revenue, 0) + IFNULL(tempRevenue, 0)) AS total_revenue,
+        uploadWeek
         FROM `{MAIN_TABLE}`
         WHERE fy = @fy AND month = @month
-        GROUP BY name, week
+        GROUP BY name, week, uploadWeek
     """
 
     job_config = bigquery.QueryJobConfig(
@@ -194,7 +257,6 @@ def get_forecast_summary():
             bigquery.ScalarQueryParameter("month", "STRING", month),
         ]
     )
-
     try:
         results = client.query(query, job_config=job_config).result()
         data = [dict(row) for row in results]
