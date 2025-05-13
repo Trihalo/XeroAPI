@@ -12,6 +12,8 @@ function TopNavbar({ userName = "User" }) {
     navigate("/", { replace: true });
   };
 
+  const role = localStorage.getItem("role");
+
   return (
     <header className="w-full bg-gray-200 px-6 py-4 flex items-center justify-between text-sm">
       <div className="flex flex-row items-baseline gap-8">
@@ -22,6 +24,14 @@ function TopNavbar({ userName = "User" }) {
       </div>
 
       <nav className="flex items-center space-x-6">
+        {role === "admin" && (
+          <button
+            className="hover:underline"
+            onClick={() => navigate("/admin")}
+          >
+            Admin
+          </button>
+        )}
         <button
           className="hover:underline"
           onClick={() => navigate("/forecasts")}

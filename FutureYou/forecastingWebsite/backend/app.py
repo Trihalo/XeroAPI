@@ -19,7 +19,7 @@ CORS(app)  # Allow CORS for local frontend development
 # Dummy user database
 users = {
     "leo":   { "password": "leo", "name": "Leo Shi", "role": "admin" },
-    "bob":   { "password": "bob", "role": "user" },
+    "bob":   { "password": "bob", "name": "Bob Bob", "role": "user" },
     "corinroberts": { "password": "corin", "name": "Corin Roberts", "role": "admin" },
 }
 
@@ -34,10 +34,12 @@ revenue_dataset_id = "InvoiceData"
 revenue_table_id = "InvoiceEnquiry"
 table_id = "RecruiterForecasts"
 staging_table_id = "StagingTable"
+target_table_id = "MonthlyTargets"
 
 STAGING_TABLE = f"{project_id}.{recruiter_dataset_id}.{staging_table_id}"
 MAIN_TABLE = f"{project_id}.{recruiter_dataset_id}.{table_id}"
 REVENUE_TABLE = f"{project_id}.{revenue_dataset_id}.{revenue_table_id}"
+TARGET_TABLE = f"{project_id}.{recruiter_dataset_id}.{target_table_id}"
 
 credentials = service_account.Credentials.from_service_account_file(
     key_path, 
@@ -264,6 +266,42 @@ def get_forecast_summary():
     except Exception as e:
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/forecasts/weekly", methods=["GET"])
+def get_forecast_weekly():
+    fy = request.args.get("fy")
+    month = request.args.get("month")
+    uploadWeek = request.args.get("uploadWeek")
+
+    if not fy or not month:
+        return jsonify({"error": "Missing 'fy' or 'month' parameter"}), 400
+
+    query = f"""
+        SELECT
+        name,
+        week,
+        SUM(IFNULL(revenue, 0) + IFNULL(tempRevenue, 0)) AS total_revenue,
+        uploadWeek
+        FROM `{MAIN_TABLE}`
+        WHERE fy = @fy AND month = @month AND uploadWeek = @uploadWeek
+        GROUP BY name, week, uploadWeek
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("fy", "STRING", fy),
+            bigquery.ScalarQueryParameter("month", "STRING", month),
+            bigquery.ScalarQueryParameter("uploadWeek", "STRING", uploadWeek),
+        ]
+    )
+    try:
+        results = client.query(query, job_config=job_config).result()
+        data = [dict(row) for row in results]
+        return jsonify(data)
+    except Exception as e:
+        print("❌ BigQuery error:", e)
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/invoices", methods=["GET"])
@@ -291,6 +329,89 @@ def get_invoices_for_month():
         rows = client.query(query, job_config=job_config).result()
         data = [dict(row) for row in rows]
         return jsonify(data)
+    except Exception as e:
+        print("❌ BigQuery error:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/monthly-targets", methods=["POST"])
+def submit_monthly_target():
+    data = request.get_json()
+
+    fy = data.get("FinancialYear")
+    month = data.get("Month")
+    target = data.get("Target")
+    upload_user = data.get("uploadUser")
+    raw_timestamp = data.get("uploadTimestamp")  # ISO string from frontend
+
+    if not fy or not month or target is None or not upload_user or not raw_timestamp:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        # Convert raw UTC timestamp to Australia/Sydney time
+        utc_dt = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
+        aest = pytz.timezone("Australia/Sydney")
+        local_dt = utc_dt.astimezone(aest)
+        formatted_timestamp = local_dt.strftime("%-I:%M%p %-d/%-m/%Y").lower()
+
+        table_ref = client.dataset("RecruiterForecasts").table("MonthlyTargets")
+        table = client.get_table(table_ref)
+
+        row = {
+            "FinancialYear": fy,
+            "Month": month,
+            "Target": target,
+            "uploadUser": upload_user,
+            "uploadTimestamp": formatted_timestamp,
+            "uploadTimeRaw": raw_timestamp,
+        }
+
+        errors = client.insert_rows_json(table, [row])
+        if errors:
+            print("❌ Insert errors:", errors)
+            return jsonify({"success": False, "error": str(errors)}), 500
+
+        return jsonify({"success": True, "message": "Monthly target submitted."})
+    except Exception as e:
+        print("❌ BigQuery error:", e)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/monthly-targets", methods=["GET"])
+def get_monthly_targets():
+    fy = request.args.get("fy")
+    if not fy:
+        return jsonify({"error": "Missing 'fy'"}), 400
+
+    query = f"""
+    SELECT Month, Target, uploadTimestamp, uploadTimeRaw, uploadUser
+    FROM `{TARGET_TABLE}`
+    WHERE FinancialYear = @fy
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY Month ORDER BY uploadTimeRaw DESC) = 1
+    ORDER BY
+      CASE
+        WHEN Month = 'Jan' THEN 1
+        WHEN Month = 'Feb' THEN 2
+        WHEN Month = 'Mar' THEN 3
+        WHEN Month = 'Apr' THEN 4
+        WHEN Month = 'May' THEN 5
+        WHEN Month = 'Jun' THEN 6
+        WHEN Month = 'Jul' THEN 7
+        WHEN Month = 'Aug' THEN 8
+        WHEN Month = 'Sep' THEN 9
+        WHEN Month = 'Oct' THEN 10
+        WHEN Month = 'Nov' THEN 11
+        WHEN Month = 'Dec' THEN 12
+      END
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("fy", "STRING", fy)]
+    )
+
+    try:
+        results = client.query(query, job_config=job_config).result()
+        return jsonify([dict(row) for row in results])
     except Exception as e:
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500

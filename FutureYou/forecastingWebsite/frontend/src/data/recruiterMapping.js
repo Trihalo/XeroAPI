@@ -35,3 +35,6 @@ export const headcountByArea = {
   "Business Support": 1.8,
   "SC, Eng & Manufacturing": 1.0,
 };
+
+export const allRecruiters = Object.values(summaryMapping).flat();
+export const allAreas = Object.keys(summaryMapping);

@@ -80,10 +80,7 @@ export const fetchForecastForRecruiter = async (
         params: { fy, month },
       }
     );
-
     const existing = res.data;
-    console.log("Fetched existing forecasts:", existing);
-
     return weeksInMonth.map((entry) => {
       const match = existing.find((e) => String(e.week) === String(entry.week));
       return {
@@ -120,9 +117,62 @@ export const fetchForecastSummary = async (fy, month) => {
       params: { fy, month },
     });
 
-    return res.data; // array of { name, week, total_revenue }
+    return res.data;
   } catch (error) {
     console.error("❌ Failed to fetch forecast summary:", error);
+    return [];
+  }
+};
+
+export const fetchForecastWeekly = async (fy, month, uploadWeek) => {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/forecasts/weekly`, {
+      params: { fy, month, uploadWeek },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("❌ Failed to fetch forecast weekly:", error);
+    return [];
+  }
+};
+
+export const submitMonthlyTarget = async ({ fy, month, amount }) => {
+  try {
+    const uploadUser = localStorage.getItem("name") || "Unknown User";
+    const uploadTimestamp = new Date().toISOString();
+
+    const response = await axios.post(`${API_BASE_URL}/monthly-targets`, {
+      FinancialYear: fy,
+      Month: month,
+      Target: amount,
+      uploadUser,
+      uploadTimestamp,
+    });
+
+    if (response.data.success) {
+      return { success: true, message: response.data.message };
+    } else {
+      console.error("❌ Submit target error:", response.data);
+      return {
+        success: false,
+        message: response.data.error || "Unknown error",
+      };
+    }
+  } catch (error) {
+    console.error("❌ Request failed:", error);
+    return { success: false, message: "Failed to connect to backend." };
+  }
+};
+
+export const fetchMonthlyTargets = async (fy) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/monthly-targets`, {
+      params: { fy },
+    });
+    return response.data; // Expected: array of { Month, Target }
+  } catch (error) {
+    console.error("❌ Failed to fetch monthly targets:", error);
     return [];
   }
 };
