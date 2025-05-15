@@ -10,7 +10,6 @@ import pandas_gbq
 from google.cloud import firestore
 from datetime import datetime
 import pytz
-
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -22,13 +21,6 @@ db = firestore.Client.from_service_account_json(
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS for local frontend development
-
-# Dummy user database
-users = {
-    "leo":   { "password": "leo", "name": "Leo Shi", "role": "admin" },
-    "bob":   { "password": "bob", "name": "Bob Bob", "role": "user" },
-    "corinroberts": { "password": "corin", "name": "Corin Roberts", "role": "admin" },
-}
 
 # 🔐 Secret key for encoding the token
 SECRET_KEY = "trihalohehe"  # Store this securely in environment variables in production
@@ -54,15 +46,19 @@ credentials = service_account.Credentials.from_service_account_file(
     scopes=["https://www.googleapis.com/auth/bigquery"]
 )
 client = bigquery.Client(credentials=credentials, project=project_id)
-
-# Convert to AEST
 aest = pytz.timezone("Australia/Sydney")
 
 @app.route("/login", methods=["POST"])
 def login():
-    revenue_table_last_modified_time = client.get_table(REVENUE_TABLE).modified
-    revenue_table_last_modified_time_local = revenue_table_last_modified_time.astimezone(aest)
-    formatted_time = revenue_table_last_modified_time_local.strftime("%d/%m/%Y %-I:%M%p").lower()
+    # Get revenue table's last modified time (BigQuery)
+    try:
+        revenue_table_last_modified_time = client.get_table(REVENUE_TABLE).modified
+        revenue_table_last_modified_time_local = revenue_table_last_modified_time.astimezone(aest)
+        formatted_time = revenue_table_last_modified_time_local.strftime("%d/%m/%Y %-I:%M%p").lower()
+    except Exception as e:
+        return jsonify({"success": False, "error": f"BigQuery error: {str(e)}"}), 500
+
+    # Get login payload
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
@@ -73,30 +69,73 @@ def login():
             "error": "Username and password are required."
         }), 400
 
-    user = users.get(username)
-    if user and user["password"] == password:
+    try:
+        users = db.collection("users").where("username", "==", username).limit(1).stream()
+        user_doc = next(users, None)
+        if user_doc is None:
+            return jsonify({"success": False, "error": "Invalid username or password."}), 401
+        user = user_doc.to_dict()
+        if user.get("password") != password:
+            return jsonify({"success": False, "error": "Invalid username or password."}), 401
+
         # ✅ Create JWT token
         payload = {
             "username": username,
-            "role": user["role"],
-            "name": user["name"],
+            "role": user.get("role"),
+            "name": user.get("name"),
             "exp": datetime.now(timezone.utc) + timedelta(hours=2)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
         return jsonify({
             "success": True,
-            "message": f"Welcome, {username}!",
             "token": token,
-            "role": user["role"],
-            "name": user["name"],
+            "role": user.get("role"),
+            "name": user.get("name"),
             "revenue_table_last_modified_time": formatted_time
         })
 
-    return jsonify({
-        "success": False,
-        "error": "Invalid username or password."
-    }), 401
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Firestore error: {str(e)}"}), 500
+
+
+@app.route("/change-password", methods=["POST"])
+def change_password():
+    data = request.get_json()
+    username = data.get("username")
+    old_password = data.get("oldPassword")
+    new_password = data.get("newPassword")
+
+    if not username or not old_password or not new_password:
+        return jsonify({
+            "success": False,
+            "error": "Username, old password, and new password are required."
+        }), 400
+
+    try:
+        users = db.collection("users").where("username", "==", username).limit(1).stream()
+        user_doc = next(users, None)
+
+        if user_doc is None:
+            return jsonify({"success": False, "error": "User not found."}), 404
+
+        user = user_doc.to_dict()
+
+        if user.get("password") != old_password:
+            return jsonify({"success": False, "error": "Old password is incorrect."}), 403
+
+        db.collection("users").document(user_doc.id).update({
+            "password": new_password
+        })
+
+        return jsonify({
+            "success": True,
+            "message": "Password changed successfully."
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
+
     
 def get_token_payload(token):
     try:

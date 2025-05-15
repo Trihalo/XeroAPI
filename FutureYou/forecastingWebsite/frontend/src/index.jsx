@@ -6,6 +6,7 @@ import Dashboard from "./pages/Revenue.jsx";
 import Admin from "./pages/Admin.jsx";
 import Upload from "./pages/Upload.jsx";
 import ForecastMain from "./pages/ForecastMain.jsx";
+import Password from "./pages/Password.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import "./index.css";
 
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         {/* Public route */}
         <Route path="/" element={<Login />} />
+        <Route path="/password" element={<Password />} />
 
         {/* Protected routes */}
         <Route element={<PrivateRoute />}>

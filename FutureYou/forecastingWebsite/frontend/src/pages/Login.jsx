@@ -38,9 +38,7 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-primary text-base-content">
       <div className="bg-base-100 text-base-content rounded-2xl shadow-md px-6 py-8 w-full max-w-sm mx-4 sm:mx-auto text-center">
         <img src="/fy.png" alt="FutureYou" className="mx-auto mb-2" />
-        <h2 className="text-xl font-small mb-6">
-          Recruiter Forecast Dashboard
-        </h2>
+        <h2 className="text-xl font-small mb-6">Forecast Revenue Dashboard</h2>
 
         <div className="text-left mb-4">
           <label className="block text-sm font-semibold mb-1">Username</label>
@@ -70,6 +68,15 @@ function Login() {
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
+        </div>
+        <div className="text-right text-sm text-gray-400">
+          <button
+            onClick={() => {
+              navigate("/password");
+            }}
+          >
+            Change Password
+          </button>
         </div>
         <button
           onClick={handleLogin}
