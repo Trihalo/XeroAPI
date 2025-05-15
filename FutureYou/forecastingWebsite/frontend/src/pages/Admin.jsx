@@ -1,12 +1,36 @@
+// ✅ Admin.jsx (Updated Layout using Firebase + Refetchable State)
 import { useState, useEffect } from "react";
 import TopNavbar from "../components/TopNavbar.jsx";
-import { recruiterMapping } from "../data/recruiterMapping.js";
-import RecruiterStatus from "../components/RecruiterStatus.jsx";
-import { submitMonthlyTarget, fetchMonthlyTargets } from "../api";
-import { useSubmittedRecruiters } from "../hooks/useSubmittedRecruiters";
+import {
+  submitMonthlyTarget,
+  fetchMonthlyTargets,
+  addRecruiter,
+  deleteRecruiter,
+  updateHeadcount,
+} from "../api";
+import { useRecruiterData } from "../hooks/useRecruiterData";
+
+const ConfirmDialog = ({ show, onConfirm, onCancel, message }) => {
+  if (!show) return null;
+  return (
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] z-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded-lg shadow-lg space-y-4 w-[320px]">
+        <p className="text-md text-gray-800">{message}</p>
+        <div className="flex justify-end space-x-4">
+          <button className="btn btn-outline btn-sm" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="btn btn-error btn-sm" onClick={onConfirm}>
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function Admin() {
-  const [activeTab, setActiveTab] = useState("submitStatus");
+  const [activeTab, setActiveTab] = useState("recruiterManagement");
   const [fy, setFy] = useState("FY25");
   const [month, setMonth] = useState("Jan");
   const [amount, setAmount] = useState("");
@@ -14,12 +38,37 @@ function Admin() {
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
   const [summaryByMonth, setSummaryByMonth] = useState({});
+  const [newRecruiterName, setNewRecruiterName] = useState("");
+  const [newRecruiterArea, setNewRecruiterArea] = useState("");
+  const [areaEdits, setAreaEdits] = useState({});
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [onConfirmAction, setOnConfirmAction] = useState(() => () => {});
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const submittedRecruiters = useSubmittedRecruiters();
+  const { recruiters, areas, summaryMapping, headcountByArea, reloadAll } =
+    useRecruiterData(refreshKey);
 
-  const tabLabels = {
-    submitStatus: "Recruiter Forecast Status",
-    monthlyTotal: "Input Monthly Target",
+  const askConfirm = (message, action) => {
+    setConfirmMessage(message);
+    setOnConfirmAction(() => action);
+    setShowConfirm(true);
+  };
+
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    const result = await submitMonthlyTarget({ fy, month, amount });
+
+    if (result.success) {
+      setAlertMessage("✅ Monthly target submitted!");
+      await fetchAndSetTargetSummary(fy);
+    } else {
+      setAlertMessage(`❌ ${result.message}`);
+    }
+
+    setShowAlert(true);
+    setSubmitting(false);
+    setTimeout(() => setShowAlert(false), 4000);
   };
 
   const fetchAndSetTargetSummary = async (selectedFY) => {
@@ -33,27 +82,7 @@ function Admin() {
 
   useEffect(() => {
     fetchAndSetTargetSummary(fy);
-  }, []);
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    const result = await submitMonthlyTarget({ fy, month, amount });
-
-    if (result.success) {
-      setAlertMessage("✅ Monthly target submitted!");
-      await fetchAndSetSummary(fy);
-    } else {
-      setAlertMessage(`❌ ${result.message}`);
-    }
-
-    setShowAlert(true);
-    setSubmitting(false);
-
-    // Auto-close after 4 seconds (optional)
-    setTimeout(() => {
-      setShowAlert(false);
-    }, 4000);
-  };
+  }, [fy]);
 
   const months = [
     "Jul",
@@ -72,126 +101,199 @@ function Admin() {
 
   return (
     <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
-      {/* Top Navbar */}
       <TopNavbar userName={localStorage.getItem("name")} />
 
-      {/* Main content area */}
       <div className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-12 relative">
+        <div className="max-w mx-auto bg-white rounded-xl shadow p-12 relative mb-15">
           <p className="text-lg font-semibold mb-4">Admin Dashboard</p>
-
-          {/* Tabs */}
-          <div className="flex space-x-4 mb-6">
-            {["submitStatus", "monthlyTotal"].map((tab) => (
+          <div className="flex flex-wrap justify-start gap-4 mb-8">
+            {["recruiterManagement", "monthlyTotal"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-lg shadow ${
+                className={`px-4 py-2 rounded-lg shadow transition min-w-[250px] ${
                   activeTab === tab
-                    ? "bg-red-400 text-white font-semibold"
-                    : "bg-gray-300 text-gray-800 font-normal"
+                    ? "bg-secondary text-white font-semibold"
+                    : "bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
                 }`}
               >
-                {tabLabels[tab] || ""}
+                {tab === "recruiterManagement"
+                  ? "Recruiter Management"
+                  : "Input Monthly Target"}
               </button>
             ))}
           </div>
 
-          {/* Conditional tab content */}
-          {activeTab === "submitStatus" && (
-            <div className="space-y-6 mt-15">
-              <h3 className="text-lg font-semibold text-primary mb-5">
-                Recruiter Forecast Submission Status
+          {activeTab === "recruiterManagement" && (
+            <div className="space-y-8">
+              <h3 className="text-lg font-semibold text-primary">
+                👤 Recruiter & Area Management
               </h3>
-              {Object.entries(recruiterMapping).map(([category, names]) => (
-                <div key={category}>
-                  <h3 className="text-md font-semibold text-primary mb-5">
-                    {category}
-                  </h3>
-                  <div className="w-full flex">
-                    <div className="w-[60%]">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-gray-800">
-                        {names.map((name) => (
-                          <RecruiterStatus
-                            key={name}
-                            name={name}
-                            isSubmitted={submittedRecruiters.has(name)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Recruiters</h4>
+                <div className="flex gap-2 mb-10">
+                  <input
+                    className="input input-bordered"
+                    placeholder="Recruiter Name"
+                    value={newRecruiterName}
+                    onChange={(e) => setNewRecruiterName(e.target.value)}
+                  />
+                  <input
+                    className="input input-bordered"
+                    placeholder="Area"
+                    value={newRecruiterArea}
+                    onChange={(e) => setNewRecruiterArea(e.target.value)}
+                  />
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() =>
+                      askConfirm(
+                        `Add ${newRecruiterName} to ${newRecruiterArea}?`,
+                        async () => {
+                          await addRecruiter(
+                            newRecruiterName,
+                            newRecruiterArea
+                          );
+                          setNewRecruiterName("");
+                          setNewRecruiterArea("");
+                          setAlertMessage("✅ Recruiter added");
+                          setShowAlert(true);
+                          setRefreshKey((k) => k + 1);
+                        }
+                      )
+                    }
+                  >
+                    Add
+                  </button>
                 </div>
-              ))}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {recruiters.map((r) => (
+                    <div
+                      key={r.id}
+                      className="bg-gray-100 p-3 rounded flex items-center justify-between text-sm shadow-sm"
+                    >
+                      <span className="text-gray-800 font-medium leading-snug">
+                        {r.name}{" "}
+                        <span className="text-gray-500 text-xs">
+                          ({r.area})
+                        </span>
+                      </span>
+                      <button
+                        onClick={() =>
+                          askConfirm(`Delete ${r.name}?`, async () => {
+                            await deleteRecruiter(r.id);
+                            setAlertMessage("✅ Recruiter deleted");
+                            setShowAlert(true);
+                            setRefreshKey((k) => k + 1);
+                          })
+                        }
+                        className="text-gray-500 hover:text-secondary"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mt-8 mb-2">Area Headcounts</h4>
+                <ul className="space-y-2">
+                  {areas.map((a) => (
+                    <li key={a.id} className="flex items-center gap-4">
+                      <span className="w-48">{a.name}</span>
+                      <input
+                        type="number"
+                        className="input input-bordered w-24"
+                        value={areaEdits[a.id] ?? a.headcount}
+                        onChange={(e) =>
+                          setAreaEdits((prev) => ({
+                            ...prev,
+                            [a.id]: e.target.value,
+                          }))
+                        }
+                      />
+                      <button
+                        className="btn btn-sm"
+                        onClick={() =>
+                          askConfirm(
+                            `Save headcount for "${a.name}"?`,
+                            async () => {
+                              await updateHeadcount(
+                                a.id,
+                                parseFloat(areaEdits[a.id])
+                              );
+                              setAlertMessage("✅ Headcount updated!");
+                              setShowAlert(true);
+                              setRefreshKey((k) => k + 1);
+                            }
+                          )
+                        }
+                      >
+                        💾 Save
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <ConfirmDialog
+                show={showConfirm}
+                onCancel={() => setShowConfirm(false)}
+                onConfirm={() => {
+                  setShowConfirm(false);
+                  onConfirmAction();
+                }}
+                message={confirmMessage}
+              />
             </div>
           )}
+
           {activeTab === "monthlyTotal" && (
-            <div className="text-gray-800 text-sm mt-15">
-              <div className="bg-white max-w-2xl space-y-6">
-                <h2 className="text-lg font-semibold text-primary mb-5">
-                  📋 Input Monthly Target
-                </h2>
-
-                {/* Year + Month Dropdowns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Financial Year Dropdown */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700">
-                      Financial Year
-                    </label>
-                    <select
-                      className="select select-bordered w-full"
-                      value={fy}
-                      onChange={(e) => setFy(e.target.value)}
-                    >
-                      <option>FY25</option>
-                      <option>FY26</option>
-                    </select>
-                  </div>
-
-                  {/* Month Dropdown */}
-                  <div>
-                    <label className="block mb-1 text-sm font-medium text-gray-700">
-                      Month
-                    </label>
-                    <select
-                      className="select select-bordered w-full"
-                      value={month}
-                      onChange={(e) => setMonth(e.target.value)}
-                    >
-                      {months.map((month) => (
-                        <option key={month}>{month}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Dollar Input */}
+            <div className="text-gray-800 text-sm mt-15 mb-15">
+              <h2 className="text-lg font-semibold text-primary mb-5">
+                📋 Input Monthly Target
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block mb-1 text-sm font-medium text-gray-700">
-                    Monthly Target ($)
-                  </label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => {
-                      setAmount(e.target.value);
-                    }}
-                    placeholder="Enter amount"
-                    className="input input-bordered w-full pl-8"
-                  />
+                  <label className="block mb-1">Financial Year</label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={fy}
+                    onChange={(e) => setFy(e.target.value)}
+                  >
+                    <option>FY25</option>
+                    <option>FY26</option>
+                  </select>
                 </div>
-                <button
-                  className="btn btn-secondary mt-4 flex items-center gap-2"
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                >
-                  {submitting && (
-                    <span className="loading loading-spinner loading-sm text-white"></span>
-                  )}
-                  Submit Target
-                </button>
+                <div>
+                  <label className="block mb-1">Month</label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                  >
+                    {months.map((m) => (
+                      <option key={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+              <label className="block mb-1">Monthly Target ($)</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="input input-bordered w-full"
+              />
+              <button
+                className="btn btn-secondary mt-4"
+                onClick={handleSubmit}
+                disabled={submitting}
+              >
+                Submit Target
+              </button>
               {alertMessage && showAlert && (
                 <div className="fixed bottom-10 right-10 text-center z-50">
                   <div className="alert shadow-lg w-fit rounded-full bg-emerald-300 border-0">
@@ -210,49 +312,37 @@ function Admin() {
                   </div>
                 </div>
               )}
-              <div className="space-y-4 mt-15">
-                <h2 className="text-lg font-semibold text-primary">
+              <div className="mt-8">
+                <h2 className="text-lg font-semibold text-primary mb-4">
                   📊 View Submitted Targets
                 </h2>
-
-                <select
-                  className="select select-bordered w-fit"
-                  value={fy}
-                  onChange={(e) => {
-                    setFy(e.target.value);
-                    fetchAndSetSummary(e.target.value);
-                  }}
-                >
-                  <option>FY25</option>
-                  <option>FY26</option>
-                </select>
-
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra mt-4 w-full">
-                    <thead>
-                      <tr>
-                        {months.map((m) => (
-                          <th key={m}>{m}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        {months.map((m) => (
-                          <td key={m}>
-                            {summaryByMonth[m]
-                              ? `$${(summaryByMonth[m] / 1000).toFixed(0)}K`
-                              : "-"}
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <table className="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      {months.map((m) => (
+                        <th key={m}>{m}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {months.map((m) => (
+                        <td key={m}>
+                          {summaryByMonth[m]
+                            ? `$${(summaryByMonth[m] / 1000).toFixed(0)}K`
+                            : "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
         </div>
+      </div>
+      <div className="text-gray-400 p-5 text-right">
+        For any issues, please contact Leo@trihalo.com.au
       </div>
     </div>
   );

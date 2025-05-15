@@ -1,34 +1,37 @@
 import TopNavbar from "../components/TopNavbar.jsx";
 import { useCumulativeActuals } from "../hooks/useCumulativeActuals.js";
 import { useCumulativeForecasts } from "../hooks/useCumulativeForecasts.js";
-import {
-  allAreas,
-  headcountByArea,
-  allRecruiters,
-  summaryMapping,
-} from "../data/recruiterMapping.js";
+import { useRecruiterData } from "../hooks/useRecruiterData";
+import { useMonthlyTargets } from "../hooks/useMonthlyTargets.js";
 import calendar from "../data/calendar.js";
 import { getCurrentMonthInfo } from "../utils/getCurrentMonthInfo.js";
 import {
   buildRecruiterTogetherByWeek,
   groupRecruitersByAreaWeek,
 } from "../utils/calcHelpers";
-import { useMonthlyTargets } from "../hooks/useMonthlyTargets";
 
 function Revenue() {
   const { currentFY, currentMonth, currentWeekIndex, weeksInMonth } =
     getCurrentMonthInfo(calendar);
   const weeks = weeksInMonth.map((w) => w.week);
-
-  const { actualsByArea, cumulativeActualsByRecruiter, cumulativeActuals } =
-    useCumulativeActuals(currentMonth, currentFY, weeks);
-
+  const { summaryMapping, allRecruiters, allAreas, headcountByArea } =
+    useRecruiterData();
   const targetByMonth = useMonthlyTargets(currentFY);
-  const {
-    cumulativeForecasts,
-    forecastByAreaForWeek,
-    cumulativeForecastsByRecruiter,
-  } = useCumulativeForecasts(currentFY, currentMonth);
+  const lastUpdatedTime = localStorage.getItem(
+    "revenue_table_last_modified_time"
+  );
+
+  const { actualsByArea, cumulativeActuals, cumulativeActualsByRecruiter } =
+    useCumulativeActuals(
+      currentMonth,
+      currentFY,
+      weeks,
+      allRecruiters,
+      allAreas
+    );
+
+  const { forecastByAreaForWeek, cumulativeForecastsByRecruiter } =
+    useCumulativeForecasts(currentFY, currentMonth, summaryMapping);
 
   const recruiterToArea = {};
   Object.entries(summaryMapping).forEach(([area, recruiters]) => {
@@ -60,7 +63,7 @@ function Revenue() {
       area,
       forecastWeek: forecastThisWeek,
       actualWeek: actualThisWeek,
-      variance: actualThisWeek - forecastThisWeek,
+      variance: Math.round(actualThisWeek - forecastThisWeek, 0),
       mtdRevenue,
       forecastMTD,
       headcount,
@@ -68,8 +71,6 @@ function Revenue() {
       actualPerHead,
     };
   });
-
-  console.log("Forecast Rows", rows);
 
   const totals = rows.reduce(
     (acc, row) => {
@@ -98,7 +99,7 @@ function Revenue() {
 
   const formatVariance = (v) =>
     v < 0 ? (
-      <span className="text-red-600">
+      <span className="text-secondary">
         ({Math.abs(v).toLocaleString("en-AU")})
       </span>
     ) : v > 0 ? (
@@ -118,7 +119,8 @@ function Revenue() {
           <div className="text-sm text-gray-500 mb-4">
             {targetByMonth[currentMonth] && (
               <span>
-                Target: ${targetByMonth[currentMonth].toLocaleString("en-AU")}
+                Target:{" "}
+                <b>${targetByMonth[currentMonth].toLocaleString("en-AU")}</b>
               </span>
             )}
           </div>
@@ -196,7 +198,9 @@ function Revenue() {
                       {format(totals.actualWeek)}
                     </td>
                     <td className="px-3 py-2 text-right border-x border-gray-200">
-                      {formatVariance(totals.actualWeek - totals.forecastWeek)}
+                      {formatVariance(
+                        Math.round(totals.actualWeek - totals.forecastWeek, 0)
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right border-x border-gray-200">
                       {format(totals.mtdRevenue)}
@@ -220,7 +224,15 @@ function Revenue() {
               </table>
             </div>
           </div>
+          {lastUpdatedTime && (
+            <div className="text-sm text-gray-500 mt-1">
+              Actual data last updated: <b>{lastUpdatedTime}</b>
+            </div>
+          )}
         </div>
+      </div>
+      <div className="text-gray-400 p-5 text-right">
+        For any issues, please contact Leo@trihalo.com.au
       </div>
     </div>
   );

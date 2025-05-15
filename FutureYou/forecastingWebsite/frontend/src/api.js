@@ -13,12 +13,15 @@ export const login = async (username, password) => {
     });
 
     if (response.data.success) {
+      console.log(response.data);
       return {
         success: true,
         message: response.data.message,
         token: response.data.token,
         role: response.data.role,
         name: response.data.name,
+        revenue_table_last_modified_time:
+          response.data.revenue_table_last_modified_time,
       };
     } else {
       console.error("API Error:", response.data.error);
@@ -175,4 +178,51 @@ export const fetchMonthlyTargets = async (fy) => {
     console.error("❌ Failed to fetch monthly targets:", error);
     return [];
   }
+};
+
+// =================== FIRESTORE APIs =========================
+
+export const getAreas = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/areas`);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
+export const getRecruiters = async () => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/recruiters`);
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
+export const addRecruiter = async (name, area) => {
+  const res = await fetch(`${API_BASE_URL}/recruiters`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, area }),
+  });
+  return await res.json();
+};
+
+export const deleteRecruiter = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/recruiters/${id}`, {
+    method: "DELETE",
+  });
+  return await res.json();
+};
+
+export const updateHeadcount = async (id, headcount) => {
+  const res = await fetch(`${API_BASE_URL}/areas/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ headcount }),
+  });
+  return await res.json();
 };

@@ -7,11 +7,18 @@ from datetime import datetime, timedelta, timezone
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
+from google.cloud import firestore
 from datetime import datetime
 import pytz
 
 from dotenv import load_dotenv
 load_dotenv()
+
+db = firestore.Client.from_service_account_json(
+    "service-account.json",
+    project="futureyou-458212",
+    database="futureyou"
+)
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS for local frontend development
@@ -41,11 +48,20 @@ MAIN_TABLE = f"{project_id}.{recruiter_dataset_id}.{table_id}"
 REVENUE_TABLE = f"{project_id}.{revenue_dataset_id}.{revenue_table_id}"
 TARGET_TABLE = f"{project_id}.{recruiter_dataset_id}.{target_table_id}"
 
+
 credentials = service_account.Credentials.from_service_account_file(
     key_path, 
     scopes=["https://www.googleapis.com/auth/bigquery"]
 )
 client = bigquery.Client(credentials=credentials, project=project_id)
+
+revenue_table_last_modified_time = client.get_table(REVENUE_TABLE).modified
+# Convert to AEST
+aest = pytz.timezone("Australia/Sydney")
+revenue_table_last_modified_time_local = revenue_table_last_modified_time.astimezone(aest)
+formatted_time = revenue_table_last_modified_time_local.strftime("%d/%m/%Y %-I:%M%p").lower()
+
+print("Last modified (AEST):", formatted_time)
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -75,7 +91,8 @@ def login():
             "message": f"Welcome, {username}!",
             "token": token,
             "role": user["role"],
-            "name": user["name"]
+            "name": user["name"],
+            "revenue_table_last_modified_time": formatted_time
         })
 
     return jsonify({
@@ -108,8 +125,7 @@ def test_receive_forecasts():
             entry["uploadMonth"] = entry.get("uploadMonth", "")
             entry["uploadWeek"] = int(entry.get("uploadWeek", 0) or 0)
             entry["uploadYear"] = entry.get("uploadYear", 0) or 0
-            
-            aest = pytz.timezone("Australia/Sydney")
+        
             entry["uploadTimestamp"] = datetime.now(aest).strftime("%-I:%M%p %-d/%-m/%Y").lower()
             entry['uploadUser'] = entry.get("uploadUser", "Kermit the Frog")
 
@@ -152,7 +168,7 @@ def test_receive_forecasts():
 
         return jsonify({
             "success": True,
-            "message": f"Uploaded {len(forecasts)} records for {recruiterName}."
+            "message": f"Updated forecast records for {recruiterName}."
         })
 
     except Exception as e:
@@ -348,9 +364,7 @@ def submit_monthly_target():
         return jsonify({"error": "Missing required fields"}), 400
 
     try:
-        # Convert raw UTC timestamp to Australia/Sydney time
         utc_dt = datetime.fromisoformat(raw_timestamp.replace("Z", "+00:00"))
-        aest = pytz.timezone("Australia/Sydney")
         local_dt = utc_dt.astimezone(aest)
         formatted_timestamp = local_dt.strftime("%-I:%M%p %-d/%-m/%Y").lower()
 
@@ -415,6 +429,70 @@ def get_monthly_targets():
     except Exception as e:
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500
+    
+    
+# ============ FIRESTORE FUNCTIONS ==================
+@app.route("/recruiters", methods=["GET"])
+def get_recruiters():
+    try:
+        docs = db.collection("recruiters").stream()
+        return jsonify([
+            {"id": doc.id, **doc.to_dict()} for doc in docs
+        ])
+    except Exception as e:
+        print("❌ Firestore error:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/recruiters", methods=["POST"])
+def add_recruiter():
+    data = request.json
+    name = data.get("name")
+    area = data.get("area")
+    if not name or not area:
+        return jsonify({"error": "Missing name or area"}), 400
+
+    try:
+        doc_ref = db.collection("recruiters").add({"name": name, "area": area})
+        return jsonify({"success": True, "id": doc_ref[1].id})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/recruiters/<id>", methods=["DELETE"])
+def delete_recruiter(id):
+    try:
+        db.collection("recruiters").document(id).delete()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/areas", methods=["GET"])
+def get_areas():
+    try:
+        docs = db.collection("areas").stream()
+        return jsonify([
+            {"id": doc.id, **doc.to_dict()} for doc in docs
+        ])
+    except Exception as e:
+        print("❌ Firestore error:", e)
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/areas/<id>", methods=["PATCH"])
+def update_area(id):
+    data = request.get_json()
+    headcount = data.get("headcount")
+
+    if headcount is None:
+        return jsonify({"error": "Missing 'headcount'"}), 400
+
+    try:
+        db.collection("areas").document(id).update({"headcount": float(headcount)})
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 
 if __name__ == "__main__":

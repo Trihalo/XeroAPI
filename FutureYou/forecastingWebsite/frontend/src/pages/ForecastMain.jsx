@@ -1,17 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import TopNavbar from "../components/TopNavbar";
-import {
-  recruiterMapping,
-  summaryMapping,
-  headcountByArea,
-  allAreas,
-  allRecruiters,
-} from "../data/recruiterMapping";
+import { useRecruiterData } from "../hooks/useRecruiterData";
 import { useNavigate } from "react-router-dom";
 import calendar from "../data/calendar";
 import { getCurrentMonthInfo } from "../utils/getCurrentMonthInfo";
 import { fetchForecastSummary } from "../api";
-import { getStoredInvoiceData } from "../utils/getInvoiceInfo";
 import { useSubmittedRecruiters } from "../hooks/useSubmittedRecruiters";
 import { useCumulativeActuals } from "../hooks/useCumulativeActuals";
 import { useCumulativeForecasts } from "../hooks/useCumulativeForecasts";
@@ -70,19 +63,20 @@ function ForecastMain() {
   const [alertMessage, setAlertMessage] = useState(null);
   const [showAlert, setShowAlert] = useState(true);
 
-  const {
-    currentMonth,
-    currentFY,
-    weeksInMonth: currentWeeks,
-    currentWeekIndex,
-  } = getCurrentMonthInfo(calendar);
+  const { currentMonth, currentFY, weeksInMonth, currentWeekIndex } = useMemo(
+    () => getCurrentMonthInfo(calendar),
+    [calendar]
+  );
 
   // const currentMonth = "Jun";
   // const currentWeekIndex = 2;
 
-  const weeks = currentWeeks.map((w) => w.week);
-  const invoices = getStoredInvoiceData();
+  const weeks = useMemo(() => weeksInMonth.map((w) => w.week), [weeksInMonth]);
+
   const submittedRecruiters = useSubmittedRecruiters();
+
+  const { summaryMapping, allRecruiters, allAreas, headcountByArea } =
+    useRecruiterData();
 
   const remainingRecruiters = allRecruiters.filter(
     (recruiter) => !submittedRecruiters.has(recruiter)
@@ -100,13 +94,19 @@ function ForecastMain() {
     actualsByRecruiterWeek,
     cumulativeActuals,
     cumulativeActualsByRecruiter,
-  } = useCumulativeActuals(currentMonth, currentFY, weeks);
+  } = useCumulativeActuals(
+    currentMonth,
+    currentFY,
+    weeks,
+    allRecruiters,
+    allAreas
+  );
 
   const {
     rawForecastRows,
     cumulativeForecasts,
     cumulativeForecastsByRecruiter,
-  } = useCumulativeForecasts(currentFY, currentMonth);
+  } = useCumulativeForecasts(currentFY, currentMonth, summaryMapping);
 
   const recruiterTogetherByWeek = buildRecruiterTogetherByWeek({
     allRecruiters,
@@ -121,17 +121,21 @@ function ForecastMain() {
   );
 
   // --- 📤 Load Forecast Data ---
+  const hasFetched = useRef(false);
+
   useEffect(() => {
+    if (hasFetched.current) return;
+    if (!summaryMapping || weeks.length === 0) return;
+
     const fetchData = async () => {
       const summary = await fetchForecastSummary(currentFY, currentMonth);
-      // Format forecastData for "view" tab
-      const structured = Object.entries(recruiterMapping).map(
+      const structured = Object.entries(summaryMapping).map(
         ([category, recruiters]) => ({
           title: category,
           data: recruiters.map((name) => {
-            const weeks = currentWeeks.map((w) => {
+            const paddedWeeks = weeks.map((weekNum) => {
               const match = summary.find(
-                (e) => e.name === name && Number(e.week) === w.week
+                (e) => e.name === name && Number(e.week) === weekNum
               );
               return match ? Number(match.total_revenue) : 0;
             });
@@ -141,20 +145,24 @@ function ForecastMain() {
               .reduce(
                 (max, curr) =>
                   Number(curr.uploadWeek) > Number(max.uploadWeek) ? curr : max,
-                {
-                  uploadWeek: 0,
-                }
+                { uploadWeek: 0 }
               );
 
-            return { name, weeks, uploadWeek: latestUpload.uploadWeek };
+            return {
+              name,
+              weeks: paddedWeeks,
+              uploadWeek: latestUpload.uploadWeek,
+            };
           }),
         })
       );
+
       setForecastData(structured);
+      hasFetched.current = true;
     };
 
     fetchData();
-  }, [currentFY, currentMonth]);
+  }, [currentFY, currentMonth, summaryMapping, weeks]);
 
   const targetByMonth = useMonthlyTargets(currentFY);
 
@@ -196,22 +204,22 @@ function ForecastMain() {
     <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
       <TopNavbar userName={localStorage.getItem("name") || "User"} />
       <div className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-10 pb-20 relative">
+        <div className="max-w-full mx-auto bg-white rounded-xl shadow px-4 sm:px-0 md:px-10 py-6 md:pb-20 relative">
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-2xl font-bold text-primary">
               Recruiter Forecasts
             </h1>
           </div>
 
-          <div className="flex space-x-4 mb-8">
+          <div className="flex flex-wrap justify-start gap-4 mb-15">
             {["input", "view", "summary"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-lg shadow ${
+                className={`px-4 py-2 rounded-lg shadow transition min-w-[250px] ${
                   activeTab === tab
-                    ? "bg-red-400 text-white font-semibold"
-                    : "bg-gray-300 text-gray-800 font-normal"
+                    ? "bg-secondary text-white font-semibold"
+                    : "bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
                 }`}
               >
                 {tab === "input"
@@ -225,21 +233,26 @@ function ForecastMain() {
 
           {/* Tab Content */}
           {activeTab === "input" && (
-            <div className="space-y-8">
-              {Object.entries(recruiterMapping).map(([category, names]) => (
-                <Section key={category} title={category} names={names} />
-              ))}
+            <div>
+              <h2 className="text-xl font-semibold text-primary mb-10">
+                Forecast Input
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {Object.entries(summaryMapping).map(([category, names]) => (
+                  <Section key={category} title={category} names={names} />
+                ))}
+              </div>
             </div>
           )}
-
           {activeTab === "view" && (
-            <div className="text-gray-800 text-sm space-y-8">
-              <div className="text-xl font-semibold text-primary">
+            <div className="text-gray-800 text-sm space-y-12">
+              <h2 className="text-xl font-semibold text-primary mb-10">
                 {currentFY} {currentMonth} Latest Forecasts
-              </div>
-              <div className="text-sm text-gray-400 mb-10">
+              </h2>
+              <p className="text-sm text-gray-400 mb-10">
                 Red highlight represents actual invoiced revenue
-              </div>
+              </p>
+
               {forecastData.map((section) => {
                 const sectionRows = section.data.map(({ name }) => {
                   const allForecasts = rawForecastRows.filter(
@@ -251,64 +264,66 @@ function ForecastMain() {
                   const latestRows = allForecasts.filter(
                     (r) => Number(r.uploadWeek) === maxUploadWeek
                   );
-                  const paddedWeeks = currentWeeks.map((w) => {
+
+                  const paddedWeeks = weeksInMonth.map((w) => {
                     const match = latestRows.find(
                       (r) => Number(r.week) === w.week
                     );
                     return match ? Number(match.total_revenue) : 0;
                   });
+
                   const finalWeeks = paddedWeeks.map((amt, i) => {
-                    const weekNumber = i + 1;
-                    return weekNumber < currentWeekIndex
-                      ? actualsByRecruiterWeek[name]?.[weekNumber] || 0
+                    const weekNum = i + 1;
+                    return weekNum < currentWeekIndex
+                      ? actualsByRecruiterWeek[name]?.[weekNum] || 0
                       : amt;
                   });
+
                   const rowTotal = finalWeeks.reduce((a, b) => a + b, 0);
                   return { name, finalWeeks, rowTotal };
                 });
 
-                const totals = currentWeeks.map((_, i) =>
+                const sectionTotals = weeksInMonth.map((_, i) =>
                   sectionRows.reduce(
                     (sum, row) => sum + (row.finalWeeks[i] || 0),
                     0
                   )
                 );
-                const totalSum = totals.reduce((a, b) => a + b, 0);
+                const totalSum = sectionTotals.reduce((a, b) => a + b, 0);
 
                 return (
                   <div key={section.title}>
-                    <h3 className="text-lg font-semibold mb-5">
+                    <h3 className="text-lg font-semibold mb-3">
                       {section.title}
                     </h3>
-                    <div className="overflow-x-auto mb-10">
-                      <table className="min-w-full text-left border-collapse text-sm border-x border-gray-200">
-                        <thead className="bg-gray-100 text-gray-700 border-x border-gray-200">
+                    <div className="overflow-x-auto border border-gray-200 mb-6 rounded-lg">
+                      <table className="table-fixed min-w-full text-sm text-left border-collapse border-gray-200">
+                        <thead className="bg-gray-100 text-gray-700 border-gray-200">
                           <tr>
-                            <th className="py-2 px-4 font-semibold">Name</th>
-                            {currentWeeks.map((week) => (
+                            <th className="w-1/6 py-2 px-4 font-semibold">
+                              Name
+                            </th>
+                            {weeksInMonth.map((week) => (
                               <th
                                 key={week.week}
-                                className="py-2 px-4 font-semibold"
+                                className="w-1/12 py-2 px-4 font-semibold"
                               >
-                                Week {week.week}
+                                Wk {week.week}
                               </th>
                             ))}
-                            <th className="py-2 px-4 font-semibold border-x border-gray-200">
+                            <th className="w-1/12 py-2 px-4 font-semibold">
                               Total
                             </th>
                           </tr>
                         </thead>
                         <tbody>
                           {sectionRows.map(({ name, finalWeeks, rowTotal }) => (
-                            <tr
-                              key={name}
-                              className="border-b border-x border-gray-200"
-                            >
+                            <tr key={name} className="border-b border-gray-200">
                               <td className="py-2 px-4">{name}</td>
                               {finalWeeks.map((amt, i) => (
                                 <td
                                   key={i}
-                                  className={`py-2 px-4 ${
+                                  className={`py-2 px-4 text-left ${
                                     i + 1 < currentWeekIndex
                                       ? "bg-accent border-x border-gray-200"
                                       : "border-x border-gray-200"
@@ -319,7 +334,7 @@ function ForecastMain() {
                                     : "-"}
                                 </td>
                               ))}
-                              <td className="py-2 px-4 font-medium">
+                              <td className="py-2 px-4 text-left font-medium">
                                 {Math.round(rowTotal).toLocaleString()}
                               </td>
                             </tr>
@@ -327,12 +342,12 @@ function ForecastMain() {
 
                           <tr className="font-semibold text-black bg-gray-100">
                             <td className="py-2 px-4">Total</td>
-                            {totals.map((amt, i) => (
-                              <td key={i} className="py-2 px-4">
+                            {sectionTotals.map((amt, i) => (
+                              <td key={i} className="py-2 px-4 text-left">
                                 {Math.round(amt).toLocaleString()}
                               </td>
                             ))}
-                            <td className="py-2 px-4">
+                            <td className="py-2 px-4 text-left">
                               {Math.round(totalSum).toLocaleString()}
                             </td>
                           </tr>
@@ -376,12 +391,12 @@ function ForecastMain() {
                 </p>
               )}
 
-              <div className="overflow-x-auto">
-                <table className="table table-sm min-w-full border-collapse">
-                  <thead className="bg-gray-100 text-gray-700 border-x border-gray-200">
+              <div className="overflow-x-auto border border-gray-300 mb-6 rounded-lg">
+                <table className="table table-sm text-sm min-w-full border-collapse">
+                  <thead className="bg-gray-100 text-gray-700">
                     <tr>
                       <th className="text-left py-2 px-4">Area</th>
-                      {currentWeeks.map((w) => (
+                      {weeksInMonth.map((w) => (
                         <th key={w.week} className="text-right py-2 px-4">
                           Wk {w.week}
                         </th>
@@ -400,11 +415,9 @@ function ForecastMain() {
                         cumulativeActuals?.[area]?.[currentWeekIndex] || 0;
 
                       return (
-                        <tr key={area} className="border-b border-gray-100">
-                          <td className="py-2 px-4 font-medium text-sm border-x border-gray-200">
-                            {area}
-                          </td>
-                          {currentWeeks.map((w) => (
+                        <tr key={area} className="border-gray-100">
+                          <td className="py-2 px-4 text-sm">{area}</td>
+                          {weeksInMonth.map((w) => (
                             <RenderKValue
                               key={w.week}
                               value={
@@ -426,17 +439,15 @@ function ForecastMain() {
                               : "-"}
                           </td>
                           {/* w2w movement */}
-                          <td className="py-2 px-4 text-sm text-left border-x border-gray-200">
+                          <td className="py-2 px-4 text-sm text-left">
                             {movement[area]?.join(", ") || ""}
                           </td>
                         </tr>
                       );
                     })}
-                    <tr className="font-semibold bg-gray-100 border-t border-gray-300 ">
-                      <td className="py-2 px-4 text-sm border-x border-gray-200">
-                        Total
-                      </td>
-                      {currentWeeks.map((w) => {
+                    <tr className="font-semibold bg-gray-100 border-gray-300 ">
+                      <td className="py-2 px-4 text-sm">Total</td>
+                      {weeksInMonth.map((w) => {
                         const val = aggregatedForecasts["Total"]?.[w.week] || 0;
                         return (
                           <td
@@ -496,6 +507,9 @@ function ForecastMain() {
             </div>
           )}
         </div>
+      </div>
+      <div className="text-gray-400 p-5 text-right">
+        For any issues, please contact Leo@trihalo.com.au
       </div>
     </div>
   );

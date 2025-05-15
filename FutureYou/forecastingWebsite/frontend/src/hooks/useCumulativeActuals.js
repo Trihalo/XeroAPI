@@ -5,9 +5,14 @@ import {
   computeCumulativeTotals,
 } from "../utils/calcHelpers";
 import { getStoredInvoiceData } from "../utils/getInvoiceInfo";
-import { allAreas, allRecruiters } from "../data/recruiterMapping";
 
-export function useCumulativeActuals(currentMonth, currentFY, weeks) {
+export function useCumulativeActuals(
+  currentMonth,
+  currentFY,
+  weeks,
+  allRecruiters,
+  allAreas
+) {
   const invoices = getStoredInvoiceData();
 
   return useMemo(() => {
@@ -38,5 +43,5 @@ export function useCumulativeActuals(currentMonth, currentFY, weeks) {
       cumulativeActuals,
       cumulativeActualsByRecruiter,
     };
-  }, [currentMonth, currentFY, weeks, invoices]);
+  }, [currentMonth, currentFY, weeks, invoices, allRecruiters, allAreas]);
 }

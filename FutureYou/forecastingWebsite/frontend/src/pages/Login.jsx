@@ -18,8 +18,14 @@ function Login() {
       localStorage.setItem("token", result.token);
       localStorage.setItem("role", result.role);
       console.log("User role:", result.role);
-      console.log("User name:", result.name);
       localStorage.setItem("name", result.name);
+      console.log("User name:", result.name);
+
+      localStorage.setItem(
+        "revenue_table_last_modified_time",
+        result.revenue_table_last_modified_time
+      );
+      console.log("last update:", result.revenue_table_last_modified_time);
       navigate("/forecasts");
 
       await fetchAndStoreInvoiceData();
@@ -30,7 +36,7 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-primary text-base-content">
-      <div className="bg-base-100 text-base-content rounded-2xl shadow-md px-10 py-8 w-[30%] text-center">
+      <div className="bg-base-100 text-base-content rounded-2xl shadow-md px-6 py-8 w-full max-w-sm mx-4 sm:mx-auto text-center">
         <img src="/fy.png" alt="FutureYou" className="mx-auto mb-2" />
         <h2 className="text-xl font-small mb-6">
           Recruiter Forecast Dashboard

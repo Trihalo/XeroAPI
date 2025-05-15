@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@firebase/firestore": "^4.7.14",
     "axios": "^1.9.0",
+    "firebase": "^11.7.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.3"
