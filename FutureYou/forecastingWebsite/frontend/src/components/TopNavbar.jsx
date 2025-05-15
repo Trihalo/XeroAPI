@@ -18,7 +18,7 @@ function TopNavbar({ userName = "User" }) {
   const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   return (
-    <header className="w-full bg-gray-200 px-4 py-4 flex items-center justify-between text-sm relative">
+    <header className="w-full bg-gray-200 px-10 py-4 flex items-center justify-between text-sm relative">
       {/* Left side */}
       <div className="flex items-baseline gap-4">
         <div className="text-2xl text-gray-700 font-light">

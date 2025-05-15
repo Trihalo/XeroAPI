@@ -46,8 +46,9 @@ function Admin() {
   const [onConfirmAction, setOnConfirmAction] = useState(() => () => {});
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const { recruiters, areas, summaryMapping, headcountByArea, reloadAll } =
-    useRecruiterData(refreshKey);
+  const { recruiters, areas } = useRecruiterData(refreshKey);
+
+  console.log(areas);
 
   const askConfirm = (message, action) => {
     setConfirmMessage(message);
@@ -139,12 +140,20 @@ function Admin() {
                     value={newRecruiterName}
                     onChange={(e) => setNewRecruiterName(e.target.value)}
                   />
-                  <input
-                    className="input input-bordered"
-                    placeholder="Area"
+                  <select
+                    className="select select-bordered"
                     value={newRecruiterArea}
                     onChange={(e) => setNewRecruiterArea(e.target.value)}
-                  />
+                  >
+                    <option value="" disabled>
+                      Select an area
+                    </option>
+                    {areas.map((area) => (
+                      <option key={area.id} value={area.name}>
+                        {area.name}
+                      </option>
+                    ))}
+                  </select>
                   <button
                     className="btn btn-secondary"
                     onClick={() =>
@@ -255,7 +264,7 @@ function Admin() {
               <h2 className="text-lg font-semibold text-primary mb-5">
                 📋 Input Monthly Target
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6 max-w-xl w-full">
                 <div>
                   <label className="block mb-1">Financial Year</label>
                   <select
@@ -279,14 +288,16 @@ function Admin() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block mb-1">Monthly Target ($)</label>
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="input input-bordered w-full"
+                  />
+                </div>
               </div>
-              <label className="block mb-1">Monthly Target ($)</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="input input-bordered w-full"
-              />
               <button
                 className="btn btn-secondary mt-4"
                 onClick={handleSubmit}
@@ -316,26 +327,37 @@ function Admin() {
                 <h2 className="text-lg font-semibold text-primary mb-4">
                   📊 View Submitted Targets
                 </h2>
-                <table className="table table-zebra w-full">
-                  <thead>
-                    <tr>
-                      {months.map((m) => (
-                        <th key={m}>{m}</th>
+                <div className="overflow-hidden rounded-xl border border-gray-300 max-w-sm">
+                  <table className="w-full text-sm text-gray-800">
+                    <thead>
+                      <tr>
+                        <th className="bg-gray-200 px-4 py-3 text-left text-sm font-semibold w-1/2">
+                          Month
+                        </th>
+                        <th className="bg-gray-200 px-4 py-3 text-left text-sm font-semibold w-1/2">
+                          Target
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {months.map((m, idx) => (
+                        <tr
+                          key={m}
+                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                        >
+                          <td className="px-4 py-3 text-left font-medium">
+                            {m}
+                          </td>
+                          <td className="px-4 py-3 text-left">
+                            {summaryByMonth[m]
+                              ? `$${(summaryByMonth[m] / 1000).toFixed(0)}K`
+                              : "-"}
+                          </td>
+                        </tr>
                       ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {months.map((m) => (
-                        <td key={m}>
-                          {summaryByMonth[m]
-                            ? `$${(summaryByMonth[m] / 1000).toFixed(0)}K`
-                            : "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}

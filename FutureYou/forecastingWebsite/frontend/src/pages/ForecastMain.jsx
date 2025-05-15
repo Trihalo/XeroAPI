@@ -212,7 +212,7 @@ function ForecastMain() {
           </div>
 
           <div className="flex flex-wrap justify-start gap-4 mb-15">
-            {["input", "view", "summary"].map((tab) => (
+            {["input", "summary", "view"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -225,8 +225,8 @@ function ForecastMain() {
                 {tab === "input"
                   ? "Forecast Input"
                   : tab === "view"
-                  ? "View Forecasts"
-                  : "Summary"}
+                  ? "Detailed Forecasts"
+                  : "Forecast Summary"}
               </button>
             ))}
           </div>

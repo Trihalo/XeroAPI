@@ -55,16 +55,14 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 client = bigquery.Client(credentials=credentials, project=project_id)
 
-revenue_table_last_modified_time = client.get_table(REVENUE_TABLE).modified
 # Convert to AEST
 aest = pytz.timezone("Australia/Sydney")
-revenue_table_last_modified_time_local = revenue_table_last_modified_time.astimezone(aest)
-formatted_time = revenue_table_last_modified_time_local.strftime("%d/%m/%Y %-I:%M%p").lower()
-
-print("Last modified (AEST):", formatted_time)
 
 @app.route("/login", methods=["POST"])
 def login():
+    revenue_table_last_modified_time = client.get_table(REVENUE_TABLE).modified
+    revenue_table_last_modified_time_local = revenue_table_last_modified_time.astimezone(aest)
+    formatted_time = revenue_table_last_modified_time_local.strftime("%d/%m/%Y %-I:%M%p").lower()
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
