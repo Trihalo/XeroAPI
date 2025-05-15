@@ -15,17 +15,17 @@ function Login() {
     const result = await login(username, password);
     if (result.success) {
       setMessage("✅ Login successful!");
+      // token
       localStorage.setItem("token", result.token);
+      // role
       localStorage.setItem("role", result.role);
-      console.log("User role:", result.role);
+      // name
       localStorage.setItem("name", result.name);
-      console.log("User name:", result.name);
-
+      // last modified time
       localStorage.setItem(
         "revenue_table_last_modified_time",
         result.revenue_table_last_modified_time
       );
-      console.log("last update:", result.revenue_table_last_modified_time);
       navigate("/forecasts");
 
       await fetchAndStoreInvoiceData();
