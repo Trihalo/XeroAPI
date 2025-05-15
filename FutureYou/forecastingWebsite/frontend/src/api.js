@@ -33,7 +33,7 @@ export const login = async (username, password) => {
     let errorMessage = "❌ Error contacting the backend.";
     if (error.response) {
       console.error("Backend Error:", error.response.data);
-      errorMessage = `❌ Server error: ${error.response.status} - ${error.response.statusText}`;
+      errorMessage = `❌ ${error.response.data.error}`;
     } else if (error.request) {
       errorMessage =
         "❌ No response from the backend. Check if the server is running.";
@@ -41,6 +41,18 @@ export const login = async (username, password) => {
 
     return { success: false, message: errorMessage };
   }
+};
+
+export const changePassword = async (username, oldPassword, newPassword) => {
+  const response = await fetch(`${API_BASE_URL}/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ username, oldPassword, newPassword }),
+  });
+
+  return await response.json();
 };
 
 export const uploadForecastToBQ = async (rows) => {
