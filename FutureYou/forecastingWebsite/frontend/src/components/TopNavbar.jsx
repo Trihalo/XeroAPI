@@ -50,12 +50,14 @@ function TopNavbar({ userName = "User" }) {
         >
           Forecasts
         </button>
-        <button
-          className="hover:underline"
-          onClick={() => navigate("/dashboard")}
-        >
-          Revenue
-        </button>
+        {role === "admin" && (
+          <button
+            className="hover:underline"
+            onClick={() => navigate("/dashboard")}
+          >
+            Revenue
+          </button>
+        )}
         <button className="hover:underline" onClick={handleLogout}>
           Log Out
         </button>
@@ -85,15 +87,17 @@ function TopNavbar({ userName = "User" }) {
           >
             Forecasts
           </button>
-          <button
-            className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 text-gray-700"
-            onClick={() => {
-              navigate("/dashboard");
-              setMenuOpen(false);
-            }}
-          >
-            Revenue
-          </button>
+          {role === "admin" && (
+            <button
+              className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 text-gray-700"
+              onClick={() => {
+                navigate("/dashboard");
+                setMenuOpen(false);
+              }}
+            >
+              Revenue
+            </button>
+          )}
           <hr className="my-2 border-gray-200" />
           <button
             className="w-full text-left px-4 py-2 rounded hover:bg-accent text-secondary"

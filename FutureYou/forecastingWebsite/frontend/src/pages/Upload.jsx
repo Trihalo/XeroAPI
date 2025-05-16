@@ -13,6 +13,15 @@ function Upload() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const invoiceData = getStoredInvoiceData();
+  const [alertMessage, setAlertMessage] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+
+  useEffect(() => {
+    if (alertMessage) {
+      const timer = setTimeout(() => setShowAlert(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [alertMessage]);
 
   const { currentFY, currentMonth, weeksInMonth, currentWeekIndex } =
     getCurrentMonthInfo(calendar);
@@ -96,8 +105,8 @@ function Upload() {
     try {
       const result = await uploadForecastToBQ(rows);
       if (result.success) {
-        sessionStorage.setItem("alertMessage", result.message);
-        navigate("/forecasts");
+        setAlertMessage(result.message);
+        setShowAlert(true);
       }
     } finally {
       setLoading(false);
@@ -180,9 +189,9 @@ function Upload() {
                           <td className="px-4 py-2 border-x border-gray-200">
                             <input
                               type="number"
-                              className={`w-full bg-transparent focus:outline-none ${
+                              className={`bg-transparent focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-60 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed"
                                   : ""
                               }`}
                               placeholder="$"
@@ -194,12 +203,12 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
-                          <td className="px-4 py-2">
+                          <td className="px-4 py-2 border-x border-gray-200 border-r-5">
                             <input
                               type="number"
-                              className={`w-full bg-transparent focus:outline-none ${
+                              className={`bg-transparent focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-60 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed"
                                   : ""
                               }`}
                               placeholder="$"
@@ -215,21 +224,33 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
-                          <td className="px-4 py-2 text-nowrap border-x border-gray-200">
+                          <td
+                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                              !isEditable ? "opacity-40 cursor-not-allowed" : ""
+                            }`}
+                          >
                             {actualsByWeek["Perm"][row.week]
                               ? `${Math.round(
                                   actualsByWeek["Perm"][row.week]
                                 ).toLocaleString()}`
                               : "-"}
                           </td>
-                          <td className="px-4 py-2 text-nowrap border-x border-gray-200">
+                          <td
+                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                              !isEditable ? "opacity-40 cursor-not-allowed" : ""
+                            }`}
+                          >
                             {actualsByWeek["Temp"][row.week]
                               ? `${Math.round(
                                   actualsByWeek["Temp"][row.week]
                                 ).toLocaleString()}`
                               : "-"}
                           </td>
-                          <td className="px-4 py-2 text-nowrap border-x border-gray-200">
+                          <td
+                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                              !isEditable ? "opacity-40 cursor-not-allowed" : ""
+                            }`}
+                          >
                             {!isEditable
                               ? (() => {
                                   const actualPerm =
@@ -271,7 +292,7 @@ function Upload() {
                               type="text"
                               className={`w-full bg-transparent focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-30 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed"
                                   : ""
                               }`}
                               placeholder="Optional notes"
@@ -351,6 +372,24 @@ function Upload() {
                 </div>
               </div>
             </>
+          )}
+          {alertMessage && showAlert && (
+            <div className="fixed bottom-10 right-10 text-center z-50">
+              <div className="alert shadow-lg w-fit rounded-full bg-emerald-300 border-0">
+                <div className="flex items-center">
+                  <span className="badge uppercase rounded-full bg-emerald-400 mr-4 p-4 border-0">
+                    Success
+                  </span>
+                  <span>{alertMessage}</span>
+                  <button
+                    onClick={() => setShowAlert(false)}
+                    className="btn btn-sm btn-ghost ml-4"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </main>

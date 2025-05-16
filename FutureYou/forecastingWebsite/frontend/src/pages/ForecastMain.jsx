@@ -60,8 +60,6 @@ const getWeekToWeekMovement = (data, currentWeekIndex) => {
 function ForecastMain() {
   const [activeTab, setActiveTab] = useState("input");
   const [forecastData, setForecastData] = useState([]);
-  const [alertMessage, setAlertMessage] = useState(null);
-  const [showAlert, setShowAlert] = useState(true);
 
   const { currentMonth, currentFY, weeksInMonth, currentWeekIndex } = useMemo(
     () => getCurrentMonthInfo(calendar),
@@ -69,7 +67,7 @@ function ForecastMain() {
   );
 
   // const currentMonth = "Jun";
-  // const currentWeekIndex = 2;
+  // const currentWeekIndex = 4;
 
   const weeks = useMemo(() => weeksInMonth.map((w) => w.week), [weeksInMonth]);
 
@@ -183,28 +181,12 @@ function ForecastMain() {
     });
   });
 
-  // --- 🛎️ Session Alert Message ---
-  useEffect(() => {
-    const message = sessionStorage.getItem("alertMessage");
-    if (message) {
-      setAlertMessage(message);
-      sessionStorage.removeItem("alertMessage");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (alertMessage) {
-      const timer = setTimeout(() => setShowAlert(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [alertMessage]);
-
   // --- ✅ UI Render ---
   return (
     <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
       <TopNavbar userName={localStorage.getItem("name") || "User"} />
       <div className="flex-1 p-8">
-        <div className="max-w-full mx-auto bg-white rounded-xl shadow px-4 sm:px-0 md:px-10 py-6 md:pb-20 relative">
+        <div className="max-w-full mx-auto bg-white rounded-xl shadow px-4 sm:px-4 md:px-10 py-6 md:pb-20 relative">
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-2xl font-bold text-primary">
               Recruiter Forecasts
@@ -489,20 +471,6 @@ function ForecastMain() {
                     </tr>
                   </tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {alertMessage && showAlert && (
-            <div className="fixed bottom-10 right-10 text-center">
-              <div className="alert shadow-lg w-fit rounded-full bg-emerald-300 border-0">
-                <div>
-                  <span className="badge uppercase rounded-full bg-emerald-400 mr-4 p-4 border-0">
-                    Success
-                  </span>
-                  <span>{alertMessage}</span>
-                </div>
-                <button className="btn btn-sm btn-ghost">✕</button>
               </div>
             </div>
           )}
