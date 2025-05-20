@@ -2,32 +2,50 @@ from flask import Flask, request, jsonify
 import sys
 import os
 from flask_cors import CORS
+from functools import wraps
 import jwt
 from datetime import datetime, timedelta, timezone
 from google.cloud import bigquery
+from google.cloud import firestore
 from google.oauth2 import service_account
 import pandas_gbq
-from google.cloud import firestore
 from datetime import datetime
 import pytz
 from dotenv import load_dotenv
 load_dotenv()
 
-db = firestore.Client.from_service_account_json(
-    "service-account.json",
-    project="futureyou-458212",
-    database="futureyou"
-)
+project_id = "futureyou-458212"
+FIRESTORE_KEY_PATH = os.getenv("FUTUREYOU_FIRESTOREACCESS")
+BQACCESS_KEY_PATH = os.getenv("FUTUREYOU_BQACCESS")
+
+# Firestore Client
+if FIRESTORE_KEY_PATH and os.path.exists(FIRESTORE_KEY_PATH):
+    print("🔐 Using Firestore service account file for local dev")
+    db = firestore.Client.from_service_account_json(FIRESTORE_KEY_PATH, project=project_id, database="futureyou")
+else:
+    print("✅ Using default Firestore credentials (e.g., Cloud Run)")
+    db = firestore.Client(project=project_id, database="futureyou")
+
+# BigQuery Client
+if BQACCESS_KEY_PATH and os.path.exists(BQACCESS_KEY_PATH):
+    print("🔐 Using BigQuery service account file for local dev")
+    credentials = service_account.Credentials.from_service_account_file(
+        BQACCESS_KEY_PATH,
+        scopes=["https://www.googleapis.com/auth/bigquery"]
+    )
+    client = bigquery.Client(credentials=credentials, project=project_id)
+else:
+    print("✅ Using default BigQuery credentials (e.g., Cloud Run)")
+    client = bigquery.Client(project=project_id)
+
 
 app = Flask(__name__)
 CORS(app)  # Allow CORS for local frontend development
 
 # 🔐 Secret key for encoding the token
-SECRET_KEY = "trihalohehe"  # Store this securely in environment variables in production
+SECRET_KEY = os.getenv("FUTUREYOU_FORECAST_SECRET_KEY")
 
 # Path to your service account key file
-key_path = os.getenv("BQACCESS")
-project_id = "futureyou-458212"
 recruiter_dataset_id = "RecruiterForecasts"
 revenue_dataset_id = "InvoiceData"
 revenue_table_id = "InvoiceEnquiry"
@@ -40,13 +58,12 @@ MAIN_TABLE = f"{project_id}.{recruiter_dataset_id}.{table_id}"
 REVENUE_TABLE = f"{project_id}.{revenue_dataset_id}.{revenue_table_id}"
 TARGET_TABLE = f"{project_id}.{recruiter_dataset_id}.{target_table_id}"
 
-
-credentials = service_account.Credentials.from_service_account_file(
-    key_path, 
-    scopes=["https://www.googleapis.com/auth/bigquery"]
-)
-client = bigquery.Client(credentials=credentials, project=project_id)
 aest = pytz.timezone("Australia/Sydney")
+
+@app.route("/", methods=["GET"])
+def index():
+    return "✅ Forecasting API is live @leo@trihalo.com.au", 200
+
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -145,8 +162,47 @@ def get_token_payload(token):
     except jwt.InvalidTokenError:
         return None
     
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        # Get token from Authorization header: Bearer <token>
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+
+        if not token:
+            return jsonify({"error": "Token is missing!"}), 401
+
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            request.user = data  # Attach user info to request context
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token has expired!"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token!"}), 401
+
+        return f(*args, **kwargs)
+
+    return decorated
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            if data.get("role") != "admin":
+                return jsonify({"error": "Admins only."}), 403
+        except:
+            return jsonify({"error": "Invalid or missing token."}), 401
+        return f(*args, **kwargs)
+    return decorated
+
     
 @app.route("/forecasts", methods=["POST"])
+@token_required
 def test_receive_forecasts():
     try:
         client.query(f"TRUNCATE TABLE `{STAGING_TABLE}`").result()
@@ -216,6 +272,7 @@ def test_receive_forecasts():
 from collections import defaultdict
 
 @app.route("/forecasts/<recruiter_name>", methods=["GET"])
+@token_required
 def get_forecast_for_recruiter(recruiter_name):
     fy = request.args.get("fy")
     month = request.args.get("month")
@@ -288,6 +345,7 @@ def get_forecast_for_recruiter(recruiter_name):
 
 
 @app.route("/forecasts/view", methods=["GET"])
+@token_required
 def get_forecast_summary():
     fy = request.args.get("fy")
     month = request.args.get("month")
@@ -322,6 +380,7 @@ def get_forecast_summary():
     
     
 @app.route("/forecasts/weekly", methods=["GET"])
+@token_required
 def get_forecast_weekly():
     fy = request.args.get("fy")
     month = request.args.get("month")
@@ -358,6 +417,7 @@ def get_forecast_weekly():
 
 
 @app.route("/invoices", methods=["GET"])
+@token_required
 def get_invoices_for_month():
     fy = request.args.get("fy")
     month = request.args.get("month")
@@ -388,6 +448,8 @@ def get_invoices_for_month():
 
 
 @app.route("/monthly-targets", methods=["POST"])
+@token_required
+@admin_required
 def submit_monthly_target():
     data = request.get_json()
 
@@ -429,6 +491,7 @@ def submit_monthly_target():
 
 
 @app.route("/monthly-targets", methods=["GET"])
+@token_required
 def get_monthly_targets():
     fy = request.args.get("fy")
     if not fy:
@@ -470,6 +533,7 @@ def get_monthly_targets():
     
 # ============ FIRESTORE FUNCTIONS ==================
 @app.route("/recruiters", methods=["GET"])
+@token_required
 def get_recruiters():
     try:
         docs = db.collection("recruiters").stream()
@@ -481,6 +545,8 @@ def get_recruiters():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/recruiters", methods=["POST"])
+@token_required
+@admin_required
 def add_recruiter():
     data = request.json
     name = data.get("name")
@@ -495,6 +561,8 @@ def add_recruiter():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/recruiters/<id>", methods=["DELETE"])
+@token_required
+@admin_required
 def delete_recruiter(id):
     try:
         db.collection("recruiters").document(id).delete()
@@ -503,6 +571,7 @@ def delete_recruiter(id):
         return jsonify({"error": str(e)}), 500
     
 @app.route("/areas", methods=["GET"])
+@token_required
 def get_areas():
     try:
         docs = db.collection("areas").stream()
@@ -515,6 +584,8 @@ def get_areas():
 
 
 @app.route("/areas/<id>", methods=["PATCH"])
+@token_required
+@admin_required
 def update_area(id):
     data = request.get_json()
     headcount = data.get("headcount")
@@ -529,8 +600,7 @@ def update_area(id):
         return jsonify({"error": str(e)}), 500
 
 
-
-
-
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+    

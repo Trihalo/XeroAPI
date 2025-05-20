@@ -21,21 +21,7 @@ export function getCurrentMonthInfo(calendar, today = new Date()) {
     (e) => e.fy === currentFY && e.month === currentMonth
   );
 
-  let currentWeekIndex = 0;
-
-  for (let i = 0; i < weeksInMonth.length; i++) {
-    const [startStr] = weeksInMonth[i].range.split(" - ");
-    const [sd, sm, sy] = startStr.split("/").map(Number);
-    const startDate = new Date(sy < 100 ? sy + 2000 : sy, sm - 1, sd);
-
-    if (today < startDate) {
-      currentWeekIndex = i;
-      break;
-    }
-  }
-
-  // If today is after all start dates, set to length (highlight all)
-  if (currentWeekIndex === -1) currentWeekIndex = weeksInMonth.length;
+  const currentWeekIndex = matchedEntry.week;
 
   const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today
     .getFullYear()

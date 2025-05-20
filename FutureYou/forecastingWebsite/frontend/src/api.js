@@ -5,6 +5,13 @@ const API_BASE_URL =
     ? "http://localhost:8080"
     : import.meta.env.VITE_API_URL;
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    Authorization: token ? `Bearer ${token}` : "",
+  };
+};
+
 export const login = async (username, password) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/login`, {
@@ -13,7 +20,6 @@ export const login = async (username, password) => {
     });
 
     if (response.data.success) {
-      console.log(response.data);
       return {
         success: true,
         message: response.data.message,
@@ -63,11 +69,11 @@ export const uploadForecastToBQ = async (rows) => {
       ...row,
       uploadUser,
     }));
-
-    const response = await axios.post(`${API_BASE_URL}/forecasts`, {
-      forecasts: enrichedRows,
-    });
-
+    const response = await axios.post(
+      `${API_BASE_URL}/forecasts`,
+      { forecasts: enrichedRows },
+      { headers: getAuthHeaders() }
+    );
     if (response.data.success) {
       return { success: true, message: response.data.message };
     } else {
@@ -93,6 +99,7 @@ export const fetchForecastForRecruiter = async (
       `${API_BASE_URL}/forecasts/${encodeURIComponent(recruiterName)}`,
       {
         params: { fy, month },
+        headers: getAuthHeaders(),
       }
     );
     const existing = res.data;
@@ -130,8 +137,8 @@ export const fetchForecastSummary = async (fy, month) => {
   try {
     const res = await axios.get(`${API_BASE_URL}/forecasts/view`, {
       params: { fy, month },
+      headers: getAuthHeaders(),
     });
-
     return res.data;
   } catch (error) {
     console.error("❌ Failed to fetch forecast summary:", error);
@@ -143,8 +150,8 @@ export const fetchForecastWeekly = async (fy, month, uploadWeek) => {
   try {
     const res = await axios.get(`${API_BASE_URL}/forecasts/weekly`, {
       params: { fy, month, uploadWeek },
+      headers: getAuthHeaders(),
     });
-
     return res.data;
   } catch (error) {
     console.error("❌ Failed to fetch forecast weekly:", error);
@@ -156,15 +163,19 @@ export const submitMonthlyTarget = async ({ fy, month, amount }) => {
   try {
     const uploadUser = localStorage.getItem("name") || "Unknown User";
     const uploadTimestamp = new Date().toISOString();
-
-    const response = await axios.post(`${API_BASE_URL}/monthly-targets`, {
-      FinancialYear: fy,
-      Month: month,
-      Target: amount,
-      uploadUser,
-      uploadTimestamp,
-    });
-
+    const response = await axios.post(
+      `${API_BASE_URL}/monthly-targets`,
+      {
+        FinancialYear: fy,
+        Month: month,
+        Target: amount,
+        uploadUser,
+        uploadTimestamp,
+      },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
     if (response.data.success) {
       return { success: true, message: response.data.message };
     } else {
@@ -184,6 +195,7 @@ export const fetchMonthlyTargets = async (fy) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/monthly-targets`, {
       params: { fy },
+      headers: getAuthHeaders(),
     });
     return response.data; // Expected: array of { Month, Target }
   } catch (error) {
@@ -196,7 +208,9 @@ export const fetchMonthlyTargets = async (fy) => {
 
 export const getAreas = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/areas`);
+    const res = await fetch(`${API_BASE_URL}/areas`, {
+      headers: getAuthHeaders(),
+    });
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch {
@@ -206,7 +220,9 @@ export const getAreas = async () => {
 
 export const getRecruiters = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/recruiters`);
+    const res = await fetch(`${API_BASE_URL}/recruiters`, {
+      headers: getAuthHeaders(),
+    });
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch {
@@ -217,7 +233,10 @@ export const getRecruiters = async () => {
 export const addRecruiter = async (name, area) => {
   const res = await fetch(`${API_BASE_URL}/recruiters`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ name, area }),
   });
   return await res.json();
@@ -226,6 +245,7 @@ export const addRecruiter = async (name, area) => {
 export const deleteRecruiter = async (id) => {
   const res = await fetch(`${API_BASE_URL}/recruiters/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
   return await res.json();
 };
@@ -233,7 +253,10 @@ export const deleteRecruiter = async (id) => {
 export const updateHeadcount = async (id, headcount) => {
   const res = await fetch(`${API_BASE_URL}/areas/${id}`, {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
     body: JSON.stringify({ headcount }),
   });
   return await res.json();

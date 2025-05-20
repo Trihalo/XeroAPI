@@ -66,9 +66,6 @@ function ForecastMain() {
     [calendar]
   );
 
-  // const currentMonth = "Jun";
-  // const currentWeekIndex = 4;
-
   const weeks = useMemo(() => weeksInMonth.map((w) => w.week), [weeksInMonth]);
 
   const submittedRecruiters = useSubmittedRecruiters();

@@ -1,0 +1,9 @@
+flask
+flask-cors
+PyJWT
+google-cloud-bigquery
+google-auth
+pandas-gbq
+google-cloud-firestore
+python-dotenv
+gunicorn

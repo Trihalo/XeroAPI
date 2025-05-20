@@ -9,9 +9,12 @@ const API_BASE_URL =
 
 export const fetchAndStoreInvoiceData = async () => {
   const { currentMonth, currentFY } = getCurrentMonthInfo(calendar);
-
+  const token = localStorage.getItem("token");
   try {
     const res = await axios.get(`${API_BASE_URL}/invoices`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       params: {
         fy: currentFY,
         month: currentMonth,

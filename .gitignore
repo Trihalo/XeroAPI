@@ -17,7 +17,7 @@ FutureYou/__pycache__/
 dashboardWebsite/frontend/node_modules
 node_modules/
 dashboardWebsite/backend/service-account.json
-FutureYou/forecastingWebsite/backend/service-account.json
+FutureYou/forecastingWebsite/backend/*.json
 dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
 dashboardWebsite/backend/uploads/*.xlsx
