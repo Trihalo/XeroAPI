@@ -135,8 +135,8 @@ function Upload() {
           </div>
 
           {fetching ? (
-            <div className="text-center text-gray-500 py-10">
-              <span className="loading loading-spinner loading-lg text-primary"></span>
+            <div className="flex flex-col items-center justify-center py-10">
+              <div className="w-6 h-6 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
               <p className="mt-4">Loading forecast data...</p>
             </div>
           ) : (
