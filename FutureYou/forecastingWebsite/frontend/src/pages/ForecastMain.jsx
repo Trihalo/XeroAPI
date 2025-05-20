@@ -159,6 +159,56 @@ function ForecastMain() {
     fetchData();
   }, [currentFY, currentMonth, summaryMapping, weeks]);
 
+  const forecastViewSections = useMemo(() => {
+    if (!forecastData.length || !weeksInMonth.length || !rawForecastRows.length)
+      return [];
+
+    return forecastData.map((section) => {
+      const sectionRows = section.data.map(({ name }) => {
+        const allForecasts = rawForecastRows.filter((r) => r.name === name);
+        const maxUploadWeek = Math.max(
+          ...allForecasts.map((r) => Number(r.uploadWeek || 0))
+        );
+        const latestRows = allForecasts.filter(
+          (r) => Number(r.uploadWeek) === maxUploadWeek
+        );
+
+        const paddedWeeks = weeksInMonth.map((w) => {
+          const match = latestRows.find((r) => Number(r.week) === w.week);
+          return match ? Number(match.total_revenue) : 0;
+        });
+
+        const finalWeeks = paddedWeeks.map((amt, i) => {
+          const weekNum = i + 1;
+          return weekNum < currentWeekIndex
+            ? actualsByRecruiterWeek[name]?.[weekNum] || 0
+            : amt;
+        });
+
+        const rowTotal = finalWeeks.reduce((a, b) => a + b, 0);
+        return { name, finalWeeks, rowTotal };
+      });
+
+      const sectionTotals = weeksInMonth.map((_, i) =>
+        sectionRows.reduce((sum, row) => sum + (row.finalWeeks[i] || 0), 0)
+      );
+      const totalSum = sectionTotals.reduce((a, b) => a + b, 0);
+
+      return {
+        title: section.title,
+        rows: sectionRows,
+        totals: sectionTotals,
+        totalSum,
+      };
+    });
+  }, [
+    forecastData,
+    rawForecastRows,
+    weeksInMonth,
+    actualsByRecruiterWeek,
+    currentWeekIndex,
+  ]);
+
   const targetByMonth = useMonthlyTargets(currentFY);
 
   // --- 🧮 Aggregated Forecasts ---
@@ -232,113 +282,82 @@ function ForecastMain() {
                 Red highlight represents actual invoiced revenue
               </p>
 
-              {forecastData.map((section) => {
-                const sectionRows = section.data.map(({ name }) => {
-                  const allForecasts = rawForecastRows.filter(
-                    (r) => r.name === name
-                  );
-                  const maxUploadWeek = Math.max(
-                    ...allForecasts.map((r) => Number(r.uploadWeek || 0))
-                  );
-                  const latestRows = allForecasts.filter(
-                    (r) => Number(r.uploadWeek) === maxUploadWeek
-                  );
-
-                  const paddedWeeks = weeksInMonth.map((w) => {
-                    const match = latestRows.find(
-                      (r) => Number(r.week) === w.week
-                    );
-                    return match ? Number(match.total_revenue) : 0;
-                  });
-
-                  const finalWeeks = paddedWeeks.map((amt, i) => {
-                    const weekNum = i + 1;
-                    return weekNum < currentWeekIndex
-                      ? actualsByRecruiterWeek[name]?.[weekNum] || 0
-                      : amt;
-                  });
-
-                  const rowTotal = finalWeeks.reduce((a, b) => a + b, 0);
-                  return { name, finalWeeks, rowTotal };
-                });
-
-                const sectionTotals = weeksInMonth.map((_, i) =>
-                  sectionRows.reduce(
-                    (sum, row) => sum + (row.finalWeeks[i] || 0),
-                    0
-                  )
-                );
-                const totalSum = sectionTotals.reduce((a, b) => a + b, 0);
-
-                return (
-                  <div key={section.title}>
-                    <h3 className="text-lg font-semibold mb-3">
-                      {section.title}
-                    </h3>
-                    <div className="overflow-x-auto border border-gray-200 mb-6 rounded-lg">
-                      <table className="table-fixed min-w-full text-sm text-left border-collapse border-gray-200">
-                        <thead className="bg-gray-100 text-gray-700 border-gray-200">
-                          <tr>
-                            <th className="w-1/6 py-2 px-4 font-semibold">
-                              Name
-                            </th>
-                            {weeksInMonth.map((week) => (
-                              <th
-                                key={week.week}
-                                className="w-1/12 py-2 px-4 font-semibold"
-                              >
-                                Wk {week.week}
+              {forecastViewSections.length === 0 ? (
+                <p className="text-center text-gray-500">
+                  Loading forecast data...
+                </p>
+              ) : (
+                forecastViewSections.map(
+                  ({ title, rows, totals, totalSum }) => (
+                    <div key={title}>
+                      <h3 className="text-lg font-semibold mb-3">{title}</h3>
+                      <div className="overflow-x-auto border border-gray-200 mb-6 rounded-lg">
+                        <table className="table-fixed min-w-full text-sm text-left border-collapse border-gray-200">
+                          <thead className="bg-gray-100 text-gray-700 border-gray-200">
+                            <tr>
+                              <th className="w-1/6 py-2 px-4 font-semibold">
+                                Name
                               </th>
-                            ))}
-                            <th className="w-1/12 py-2 px-4 font-semibold">
-                              Total
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {sectionRows.map(({ name, finalWeeks, rowTotal }) => (
-                            <tr key={name} className="border-b border-gray-200">
-                              <td className="py-2 px-4">{name}</td>
-                              {finalWeeks.map((amt, i) => (
-                                <td
-                                  key={i}
-                                  className={`py-2 px-4 text-left ${
-                                    i + 1 < currentWeekIndex
-                                      ? "bg-accent border-x border-gray-200"
-                                      : "border-x border-gray-200"
-                                  }`}
+                              {weeksInMonth.map((week) => (
+                                <th
+                                  key={week.week}
+                                  className="w-1/12 py-2 px-4 font-semibold"
                                 >
-                                  {amt > 0
-                                    ? Math.round(amt).toLocaleString()
-                                    : "-"}
+                                  Wk {week.week}
+                                </th>
+                              ))}
+                              <th className="w-1/12 py-2 px-4 font-semibold">
+                                Total
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {rows.map(({ name, finalWeeks, rowTotal }) => (
+                              <tr
+                                key={name}
+                                className="border-b border-gray-200"
+                              >
+                                <td className="py-2 px-4">{name}</td>
+                                {finalWeeks.map((amt, i) => (
+                                  <td
+                                    key={i}
+                                    className={`py-2 px-4 text-left ${
+                                      i + 1 < currentWeekIndex
+                                        ? "bg-accent border-x border-gray-200"
+                                        : "border-x border-gray-200"
+                                    }`}
+                                  >
+                                    {amt > 0
+                                      ? Math.round(amt).toLocaleString()
+                                      : "-"}
+                                  </td>
+                                ))}
+                                <td className="py-2 px-4 text-left font-medium">
+                                  {Math.round(rowTotal).toLocaleString()}
+                                </td>
+                              </tr>
+                            ))}
+
+                            <tr className="font-semibold text-black bg-gray-100">
+                              <td className="py-2 px-4">Total</td>
+                              {totals.map((amt, i) => (
+                                <td key={i} className="py-2 px-4 text-left">
+                                  {Math.round(amt).toLocaleString()}
                                 </td>
                               ))}
-                              <td className="py-2 px-4 text-left font-medium">
-                                {Math.round(rowTotal).toLocaleString()}
+                              <td className="py-2 px-4 text-left">
+                                {Math.round(totalSum).toLocaleString()}
                               </td>
                             </tr>
-                          ))}
-
-                          <tr className="font-semibold text-black bg-gray-100">
-                            <td className="py-2 px-4">Total</td>
-                            {sectionTotals.map((amt, i) => (
-                              <td key={i} className="py-2 px-4 text-left">
-                                {Math.round(amt).toLocaleString()}
-                              </td>
-                            ))}
-                            <td className="py-2 px-4 text-left">
-                              {Math.round(totalSum).toLocaleString()}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  )
+                )
+              )}
             </div>
           )}
-
           {activeTab === "summary" && (
             <div className="text-gray-800 text-md space-y-6">
               <h2 className="text-xl font-semibold text-primary">
