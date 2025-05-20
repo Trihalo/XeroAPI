@@ -117,47 +117,57 @@ function ForecastMain() {
 
   // --- 📤 Load Forecast Data ---
   const hasFetched = useRef(false);
-
   useEffect(() => {
-    if (hasFetched.current) return;
-    if (!summaryMapping || weeks.length === 0) return;
+    const isReadyToFetch =
+      activeTab === "view" &&
+      currentFY &&
+      currentMonth &&
+      weeks.length > 0 &&
+      Object.keys(summaryMapping || {}).length > 0;
+
+    if (!isReadyToFetch || hasFetched.current) return;
 
     const fetchData = async () => {
-      const summary = await fetchForecastSummary(currentFY, currentMonth);
-      const structured = Object.entries(summaryMapping).map(
-        ([category, recruiters]) => ({
-          title: category,
-          data: recruiters.map((name) => {
-            const paddedWeeks = weeks.map((weekNum) => {
-              const match = summary.find(
-                (e) => e.name === name && Number(e.week) === weekNum
-              );
-              return match ? Number(match.total_revenue) : 0;
-            });
+      try {
+        const summary = await fetchForecastSummary(currentFY, currentMonth);
+        const structured = Object.entries(summaryMapping).map(
+          ([category, recruiters]) => ({
+            title: category,
+            data: recruiters.map((name) => {
+              const paddedWeeks = weeks.map((weekNum) => {
+                const match = summary.find(
+                  (e) => e.name === name && Number(e.week) === weekNum
+                );
+                return match ? Number(match.total_revenue) : 0;
+              });
 
-            const latestUpload = summary
-              .filter((e) => e.name === name)
-              .reduce(
-                (max, curr) =>
-                  Number(curr.uploadWeek) > Number(max.uploadWeek) ? curr : max,
-                { uploadWeek: 0 }
-              );
+              const latestUpload = summary
+                .filter((e) => e.name === name)
+                .reduce(
+                  (max, curr) =>
+                    Number(curr.uploadWeek) > Number(max.uploadWeek)
+                      ? curr
+                      : max,
+                  { uploadWeek: 0 }
+                );
 
-            return {
-              name,
-              weeks: paddedWeeks,
-              uploadWeek: latestUpload.uploadWeek,
-            };
-          }),
-        })
-      );
-
-      setForecastData(structured);
-      hasFetched.current = true;
+              return {
+                name,
+                weeks: paddedWeeks,
+                uploadWeek: latestUpload.uploadWeek,
+              };
+            }),
+          })
+        );
+        setForecastData(structured);
+        hasFetched.current = true;
+      } catch (err) {
+        console.error("Failed to fetch forecast data:", err);
+      }
     };
 
     fetchData();
-  }, [currentFY, currentMonth, summaryMapping, weeks]);
+  }, [activeTab, currentFY, currentMonth, weeks, summaryMapping]);
 
   const forecastViewSections = useMemo(() => {
     if (!forecastData.length || !weeksInMonth.length || !rawForecastRows.length)
@@ -266,11 +276,21 @@ function ForecastMain() {
               <h2 className="text-xl font-semibold text-primary mb-10">
                 Forecast Input
               </h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {Object.entries(summaryMapping).map(([category, names]) => (
-                  <Section key={category} title={category} names={names} />
-                ))}
-              </div>
+
+              {Object.keys(summaryMapping || {}).length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="w-6 h-6 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+                  <p className="mt-2 text-gray-500 text-sm">
+                    Loading recruiter groups...
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {Object.entries(summaryMapping).map(([category, names]) => (
+                    <Section key={category} title={category} names={names} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {activeTab === "view" && (
@@ -283,9 +303,12 @@ function ForecastMain() {
               </p>
 
               {forecastViewSections.length === 0 ? (
-                <p className="text-center text-gray-500">
-                  Loading forecast data...
-                </p>
+                <div className="flex flex-col items-center justify-center py-10">
+                  <div className="w-6 h-6 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+                  <p className="mt-2 text-gray-500 text-sm">
+                    Loading forecast data...
+                  </p>
+                </div>
               ) : (
                 forecastViewSections.map(
                   ({ title, rows, totals, totalSum }) => (
