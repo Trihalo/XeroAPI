@@ -62,7 +62,7 @@ aest = pytz.timezone("Australia/Sydney")
 
 @app.route("/", methods=["GET"])
 def index():
-    return "✅ Forecasting API is live @leo@trihalo.com.au", 200
+    return "✅ Forecasting API is live @leoshi@future-you.com.au", 200
 
 
 @app.route("/login", methods=["POST"])

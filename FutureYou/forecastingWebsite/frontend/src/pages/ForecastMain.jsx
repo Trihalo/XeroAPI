@@ -516,7 +516,7 @@ function ForecastMain() {
         </div>
       </div>
       <div className="text-gray-400 p-5 text-right">
-        For any issues, please contact Leo@trihalo.com.au
+        For any issues, please contact leoshi@future-you.com.au
       </div>
     </div>
   );
