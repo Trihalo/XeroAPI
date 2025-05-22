@@ -18,10 +18,10 @@ function TopNavbar({ userName = "User" }) {
   const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   return (
-    <header className="w-full bg-gray-200 px-10 py-4 flex items-center justify-between text-sm relative">
+    <header className="w-full bg-base-300 px-10 py-4 flex items-center justify-between text-sm relative">
       {/* Left side */}
       <div className="flex items-baseline gap-4">
-        <div className="text-2xl text-gray-700 font-light">
+        <div className="text-2xl text-primary font-light">
           Hello, {userName}
         </div>
         <div className="text-sm text-gray-500">{weekLabel}</div>
@@ -66,10 +66,10 @@ function TopNavbar({ userName = "User" }) {
 
       {/* Mobile Dropdown */}
       {menuOpen && (
-        <div className="absolute top-16 right-4 w-56 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 animate-fadeIn space-y-2">
+        <div className="absolute top-16 right-4 w-56 bg-base-100 border border-gray-300 rounded-lg shadow-lg z-50 p-4 animate-fadeIn space-y-2">
           {role === "admin" && (
             <button
-              className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 text-gray-700"
+              className="w-full text-left px-4 py-2 rounded hover:bg-base-200 text-base-content"
               onClick={() => {
                 navigate("/admin");
                 setMenuOpen(false);
@@ -79,7 +79,7 @@ function TopNavbar({ userName = "User" }) {
             </button>
           )}
           <button
-            className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 text-gray-700"
+            className="w-full text-left px-4 py-2 rounded hover:bg-base-200 text-base-content"
             onClick={() => {
               navigate("/forecasts");
               setMenuOpen(false);
@@ -89,7 +89,7 @@ function TopNavbar({ userName = "User" }) {
           </button>
           {role === "admin" && (
             <button
-              className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 text-gray-700"
+              className="w-full text-left px-4 py-2 rounded hover:bg-base-200 text-base-content"
               onClick={() => {
                 navigate("/dashboard");
                 setMenuOpen(false);

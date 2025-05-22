@@ -114,12 +114,12 @@ function Upload() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-200 text-base-content flex-col">
+    <div className="min-h-screen flex bg-base-300 text-base-content flex-col">
       <TopNavbar userName={localStorage.getItem("name")} />
       <main className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-6">
+        <div className="max-w mx-auto bg-base-100 rounded-xl shadow p-6">
           <div className="flex items-baseline gap-6 mb-6">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-primary">
               {currentFY} {currentMonth} Forecast Upload
             </h1>
             <button
@@ -144,7 +144,7 @@ function Upload() {
               <div className="overflow-x-auto">
                 <table className="table-auto text-sm">
                   <thead>
-                    <tr className="bg-gray-100 text-gray-700 border-b border-gray-300">
+                    <tr className="bg-base-300 text-base-content border-b border-gray-300">
                       <th className="text-left px-4 py-2 min-w-[60px] max-w-[80px]">
                         Week
                       </th>
