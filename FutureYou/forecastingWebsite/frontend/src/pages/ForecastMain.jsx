@@ -240,10 +240,10 @@ function ForecastMain() {
 
   // --- ✅ UI Render ---
   return (
-    <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
+    <div className="min-h-screen bg-base-300 text-base-content flex flex-col">
       <TopNavbar userName={localStorage.getItem("name") || "User"} />
       <div className="flex-1 p-8">
-        <div className="max-w-full mx-auto bg-white rounded-xl shadow px-4 sm:px-4 md:px-10 py-6 md:pb-20 relative">
+        <div className="max-w-full mx-auto bg-base-100 rounded-xl shadow px-4 sm:px-4 md:px-10 py-6 md:pb-20 relative">
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-2xl font-bold text-primary">
               Recruiter Forecasts
@@ -258,7 +258,7 @@ function ForecastMain() {
                 className={`px-4 py-2 rounded-lg shadow transition min-w-[250px] ${
                   activeTab === tab
                     ? "bg-secondary text-white font-semibold"
-                    : "bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
+                    : "bg-base-300 text-base-content font-medium hover:bg-base-200"
                 }`}
               >
                 {tab === "input"
@@ -294,7 +294,7 @@ function ForecastMain() {
             </div>
           )}
           {activeTab === "view" && (
-            <div className="text-gray-800 text-sm space-y-12">
+            <div className="text-base-content text-sm space-y-12">
               <h2 className="text-xl font-semibold text-primary mb-10">
                 {currentFY} {currentMonth} Latest Forecasts
               </h2>
@@ -316,7 +316,7 @@ function ForecastMain() {
                       <h3 className="text-lg font-semibold mb-3">{title}</h3>
                       <div className="overflow-x-auto border border-gray-200 mb-6 rounded-lg">
                         <table className="table-fixed min-w-full text-sm text-left border-collapse border-gray-200">
-                          <thead className="bg-gray-100 text-gray-700 border-gray-200">
+                          <thead className="bg-base-200 text-base-content border-gray-200">
                             <tr>
                               <th className="w-1/6 py-2 px-4 font-semibold">
                                 Name
@@ -346,7 +346,7 @@ function ForecastMain() {
                                     key={i}
                                     className={`py-2 px-4 text-left ${
                                       i + 1 < currentWeekIndex
-                                        ? "bg-accent border-x border-gray-200"
+                                        ? "bg-secondary-content text-secondary border-x border-gray-200"
                                         : "border-x border-gray-200"
                                     }`}
                                   >
@@ -361,7 +361,7 @@ function ForecastMain() {
                               </tr>
                             ))}
 
-                            <tr className="font-semibold text-black bg-gray-100">
+                            <tr className="font-semibold text-base-content bg-base-200">
                               <td className="py-2 px-4">Total</td>
                               {totals.map((amt, i) => (
                                 <td key={i} className="py-2 px-4 text-left">
@@ -382,7 +382,7 @@ function ForecastMain() {
             </div>
           )}
           {activeTab === "summary" && (
-            <div className="text-gray-800 text-md space-y-6">
+            <div className="text-base-content text-md space-y-6">
               <h2 className="text-xl font-semibold text-primary">
                 {currentFY} {currentMonth} Summary
               </h2>
@@ -414,7 +414,7 @@ function ForecastMain() {
 
               <div className="overflow-x-auto border border-gray-300 mb-6 rounded-lg">
                 <table className="table table-sm text-sm min-w-full border-collapse">
-                  <thead className="bg-gray-100 text-gray-700">
+                  <thead className="bg-base-200 text-base-content">
                     <tr>
                       <th className="text-left py-2 px-4">Area</th>
                       {weeksInMonth.map((w) => (
@@ -466,7 +466,7 @@ function ForecastMain() {
                         </tr>
                       );
                     })}
-                    <tr className="font-semibold bg-gray-100 border-gray-300 ">
+                    <tr className="font-semibold bg-base-200 border-gray-300 ">
                       <td className="py-2 px-4 text-sm">Total</td>
                       {weeksInMonth.map((w) => {
                         const val = aggregatedForecasts["Total"]?.[w.week] || 0;
@@ -533,7 +533,7 @@ function Section({ title, names }) {
           <button
             key={name}
             onClick={() => navigate(`/forecasts/${encodeURIComponent(name)}`)}
-            className="bg-blue-100 text-primary font-small px-4 py-1.5 rounded-full"
+            className="bg-primary-content text-primary font-small px-4 py-1.5 rounded-full"
           >
             {name}
           </button>

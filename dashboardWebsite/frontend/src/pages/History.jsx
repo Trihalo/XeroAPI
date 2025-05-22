@@ -31,11 +31,11 @@ export default function History() {
 
       {/* Main Content */}
       <div className="flex-1 p-6 bg-base-200 pt-10 overflow-auto">
-        <p className="text-6xl text-primary-content">Trihalo Accountancy</p>
+        <p className="text-6xl text-base-content">Trihalo Accountancy</p>
         <p className="text-primary pt-8">Let's make this day efficient!</p>
 
         {/* Card Container */}
-        <div className="mt-6 mr-10 bg-base-100 text-primary-content shadow-lg rounded-box">
+        <div className="mt-6 mr-10 bg-base-100 text-base-content shadow-lg rounded-box">
           <div className="card-body max-h-[500px] overflow-auto">
             <h2 className="text-2xl font-bold mb-4">Workflow History</h2>
 

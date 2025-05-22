@@ -14,8 +14,8 @@ const ConfirmDialog = ({ show, onConfirm, onCancel, message }) => {
   if (!show) return null;
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] z-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg space-y-4 w-[320px]">
-        <p className="text-md text-gray-800">{message}</p>
+      <div className="bg-base-100 p-6 rounded-lg shadow-lg space-y-4 w-[320px]">
+        <p className="text-md text-base-content">{message}</p>
         <div className="flex justify-end space-x-4">
           <button className="btn btn-outline btn-sm" onClick={onCancel}>
             Cancel
@@ -101,11 +101,11 @@ function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
+    <div className="min-h-screen bg-base-300 text-base-content flex flex-col">
       <TopNavbar userName={localStorage.getItem("name")} />
 
       <div className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-12 relative mb-15">
+        <div className="max-w mx-auto bg-base-100 rounded-xl shadow p-12 relative mb-15">
           <p className="text-lg font-semibold mb-4">Admin Dashboard</p>
           <div className="flex flex-wrap justify-start gap-4 mb-8">
             {["recruiterManagement", "monthlyTotal"].map((tab) => (
@@ -115,7 +115,7 @@ function Admin() {
                 className={`px-4 py-2 rounded-lg shadow transition min-w-[250px] ${
                   activeTab === tab
                     ? "bg-secondary text-white font-semibold"
-                    : "bg-gray-200 text-gray-800 font-medium hover:bg-gray-300"
+                    : "bg-base-300 text-base-content font-medium hover:bg-base-200"
                 }`}
               >
                 {tab === "recruiterManagement"
@@ -181,9 +181,9 @@ function Admin() {
                   {recruiters.map((r) => (
                     <div
                       key={r.id}
-                      className="bg-gray-100 p-3 rounded flex items-center justify-between text-sm shadow-sm"
+                      className="bg-base-200 p-3 rounded flex items-center justify-between text-sm shadow-sm"
                     >
-                      <span className="text-gray-800 font-medium leading-snug">
+                      <span className="text-base-content font-medium leading-snug">
                         {r.name}{" "}
                         <span className="text-gray-500 text-xs">
                           ({r.area})
@@ -260,7 +260,7 @@ function Admin() {
           )}
 
           {activeTab === "monthlyTotal" && (
-            <div className="text-gray-800 text-sm mt-15 mb-15">
+            <div className="text-base-content text-sm mt-15 mb-15">
               <h2 className="text-lg font-semibold text-primary mb-5">
                 📋 Input Monthly Target
               </h2>
@@ -328,13 +328,13 @@ function Admin() {
                   📊 View Submitted Targets
                 </h2>
                 <div className="overflow-hidden rounded-xl border border-gray-300 max-w-sm">
-                  <table className="w-full text-sm text-gray-800">
+                  <table className="w-full text-sm text-base-content">
                     <thead>
                       <tr>
-                        <th className="bg-gray-200 px-4 py-3 text-left text-sm font-semibold w-1/2">
+                        <th className="bg-base-300 px-4 py-3 text-left text-sm font-semibold w-1/2">
                           Month
                         </th>
-                        <th className="bg-gray-200 px-4 py-3 text-left text-sm font-semibold w-1/2">
+                        <th className="bg-base-300 px-4 py-3 text-left text-sm font-semibold w-1/2">
                           Target
                         </th>
                       </tr>
@@ -343,7 +343,9 @@ function Admin() {
                       {months.map((m, idx) => (
                         <tr
                           key={m}
-                          className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                          className={
+                            idx % 2 === 0 ? "bg-base-100" : "bg-base-200"
+                          }
                         >
                           <td className="px-4 py-3 text-left font-medium">
                             {m}

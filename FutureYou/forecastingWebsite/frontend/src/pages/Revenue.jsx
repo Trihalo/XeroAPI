@@ -49,11 +49,14 @@ function Revenue() {
 
   const mtdRevenueByGroup = groupRecruitersByAreaWeek(recruiterTogetherByWeek);
 
+  console.log(cumulativeActuals);
   const rows = allAreas.map((area) => {
     const forecastThisWeek =
       forecastByAreaForWeek[area]?.[currentWeekIndex] || 0;
-    const mtdRevenue = cumulativeActuals[area]?.[currentWeekIndex] || 0;
     const actualThisWeek = actualsByArea[area]?.[currentWeekIndex] || 0;
+    const mtdRevenue =
+      (cumulativeActuals[area]?.[currentWeekIndex] || 0) + actualThisWeek;
+
     const forecastMTD = mtdRevenueByGroup[area]?.[currentWeekIndex] || 0;
     const headcount = headcountByArea[area] || 0;
     const forecastPerHead = headcount > 0 ? forecastMTD / headcount : undefined;
@@ -109,10 +112,10 @@ function Revenue() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-200 text-base-content flex flex-col">
+    <div className="min-h-screen bg-base-300 text-base-content flex flex-col">
       <TopNavbar userName={localStorage.getItem("name") || "User"} />
       <div className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-10 pb-20">
+        <div className="max-w mx-auto bg-base-100 rounded-xl shadow p-10 pb-20">
           <h1 className="text-xl font-bold mb-4">
             {currentMonth} Week {currentWeekIndex} Forecast vs Actual Revenue
           </h1>
@@ -128,7 +131,7 @@ function Revenue() {
           <div className="overflow-x-auto border border-gray-300 mb-6 rounded-lg">
             <div className="min-w-[900px]">
               <table className="table table-sm text-sm w-full">
-                <thead className="bg-gray-100 border-b">
+                <thead className="bg-base-200 border-b">
                   <tr>
                     <th className="text-left px-3 py-2"></th>
                     <th className="px-3 py-2 text-right border-x border-gray-200">
@@ -189,7 +192,7 @@ function Revenue() {
                       </td>
                     </tr>
                   ))}
-                  <tr className="font-bold border-t bg-gray-100">
+                  <tr className="font-bold border-t bg-base-200">
                     <td className="px-3 py-2">Total</td>
                     <td className="px-3 py-2 text-right border-x border-gray-200">
                       {format(totals.forecastWeek)}

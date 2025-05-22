@@ -236,11 +236,11 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 p-6 bg-base-200 pt-10">
-        <p className="text-6xl text-primary-content">Trihalo Accountancy</p>
+        <p className="text-6xl text-base-content">Trihalo Accountancy</p>
         <p className="text-primary pt-8">Let's make this day efficient!</p>
 
         {/* Requests Section */}
-        <div className="mt-6 mr-10 bg-base-100 text-primary-content shadow-lg rounded-box">
+        <div className="mt-6 mr-10 bg-base-100 text-base-content shadow-lg rounded-box">
           <div className="card-body overflow-auto">
             <h2 className="card-title text-2xl">Requests</h2>
 

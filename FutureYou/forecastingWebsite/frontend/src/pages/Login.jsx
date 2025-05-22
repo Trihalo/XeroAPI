@@ -9,28 +9,31 @@ function Login() {
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setMessage("");
-    const result = await login(username, password);
-    if (result.success) {
-      setMessage("✅ Login successful!");
-      // token
-      localStorage.setItem("token", result.token);
-      // role
-      localStorage.setItem("role", result.role);
-      // name
-      localStorage.setItem("name", result.name);
-      // last modified time
-      localStorage.setItem(
-        "revenue_table_last_modified_time",
-        result.revenue_table_last_modified_time
-      );
-      navigate("/forecasts");
-
-      await fetchAndStoreInvoiceData();
-    } else {
-      setMessage(result.message);
+    setLoading(true);
+    try {
+      const result = await login(username, password);
+      if (result.success) {
+        setMessage("✅ Login successful!");
+        localStorage.setItem("token", result.token);
+        localStorage.setItem("role", result.role);
+        localStorage.setItem("name", result.name);
+        localStorage.setItem(
+          "revenue_table_last_modified_time",
+          result.revenue_table_last_modified_time
+        );
+        navigate("/forecasts");
+        await fetchAndStoreInvoiceData();
+      } else {
+        setMessage(result.message);
+      }
+    } catch (error) {
+      setMessage("Something went wrong.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -80,11 +83,15 @@ function Login() {
         </div>
         <button
           onClick={handleLogin}
-          className="btn btn-primary w-full py-2 mt-4"
+          className="btn btn-primary w-full py-2 mt-4 flex justify-center items-center"
+          disabled={loading}
         >
-          Log In
+          {loading ? (
+            <div className="w-6 h-6 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+          ) : (
+            "Log In"
+          )}
         </button>
-
         {message && <div className="text-sm mt-4 text-error">{message}</div>}
       </div>
 
