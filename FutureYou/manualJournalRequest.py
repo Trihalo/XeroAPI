@@ -2,11 +2,11 @@ import requests
 import os
 import sys
 import csv
-from databaseHelpers import parse_xero_date, get_company_month, week_of_company_month
 from databaseMappings import journal_account_code_mapping
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from helpers.databaseHelpers import parse_xero_date, get_company_month, week_of_company_month
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 

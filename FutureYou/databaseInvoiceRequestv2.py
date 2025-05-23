@@ -9,13 +9,13 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
 from manualJournalRequest import get_manual_journal_data
-from databaseHelpers import parse_xero_date, get_company_month, get_financial_year, week_of_company_month
 from databaseMappings import account_code_mapping, consultant_area_mapping
 from dotenv import load_dotenv
 load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from helpers.databaseHelpers import parse_xero_date, get_company_month, get_financial_year, week_of_company_month
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
@@ -28,7 +28,7 @@ def export_to_bigquery(rows):
         return
 
     # Path to your service account key file
-    key_path = os.getenv("BQACCESS")
+    key_path = os.getenv("FUTUREYOU_BQACCESS")
     project_id = "futureyou-458212"
     dataset_id = "InvoiceData"
     table_id = "InvoiceEnquiry"
