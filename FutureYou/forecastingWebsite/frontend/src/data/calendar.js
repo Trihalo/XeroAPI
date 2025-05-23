@@ -9,7 +9,7 @@ const calendar = [
   { fy: "FY25", month: "May", week: 2, range: "3/5/25 - 9/5/25" },
   { fy: "FY25", month: "May", week: 3, range: "10/5/25 - 16/5/25" },
   { fy: "FY25", month: "May", week: 4, range: "17/5/25 - 23/5/25" },
-  { fy: "FY25", month: "Jun", week: 1, range: "24/6/25 - 30/6/25" },
+  { fy: "FY25", month: "Jun", week: 1, range: "24/5/25 - 30/5/25" },
   { fy: "FY25", month: "Jun", week: 2, range: "31/5/25 - 6/6/25" },
   { fy: "FY25", month: "Jun", week: 3, range: "7/6/25 - 13/6/25" },
   { fy: "FY25", month: "Jun", week: 4, range: "14/6/25 - 20/6/25" },
