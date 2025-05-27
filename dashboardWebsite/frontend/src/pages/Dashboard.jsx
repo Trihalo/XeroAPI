@@ -52,7 +52,7 @@ export default function Dashboard() {
       clientName: "FutureYou",
       scripts: [
         {
-          name: "ATB & Overdue Request",
+          name: "ATB & Overdue Files",
           description:
             "Generates an Aged Trial Balance report that includes both FutureYou Recruitment and Contracting Invoices",
           action: triggerFutureYouReports,
@@ -65,6 +65,14 @@ export default function Dashboard() {
             "Updates the Invoice Revenue BigQuery Database by updating invoices that have been changed within the last 24 hours.",
           action: triggerUpdateRevenueDatabase,
           estimatedTime: 30,
+          requiresFileUpload: false,
+        },
+        {
+          name: "Update ATB Database",
+          description:
+            "Updates the ATB BigQuery Database, automatically updating the Master ATB file with the latest data.",
+          action: triggerUpdateRevenueDatabase,
+          estimatedTime: 120,
           requiresFileUpload: false,
         },
       ],

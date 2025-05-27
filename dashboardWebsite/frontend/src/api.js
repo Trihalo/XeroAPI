@@ -51,12 +51,14 @@ export const triggerTestEmail = (userData) =>
   triggerWorkflow("test-email", userData);
 export const triggerFutureYouReports = (userData) =>
   triggerWorkflow("futureyou-reports", userData);
+export const triggerUpdateFYATBDatabase = (userData) =>
+  triggerWorkflow("futureyou-atb-database", userData);
 export const triggerH2cocoTradeFinance = (userData) =>
   triggerWorkflow("h2coco-trade-finance", userData);
 export const triggerCosmoBillsApprover = (userData) =>
   triggerWorkflow("cosmo-bills-approver", userData);
 export const triggerUpdateRevenueDatabase = (userData) =>
-  triggerWorkflow("update-revenue-database", userData);
+  triggerWorkflow("futureyou-revenue-database", userData);
 
 export const testApiCall = async (userData) => {
   try {
