@@ -1,0 +1,42 @@
+name: FutureYou Invoice Revenue SQL Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  future-you-invoice-revenue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r FutureYou/requirements.txt
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.BQACCESS }}' > /tmp/key.json
+          echo "BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Run FutureYou ATB BigQuery upload
+        working-directory: FutureYou
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FUTUREYOU_CONTRACTING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
+          FUTUREYOU_CONTRACTING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
+          FUTUREYOU_RECRUITMENT_CLIENT_ID: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}
+          FUTUREYOU_RECRUITMENT_CLIENT_SECRET: ${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
+          XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
+        run: |
+          python atbRequestv2.py

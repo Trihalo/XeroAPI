@@ -30,7 +30,8 @@ WORKFLOWS = {
     "futureyou-reports": "futureYouReports.yml",
     "h2coco-trade-finance": "tradeFinance.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
-    "update-revenue-database": "futureYouInvoiceRevenue.yml",
+    "futureyou-revenue-database": "futureYouInvoiceRevenue.yml",
+    "futureyou-atb-database": "futureYouATB.yml",
 }
 
 def log_api_call(workflow_id, auth_user, status_code):
