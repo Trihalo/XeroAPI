@@ -1,4 +1,4 @@
-name: FutureYou Invoice Revenue SQL Update
+name: FutureYou ATB SQL Update
 
 on:
   workflow_dispatch:
