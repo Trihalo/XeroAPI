@@ -135,7 +135,6 @@ def getAtbData(data, client_tokens):
             "Consultant": consultant,
             "Comments": comments,
         })
-    print("✅ All invoices processed. Generating Excel file...")
     return invoices
 
 def processAtbData(data, client_tokens):
@@ -145,7 +144,9 @@ def processAtbData(data, client_tokens):
     df = pd.DataFrame(invoices)
 
     # Set up BigQuery configuration
-    key_path = os.getenv("FUTUREYOU_BQACCESS")
+    # use this line if running locally
+    # key_path = os.getenv("FUTUREYOU_BQACCESS")
+    key_path = os.getenv("BQACCESS")
     project_id = "futureyou-458212"
     dataset_id = "InvoiceData"
     table_id = "ATBEnquiry"
@@ -162,7 +163,7 @@ def processAtbData(data, client_tokens):
 
     # Upload the data
     job_config = bigquery.LoadJobConfig(
-        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,  # or WRITE_APPEND
+        write_disposition=bigquery.WriteDisposition.WRITE_TRUNCATE,
         autodetect=True,
     )
 
