@@ -213,7 +213,7 @@ def main():
     tenant_id = XeroTenants(access_token)
 
     invoice_params = {
-        "where": 'Type=="ACCREC" AND Date>=DateTime(2023,06,01)' if FULL_RESET else f'Type=="ACCREC" AND UpdatedDateUTC>={updated_date_str}',
+        "where": 'Type=="ACCREC" AND Date>=DateTime(2023,07,01)' if FULL_RESET else f'Type=="ACCREC" AND UpdatedDateUTC>={updated_date_str}',
         "page": 1,
         "pageSize": 1000
     }
@@ -226,7 +226,7 @@ def main():
     all_rows = transform_invoice_data(invoices)
     export_to_csv(all_rows, "xero_export.csv")
     export_to_csv(invoices, "raw_file.csv")
-    export_to_bigquery(all_rows)
+    # export_to_bigquery(all_rows)
 
 if __name__ == "__main__":
     main()
