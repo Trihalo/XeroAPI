@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import RequestButton from "../components/RequestButton";
 import {
@@ -6,6 +6,7 @@ import {
   triggerTestEmail,
   triggerFutureYouReports,
   triggerH2cocoTradeFinance,
+  triggerUpdateFYATBDatabase,
   triggerCosmoBillsApprover,
   triggerUpdateRevenueDatabase,
   uploadFile,
@@ -71,7 +72,7 @@ export default function Dashboard() {
           name: "Update ATB Database",
           description:
             "Updates the ATB BigQuery Database, automatically updating the Master ATB file with the latest data.",
-          action: triggerUpdateRevenueDatabase,
+          action: triggerUpdateFYATBDatabase,
           estimatedTime: 120,
           requiresFileUpload: false,
         },
