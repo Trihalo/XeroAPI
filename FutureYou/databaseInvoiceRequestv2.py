@@ -291,7 +291,9 @@ def extract_invoice_lines(invoice, journal_totals):
             return rows
 
         account_code = str(valid_lines[0].get("AccountCode", ""))
-        placement_total = 1 / 3 if account_code in ["225", "226", "227"] else 1
+        if account_code in ["225", "226","227"]: placement_total = 1/3
+        elif account_code == "240": placement_total = 0
+        else: placement_total = 1
         total_exgst = sum(line.get("LineAmount", 0) for line in valid_lines)
 
         for line in valid_lines:
@@ -322,7 +324,6 @@ def extract_invoice_lines(invoice, journal_totals):
                 subtotal /= currency_rate
                 total /= currency_rate
                 margin /= currency_rate
-                placement /= currency_rate  # optional: if you want to show placement in base currency terms
 
             if account_code not in account_code_mapping:
                 print(f"⚠️ Unknown account code: {account_code} in invoice {invoice_number}")
