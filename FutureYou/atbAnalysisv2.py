@@ -21,18 +21,6 @@ def getCategory(invoice):
                     if tracking_item.get("Name") == "Category": return tracking_item.get("Option")
     return None
 
-def getConsultant(invoice):
-    consultants = []
-    line_items = invoice.get("LineItems", [])
-
-    for line in line_items:
-        if "Tracking" in line and isinstance(line["Tracking"], list):
-            for tracking_item in line["Tracking"]:
-                if tracking_item.get("Name") == "Consultant":
-                    consultant_name = tracking_item.get("Option")
-                    if consultant_name not in consultants: consultants.append(consultant_name)
-    return ", ".join(consultants) if consultants else "Unknown"
-
 # --- Get Notes ---
 def fetchInvoiceHistory(invoice_id, access_token, xero_tenant_id):
     XERO_HISTORY_API_URL = "https://api.xero.com/api.xro/2.0/Invoices/{invoice_id}/History"
@@ -91,51 +79,69 @@ def getNotes(invoice_id, invoice_number, client_tokens):
     return ", ".join(notes) if notes else ""
 
 # --- Process Data ---
-
 def getAtbData(data, client_tokens):     
     accrec_invoices = [
         invoice for invoice in data.get("Invoices", [])
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCREC"
     ]
-    invoices = []
+    invoice_rows = []
+
     for index, invoice in enumerate(accrec_invoices, start=1):
         invoice_id = invoice.get("InvoiceID", "")
         invoice_number = invoice.get("InvoiceNumber", "")
         invoice_date = datetime.strptime(invoice["DateString"], "%Y-%m-%dT%H:%M:%S")
         due_date = datetime.strptime(invoice["DueDateString"], "%Y-%m-%dT%H:%M:%S")
-        formatted_invoice_date = invoice_date.strftime("%d/%m/%Y")
-        formatted_due_date = due_date.strftime("%d/%m/%Y")
+        formatted_invoice_date = invoice_date.date()
+        formatted_due_date = due_date.date()
+        reference = invoice.get("Reference", "")
+        
+        # Classification
         type_column = ""
-        if "Retainer Commencement" in invoice.get("Reference", ""): 
+        if "Retainer Commencement" in reference: 
             type_column = "Commencement Retainer"
         if (date.today() - invoice_date.date()).days > 90: 
             type_column = "Invoices 90 days plus"
 
-        # Invoice total
         amount_due = float(invoice.get("AmountDue", 0.0))
         currency_rate = float(invoice.get("CurrencyRate", 1.0))
+        currency_code = invoice.get("CurrencyCode", "AUD")
 
         # Convert to AUD if needed
-        if invoice.get("CurrencyCode", "AUD") != "AUD" and currency_rate != 0:
+        if currency_code != "AUD" and currency_rate != 0:
             amount_due *= (1 / currency_rate)
 
-        logging.info(f"📊 Processing invoice {index}/{len(accrec_invoices)} - {invoice_number}")
         comments = getNotes(invoice_id, invoice_number, client_tokens)
+        contact = invoice.get("Contact", {}).get("Name", "")
         category = getCategory(invoice)
-        consultant = getConsultant(invoice)
-        invoices.append({
-            "InvoiceNumber": invoice_number,
-            "Type": type_column,
-            "Contact": invoice.get("Contact", {}).get("Name", ""),
-            "InvoiceDate": formatted_invoice_date,
-            "DueDate": formatted_due_date,
-            "Reference": invoice.get("Reference", ""),
-            "Total": amount_due,
-            "Category": category,
-            "Consultant": consultant,
-            "Comments": comments,
-        })
-    return invoices
+
+        line_items = invoice.get("LineItems", [])
+        total_quantity = sum(float(line.get("Quantity", 0)) for line in line_items if line.get("Quantity"))
+
+        for line in line_items:
+            quantity = float(line.get("Quantity", 0))
+            if quantity == 0: continue
+            consultant_name = "No Consultant"
+            if "Tracking" in line and isinstance(line["Tracking"], list):
+                for tracking_item in line["Tracking"]:
+                    if tracking_item.get("Name") == "Consultant":
+                        consultant_name = tracking_item.get("Option")
+                        break
+            if not consultant_name: continue
+            proportional_total = amount_due * (quantity / total_quantity)
+            invoice_rows.append({
+                "InvoiceNumber": invoice_number,
+                "Type": type_column,
+                "Contact": contact,
+                "InvoiceDate": formatted_invoice_date,
+                "DueDate": formatted_due_date,
+                "Reference": reference,
+                "Total": proportional_total,
+                "Category": category,
+                "Consultant": consultant_name,
+                "Comments": comments,
+            })
+        logging.info(f"✅ Processed invoice {index}/{len(accrec_invoices)} - {invoice_number}")
+    return invoice_rows
 
 def processAtbData(data, client_tokens):
     invoices = getAtbData(data, client_tokens)
@@ -144,8 +150,6 @@ def processAtbData(data, client_tokens):
     df = pd.DataFrame(invoices)
 
     # Set up BigQuery configuration
-    # use this line if running locally
-    # key_path = os.getenv("FUTUREYOU_BQACCESS")
     key_path = os.getenv("BQACCESS")
     project_id = "futureyou-458212"
     dataset_id = "InvoiceData"
@@ -174,4 +178,21 @@ def processAtbData(data, client_tokens):
 
     print(f"📊 Successfully uploaded {len(df)} rows to BigQuery table {table_ref}")
     return table_ref
+
+
+# # --- Testing Purposes ---
+# def processAtbData(data, client_tokens):
+#     invoices = getAtbData(data, client_tokens)
+
+#     # Convert to DataFrame
+#     df = pd.DataFrame(invoices)
+
+#     # Define the output Excel path
+#     output_file = "ATB_Test_Export.xlsx"
+
+#     # Export to Excel
+#     df.to_excel(output_file, index=False)
+#     print(f"📁 Exported {len(df)} rows to Excel file: {output_file}")
+#     return output_file
+    
 
