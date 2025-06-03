@@ -47,9 +47,6 @@ function Admin() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { recruiters, areas } = useRecruiterData(refreshKey);
-
-  console.log(areas);
-
   const askConfirm = (message, action) => {
     setConfirmMessage(message);
     setOnConfirmAction(() => action);
