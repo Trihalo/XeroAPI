@@ -15,16 +15,35 @@ import ForecastMain from "./pages/ForecastMain.jsx";
 import Password from "./pages/Password.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 
+import { fetchAndStoreInvoiceData } from "./utils/getInvoiceInfo.js";
+
 import "./index.css";
 
-// 🧠 All routing logic here, safely inside <Router>
 function AppRoutes() {
   const navigate = useNavigate();
 
+  // Redirect to login if no token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/");
+    }
+  }, [navigate]);
+
+  // Fetch invoice data ONCE per session if logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const hasFetchedInvoiceData = sessionStorage.getItem("invoiceDataFetched");
+
+    if (token && !hasFetchedInvoiceData) {
+      fetchAndStoreInvoiceData()
+        .then(() => {
+          sessionStorage.setItem("invoiceDataFetched", "true");
+          console.log("✅ Invoice data fetched and flag set.");
+        })
+        .catch((err) => {
+          console.error("❌ Error fetching invoice data:", err);
+        });
     }
   }, []);
 
