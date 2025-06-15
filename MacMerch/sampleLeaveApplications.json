@@ -1,0 +1,1813 @@
+{
+  "Id": "bead11ec-1160-4247-b0ee-18887d5446c8",
+  "Status": "OK",
+  "ProviderName": "API Explorer",
+  "DateTimeUTC": "/Date(1749799197709)/",
+  "LeaveApplications": [
+    {
+      "LeaveApplicationID": "b72e3ac7-d794-4861-954f-50f5be1c4206",
+      "EmployeeID": "76e631e4-6ae2-442f-ae6b-7adbc9b2fedd",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1771459200000+0000)/",
+          "PayPeriodEndDate": "/Date(1773792000000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 107.0333
+        },
+        {
+          "PayPeriodStartDate": "/Date(1773878400000+0000)/",
+          "PayPeriodEndDate": "/Date(1776470400000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "Title": "Overseas Holiday ",
+      "StartDate": "/Date(1772409600000+0000)/",
+      "EndDate": "/Date(1773964800000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509689000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "b90ef443-f554-48bf-bf1c-5eada8f19333",
+      "EmployeeID": "76e631e4-6ae2-442f-ae6b-7adbc9b2fedd",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1768780800000+0000)/",
+          "PayPeriodEndDate": "/Date(1771372800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 14.3188
+        }
+      ],
+      "Title": "Wedding ",
+      "StartDate": "/Date(1769040000000+0000)/",
+      "EndDate": "/Date(1769126400000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509702000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "85f98831-9ddc-49a1-baa3-4ba0c2a13f94",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1766102400000+0000)/",
+          "PayPeriodEndDate": "/Date(1768694400000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 39.2063
+        }
+      ],
+      "Title": "Annual leave\n",
+      "StartDate": "/Date(1767571200000+0000)/",
+      "EndDate": "/Date(1767916800000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509725000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "eee15403-f5a8-495d-af4f-c00f3896dbc4",
+      "EmployeeID": "76e631e4-6ae2-442f-ae6b-7adbc9b2fedd",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1766102400000+0000)/",
+          "PayPeriodEndDate": "/Date(1768694400000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 23.5238
+        }
+      ],
+      "Title": "Xmas leave ",
+      "StartDate": "/Date(1766966400000+0000)/",
+      "EndDate": "/Date(1767139200000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509708000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "eadf060c-2cfc-4eb5-b32c-c36fb0ed1c0e",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1758240000000+0000)/",
+          "PayPeriodEndDate": "/Date(1760745600000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 140.3174
+        },
+        {
+          "PayPeriodStartDate": "/Date(1760832000000+0000)/",
+          "PayPeriodEndDate": "/Date(1763424000000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 126.0606
+        }
+      ],
+      "Title": "annual leave ",
+      "StartDate": "/Date(1758672000000+0000)/",
+      "EndDate": "/Date(1762732800000+0000)/",
+      "UpdatedDateUTC": "/Date(1739826078000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "cb6a72fb-c047-47b0-8ba2-4dd089bce031",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1760832000000+0000)/",
+          "PayPeriodEndDate": "/Date(1763424000000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 37.4242
+        }
+      ],
+      "Title": "Holiday ",
+      "StartDate": "/Date(1761523200000+0000)/",
+      "EndDate": "/Date(1761868800000+0000)/",
+      "UpdatedDateUTC": "/Date(1747096923000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "8741db71-4d4a-4585-88c1-69fd6d48b4a5",
+      "EmployeeID": "76e631e4-6ae2-442f-ae6b-7adbc9b2fedd",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1758240000000+0000)/",
+          "PayPeriodEndDate": "/Date(1760745600000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 47.0476
+        }
+      ],
+      "Title": "Wedding/ holiday ",
+      "StartDate": "/Date(1758844800000+0000)/",
+      "EndDate": "/Date(1759449600000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509640000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "63cbdd7c-aa0e-44ca-bce1-25d1551d09cc",
+      "EmployeeID": "0ae0d6b1-09aa-4c4c-b343-cfa15e2d2f9f",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1755561600000+0000)/",
+          "PayPeriodEndDate": "/Date(1758153600000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 42.9565
+        }
+      ],
+      "Title": "Annual leave for cousins wedding in Thailand. ",
+      "StartDate": "/Date(1756425600000+0000)/",
+      "EndDate": "/Date(1757203200000+0000)/",
+      "UpdatedDateUTC": "/Date(1749509532000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "073a1e13-3c2f-480c-9104-43ee168700c8",
+      "EmployeeID": "82b572c6-6fc0-465f-83d8-a2eb4ad6eb02",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1752883200000+0000)/",
+          "PayPeriodEndDate": "/Date(1755475200000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 8.254
+        },
+        {
+          "PayPeriodStartDate": "/Date(1755561600000+0000)/",
+          "PayPeriodEndDate": "/Date(1758153600000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 52.7536
+        }
+      ],
+      "StartDate": "/Date(1755475200000+0000)/",
+      "EndDate": "/Date(1756252800000+0000)/",
+      "UpdatedDateUTC": "/Date(1747720501000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "9e63bb27-84f6-4fae-af46-003d6d865769",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1750291200000+0000)/",
+          "PayPeriodEndDate": "/Date(1752796800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.5
+        }
+      ],
+      "Title": "annual leave",
+      "StartDate": "/Date(1752192000000+0000)/",
+      "EndDate": "/Date(1752219000000+0000)/",
+      "UpdatedDateUTC": "/Date(1746408068000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "fda38a37-224a-41b3-a5ad-d943bd6cc1c7",
+      "EmployeeID": "a4522775-9ffc-4097-b9e6-ec43640cc638",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1750636800000+0000)/",
+          "PayPeriodEndDate": "/Date(1751760000000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 30.4
+        },
+        {
+          "PayPeriodStartDate": "/Date(1751846400000+0000)/",
+          "PayPeriodEndDate": "/Date(1752969600000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 30.4
+        }
+      ],
+      "Title": "Annual leave please ",
+      "StartDate": "/Date(1751328000000+0000)/",
+      "EndDate": "/Date(1752105600000+0000)/",
+      "UpdatedDateUTC": "/Date(1748298666000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "1942a09d-7804-4d7d-ad22-e905f0dae8e0",
+      "EmployeeID": "353717a2-c1e7-406f-a5b7-5cb78938396b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1749427200000+0000)/",
+          "PayPeriodEndDate": "/Date(1750550400000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 15.2
+        }
+      ],
+      "Title": "Email sent\n",
+      "StartDate": "/Date(1750204800000+0000)/",
+      "EndDate": "/Date(1750291200000+0000)/",
+      "UpdatedDateUTC": "/Date(1748386437000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "40dd4072-6b2d-4f76-a28e-6dc28b6caa59",
+      "EmployeeID": "96818292-2f14-4920-a07b-cb8798c42a96",
+      "LeaveTypeID": "1cd8a687-4e13-441f-bbde-40fbf4411df5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 14.3188
+        }
+      ],
+      "Title": "Friday and Monday leave for my daughter’s travel.",
+      "StartDate": "/Date(1749772800000+0000)/",
+      "EndDate": "/Date(1750032000000+0000)/",
+      "UpdatedDateUTC": "/Date(1747097109000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "4eb11738-4f33-4529-b934-51451e2f84fd",
+      "EmployeeID": "6d7d9d8e-fc06-4ff5-9a56-f3c7606afdd2",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Annual Leave - Day after Birthday Leave Day ",
+      "StartDate": "/Date(1749772800000+0000)/",
+      "EndDate": "/Date(1749800160000+0000)/",
+      "UpdatedDateUTC": "/Date(1747261717000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "a745d978-db92-463f-9122-6092922b842a",
+      "EmployeeID": "c7cee56a-1b2d-4de2-99f7-9fa78ba82b36",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Annual leave day",
+      "StartDate": "/Date(1749772800000+0000)/",
+      "EndDate": "/Date(1749800160000+0000)/",
+      "UpdatedDateUTC": "/Date(1748829434000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "1471b702-2697-4a9c-bfbb-646ea4331215",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 37.6812
+        }
+      ],
+      "Title": "Holiday",
+      "StartDate": "/Date(1748390400000+0000)/",
+      "EndDate": "/Date(1748908800000+0000)/",
+      "UpdatedDateUTC": "/Date(1746408132000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "d70cfac6-badf-4379-8efc-328fa6998167",
+      "EmployeeID": "c102db9c-39ca-4f01-8c55-fc78c6f62556",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 4
+        }
+      ],
+      "Title": "Funeral Monday morning",
+      "StartDate": "/Date(1748822400000+0000)/",
+      "EndDate": "/Date(1748836800000+0000)/",
+      "UpdatedDateUTC": "/Date(1748298676000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "14dd2f80-2d58-4184-a207-a5e87b341693",
+      "EmployeeID": "d4ca328c-3632-44e9-909b-2ed6948e6e68",
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 35.7971
+        }
+      ],
+      "Title": "Baseball coaching in Lismore ",
+      "StartDate": "/Date(1748304000000+0000)/",
+      "EndDate": "/Date(1748822400000+0000)/",
+      "UpdatedDateUTC": "/Date(1746657370000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "ff2ab934-104b-4161-9795-bd0061ef7823",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "Dad arriving from Portugal 🇵🇹 ",
+      "StartDate": "/Date(1748563200000+0000)/",
+      "EndDate": "/Date(1748592000000+0000)/",
+      "UpdatedDateUTC": "/Date(1746657355000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "78d465a9-53da-4150-bf68-83a3e927132a",
+      "EmployeeID": "9f569eb7-185b-4cc3-8681-1598318f712b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.1594
+        }
+      ],
+      "Title": "Caer's Leave for my Son",
+      "StartDate": "/Date(1748476800000+0000)/",
+      "EndDate": "/Date(1748476800000+0000)/",
+      "UpdatedDateUTC": "/Date(1748589865000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "e90a59b6-c5f0-482b-939e-2f4ef8f2a654",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 4
+        }
+      ],
+      "Title": "Illness ",
+      "StartDate": "/Date(1748390400000+0000)/",
+      "EndDate": "/Date(1748404800000+0000)/",
+      "UpdatedDateUTC": "/Date(1748829458000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "de2ca9f8-1573-4225-83c4-819d8f8abc88",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 50.1159
+        }
+      ],
+      "Title": "annual leave ",
+      "StartDate": "/Date(1747699200000+0000)/",
+      "EndDate": "/Date(1748390400000+0000)/",
+      "UpdatedDateUTC": "/Date(1747097027000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "c275f6ac-47e6-4eca-9baf-82c244d1f516",
+      "EmployeeID": "6d7d9d8e-fc06-4ff5-9a56-f3c7606afdd2",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.1
+        }
+      ],
+      "Title": "Sick Leave - Without Certificate ",
+      "StartDate": "/Date(1747958400000+0000)/",
+      "EndDate": "/Date(1747983960000+0000)/",
+      "UpdatedDateUTC": "/Date(1748298695000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "8d72c0a1-44e8-43b7-bcc6-2cc1f4c5f710",
+      "EmployeeID": "c102db9c-39ca-4f01-8c55-fc78c6f62556",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 35.7971
+        }
+      ],
+      "Title": "Annual leave approved by Brooke",
+      "StartDate": "/Date(1747612800000+0000)/",
+      "EndDate": "/Date(1747958400000+0000)/",
+      "UpdatedDateUTC": "/Date(1749086472000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "ec4f1206-45af-4e74-a108-4ce42c97806a",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "Illness ",
+      "StartDate": "/Date(1747872000000+0000)/",
+      "EndDate": "/Date(1747900800000+0000)/",
+      "UpdatedDateUTC": "/Date(1748829471000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "b519b0fa-93d2-4deb-9f4b-2015d5c47db6",
+      "EmployeeID": "a4522775-9ffc-4097-b9e6-ec43640cc638",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747008000000+0000)/",
+          "PayPeriodEndDate": "/Date(1748131200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "StartDate": "/Date(1747872000000+0000)/",
+      "EndDate": "/Date(1747872000000+0000)/",
+      "UpdatedDateUTC": "/Date(1747959556000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "3d0797b0-a34f-40cc-870a-b8b1be06621c",
+      "EmployeeID": "295772c7-29ed-4369-a19c-3f47233005e3",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 7.5362
+        }
+      ],
+      "Title": "Leave Request",
+      "StartDate": "/Date(1747785600000+0000)/",
+      "EndDate": "/Date(1747785600000+0000)/",
+      "UpdatedDateUTC": "/Date(1746355279000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "2f1562d5-aad5-4a02-830f-4dc207806b20",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747612800000+0000)/",
+          "PayPeriodEndDate": "/Date(1750204800000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "Sick leave",
+      "StartDate": "/Date(1747699200000+0000)/",
+      "EndDate": "/Date(1747728000000+0000)/",
+      "UpdatedDateUTC": "/Date(1747720674000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "5316d49f-c4eb-46b8-8698-ce05d6bec235",
+      "EmployeeID": "e2189714-7c4c-46e9-a482-6ab30565a045",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747008000000+0000)/",
+          "PayPeriodEndDate": "/Date(1748131200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Sick ",
+      "StartDate": "/Date(1747612800000+0000)/",
+      "EndDate": "/Date(1747640160000+0000)/",
+      "UpdatedDateUTC": "/Date(1747720648000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "5e24c793-94a0-4e3c-996a-7a3bd224d523",
+      "EmployeeID": "85b116b2-341a-47af-93ba-153be18e5021",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "SCHEDULED",
+          "NumberOfUnits": 4
+        }
+      ],
+      "Title": "Sick Leave - Half Day",
+      "StartDate": "/Date(1747353600000+0000)/",
+      "EndDate": "/Date(1747368000000+0000)/",
+      "UpdatedDateUTC": "/Date(1747720638000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "6abe3c2f-097a-49cd-9f33-e4e2cf83f7ef",
+      "EmployeeID": "c102db9c-39ca-4f01-8c55-fc78c6f62556",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.2333
+        }
+      ],
+      "StartDate": "/Date(1747267200000+0000)/",
+      "EndDate": "/Date(1747267200000+0000)/",
+      "UpdatedDateUTC": "/Date(1747265155000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "dbb75594-feb4-42de-ad40-b69cdb27c106",
+      "EmployeeID": "d4ca328c-3632-44e9-909b-2ed6948e6e68",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.2333
+        }
+      ],
+      "StartDate": "/Date(1747267200000+0000)/",
+      "EndDate": "/Date(1747267200000+0000)/",
+      "UpdatedDateUTC": "/Date(1747270926000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "be61e04b-5137-4e11-a2bc-f4d4e5673e5d",
+      "EmployeeID": "353717a2-c1e7-406f-a5b7-5cb78938396b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1747008000000+0000)/",
+          "PayPeriodEndDate": "/Date(1748131200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 3
+        }
+      ],
+      "Title": "Went home early unwell",
+      "StartDate": "/Date(1747180800000+0000)/",
+      "EndDate": "/Date(1747191600000+0000)/",
+      "UpdatedDateUTC": "/Date(1747261801000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "e4a6443e-895d-4978-aa7f-9a176af7b92f",
+      "EmployeeID": "9f569eb7-185b-4cc3-8681-1598318f712b",
+      "LeaveTypeID": "83f7c0f4-aba0-4e8f-88fa-cae5ff29cc16",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.2333
+        }
+      ],
+      "StartDate": "/Date(1747180800000+0000)/",
+      "EndDate": "/Date(1747180800000+0000)/",
+      "UpdatedDateUTC": "/Date(1747283328000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "caae9edf-5e5c-41a5-a3f9-390ec57ec442",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.6667
+        }
+      ],
+      "StartDate": "/Date(1746662400000+0000)/",
+      "EndDate": "/Date(1746662400000+0000)/",
+      "UpdatedDateUTC": "/Date(1747265067000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "47372478-c5f6-4ebf-b295-c69f37341531",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.5
+        }
+      ],
+      "Title": "annual leave",
+      "StartDate": "/Date(1746144000000+0000)/",
+      "EndDate": "/Date(1746171000000+0000)/",
+      "UpdatedDateUTC": "/Date(1742180486000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "18fb9ebc-bf39-4f99-b627-6d4d9a6647fe",
+      "EmployeeID": "9f569eb7-185b-4cc3-8681-1598318f712b",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 49.4
+        }
+      ],
+      "StartDate": "/Date(1745193600000+0000)/",
+      "EndDate": "/Date(1745971200000+0000)/",
+      "UpdatedDateUTC": "/Date(1747265806000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "9ada9350-dbb7-4b9c-a31a-d756b25b981d",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 24.7
+        }
+      ],
+      "Title": "Mini holidays for easter",
+      "StartDate": "/Date(1745280000000+0000)/",
+      "EndDate": "/Date(1745452800000+0000)/",
+      "UpdatedDateUTC": "/Date(1747264099000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "f02b207e-7abd-42b3-8fa0-ad08122dded7",
+      "EmployeeID": "85b116b2-341a-47af-93ba-153be18e5021",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 26
+        }
+      ],
+      "Title": "Annual Leave",
+      "StartDate": "/Date(1745280000000+0000)/",
+      "EndDate": "/Date(1745452800000+0000)/",
+      "UpdatedDateUTC": "/Date(1739918440000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "69112a99-5e3f-4bdf-b17a-e4cfc98f326f",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 26
+        }
+      ],
+      "Title": "Holiday ",
+      "StartDate": "/Date(1745280000000+0000)/",
+      "EndDate": "/Date(1745452800000+0000)/",
+      "UpdatedDateUTC": "/Date(1736200051000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "50fa3f16-856b-42fb-9d3c-d8b17b5e19b1",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1745020800000+0000)/",
+          "PayPeriodEndDate": "/Date(1747526400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 24.7
+        }
+      ],
+      "Title": "Holiday ",
+      "StartDate": "/Date(1745280000000+0000)/",
+      "EndDate": "/Date(1745452800000+0000)/",
+      "UpdatedDateUTC": "/Date(1736302872000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "fee1bc61-46b2-4b74-86ad-c151fba29dba",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.3188
+        }
+      ],
+      "Title": "instead of 22nd, 23rd , 24th",
+      "StartDate": "/Date(1744761600000+0000)/",
+      "EndDate": "/Date(1744848000000+0000)/",
+      "UpdatedDateUTC": "/Date(1746407914000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "3b352732-1626-4097-b7df-042f78fb3ad2",
+      "EmployeeID": "c102db9c-39ca-4f01-8c55-fc78c6f62556",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.1594
+        }
+      ],
+      "Title": "Sick Leave",
+      "StartDate": "/Date(1744675200000+0000)/",
+      "EndDate": "/Date(1744675200000+0000)/",
+      "UpdatedDateUTC": "/Date(1744725397000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "e444e70a-0448-4729-a54c-f2762d5841f7",
+      "EmployeeID": "e2189714-7c4c-46e9-a482-6ab30565a045",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1744588800000+0000)/",
+          "PayPeriodEndDate": "/Date(1745712000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Looking after mum ",
+      "StartDate": "/Date(1744588800000+0000)/",
+      "EndDate": "/Date(1744616160000+0000)/",
+      "UpdatedDateUTC": "/Date(1745503960000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "1367c851-03ce-458d-80a1-b78f592436e0",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.1594
+        }
+      ],
+      "Title": "Carer Leave",
+      "StartDate": "/Date(1744588800000+0000)/",
+      "EndDate": "/Date(1744588800000+0000)/",
+      "UpdatedDateUTC": "/Date(1744725551000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "bf8200b7-60ca-4d02-824b-db2781fc6af2",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.5
+        }
+      ],
+      "Title": "sons teeth removal ",
+      "StartDate": "/Date(1744329600000+0000)/",
+      "EndDate": "/Date(1744329600000+0000)/",
+      "UpdatedDateUTC": "/Date(1744328266000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "6e34fec5-428a-4b8f-a750-fd87a9285ac3",
+      "EmployeeID": "e759275c-9350-4f6f-9077-5dc4362dd621",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "Personal Leave",
+      "StartDate": "/Date(1744329600000+0000)/",
+      "EndDate": "/Date(1744329600000+0000)/",
+      "UpdatedDateUTC": "/Date(1744298713000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "82230479-9574-4344-8465-b3cb0f0f9c62",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.1594
+        }
+      ],
+      "Title": "Sick Leave",
+      "StartDate": "/Date(1744156800000+0000)/",
+      "EndDate": "/Date(1744156800000+0000)/",
+      "UpdatedDateUTC": "/Date(1744298874000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "bd5ab6e1-1d62-43ff-a827-49d9fb1bbace",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.5
+        }
+      ],
+      "Title": "day off ",
+      "StartDate": "/Date(1743724800000+0000)/",
+      "EndDate": "/Date(1743751800000+0000)/",
+      "UpdatedDateUTC": "/Date(1744328241000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "be744711-0c72-4cf2-b5a9-bd68897d8b4a",
+      "EmployeeID": "295772c7-29ed-4369-a19c-3f47233005e3",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.5362
+        }
+      ],
+      "Title": "Annual Leave",
+      "StartDate": "/Date(1743724800000+0000)/",
+      "EndDate": "/Date(1743724800000+0000)/",
+      "UpdatedDateUTC": "/Date(1744298667000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "779c934b-50c7-45dd-9332-747213a8397f",
+      "EmployeeID": "a4522775-9ffc-4097-b9e6-ec43640cc638",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1743379200000+0000)/",
+          "PayPeriodEndDate": "/Date(1744502400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Sick leave",
+      "StartDate": "/Date(1743638400000+0000)/",
+      "EndDate": "/Date(1743638400000+0000)/",
+      "UpdatedDateUTC": "/Date(1744260532000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "7c985057-0919-44ba-a14a-54054684e930",
+      "EmployeeID": "e2189714-7c4c-46e9-a482-6ab30565a045",
+      "LeaveTypeID": "4b1a11ab-53e6-488a-ae63-cfea36956636",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1743379200000+0000)/",
+          "PayPeriodEndDate": "/Date(1744502400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Unpaid leave ",
+      "StartDate": "/Date(1743379200000+0000)/",
+      "EndDate": "/Date(1743406560000+0000)/",
+      "UpdatedDateUTC": "/Date(1745503956000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "cdcbb3c7-51e7-435b-be0d-2759ac2be1ab",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742342400000+0000)/",
+          "PayPeriodEndDate": "/Date(1744934400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.1594
+        }
+      ],
+      "Title": "Sick Leave",
+      "StartDate": "/Date(1742774400000+0000)/",
+      "EndDate": "/Date(1742774400000+0000)/",
+      "UpdatedDateUTC": "/Date(1744298813000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "1d58700c-f934-465e-987f-9509d3be057d",
+      "EmployeeID": "e2189714-7c4c-46e9-a482-6ab30565a045",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742169600000+0000)/",
+          "PayPeriodEndDate": "/Date(1743292800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "StartDate": "/Date(1742342400000+0000)/",
+      "EndDate": "/Date(1742342400000+0000)/",
+      "UpdatedDateUTC": "/Date(1743385997000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "f52d1a18-fe6f-4424-89a3-c2d575fd9a62",
+      "EmployeeID": "e2189714-7c4c-46e9-a482-6ab30565a045",
+      "LeaveTypeID": "83f7c0f4-aba0-4e8f-88fa-cae5ff29cc16",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1742169600000+0000)/",
+          "PayPeriodEndDate": "/Date(1743292800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "Title": "Funeral",
+      "StartDate": "/Date(1742169600000+0000)/",
+      "EndDate": "/Date(1742169600000+0000)/",
+      "UpdatedDateUTC": "/Date(1743385968000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "d1ad957d-35bf-4255-a492-01d01bb230ac",
+      "EmployeeID": "6d7d9d8e-fc06-4ff5-9a56-f3c7606afdd2",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 34.666
+        }
+      ],
+      "StartDate": "/Date(1741651200000+0000)/",
+      "EndDate": "/Date(1741910400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742162151000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "7f49ef2c-7424-4ad3-bbbb-e32a16a28743",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.6667
+        }
+      ],
+      "StartDate": "/Date(1741910400000+0000)/",
+      "EndDate": "/Date(1741910400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742162361000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "9a39e2e4-4e83-4bc8-9ffa-a4a913cf39a4",
+      "EmployeeID": "96818292-2f14-4920-a07b-cb8798c42a96",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 32.9333
+        }
+      ],
+      "Title": "Family funeral interstate. ",
+      "StartDate": "/Date(1741651200000+0000)/",
+      "EndDate": "/Date(1741910400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742164149000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "33572ae8-ab13-4380-82b9-b3ce9cb7a22a",
+      "EmployeeID": "82b572c6-6fc0-465f-83d8-a2eb4ad6eb02",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.6667
+        }
+      ],
+      "StartDate": "/Date(1741910400000+0000)/",
+      "EndDate": "/Date(1741910400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742165353000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "85898ef6-d09a-4447-92d1-ad03f190704c",
+      "EmployeeID": "a4522775-9ffc-4097-b9e6-ec43640cc638",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1740960000000+0000)/",
+          "PayPeriodEndDate": "/Date(1742083200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.2
+        }
+      ],
+      "StartDate": "/Date(1741564800000+0000)/",
+      "EndDate": "/Date(1741651200000+0000)/",
+      "UpdatedDateUTC": "/Date(1742188895000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "cc7c53da-dfcb-4a1b-8caf-970638827e39",
+      "EmployeeID": "6d7d9d8e-fc06-4ff5-9a56-f3c7606afdd2",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.8786
+        },
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 112.6645
+        }
+      ],
+      "Title": "Overseas Holiday. \n1 x Public Holiday Labour day",
+      "StartDate": "/Date(1739836800000+0000)/",
+      "EndDate": "/Date(1741478400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742162117000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "1a8ee608-f520-49d9-9e6c-ae25cef26d07",
+      "EmployeeID": "353717a2-c1e7-406f-a5b7-5cb78938396b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1740960000000+0000)/",
+          "PayPeriodEndDate": "/Date(1742083200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6667
+        }
+      ],
+      "Title": "Unwell ",
+      "StartDate": "/Date(1741132800000+0000)/",
+      "EndDate": "/Date(1741160400000+0000)/",
+      "UpdatedDateUTC": "/Date(1741511165000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "2d449025-fe08-4c82-9f08-490ebf073a29",
+      "EmployeeID": "353717a2-c1e7-406f-a5b7-5cb78938396b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1740960000000+0000)/",
+          "PayPeriodEndDate": "/Date(1742083200000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6667
+        }
+      ],
+      "Title": "Unwell",
+      "StartDate": "/Date(1741046400000+0000)/",
+      "EndDate": "/Date(1741074000000+0000)/",
+      "UpdatedDateUTC": "/Date(1741511168000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "48ae6bf0-c1c7-48c9-8d4f-df4482ca6c11",
+      "EmployeeID": "82b572c6-6fc0-465f-83d8-a2eb4ad6eb02",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 17.3333
+        }
+      ],
+      "StartDate": "/Date(1740960000000+0000)/",
+      "EndDate": "/Date(1741046400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742165326000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "aca9f6f2-40d5-4697-9d20-ad0cc5f6618f",
+      "EmployeeID": "d6337d50-ecb6-4bad-bd45-6ea8db2452db",
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 16.4667
+        }
+      ],
+      "Title": "Not enough sick leave hours",
+      "StartDate": "/Date(1740960000000+0000)/",
+      "EndDate": "/Date(1741046400000+0000)/",
+      "UpdatedDateUTC": "/Date(1742165838000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "32aa94ec-f13d-49d9-9032-c06556c4aced",
+      "EmployeeID": "e759275c-9350-4f6f-9077-5dc4362dd621",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 16
+        }
+      ],
+      "Title": "Hamilton Island ",
+      "StartDate": "/Date(1740700800000+0000)/",
+      "EndDate": "/Date(1740960000000+0000)/",
+      "UpdatedDateUTC": "/Date(1742161489000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "a87ffc9f-cd05-46e5-931c-7bdd261d080d",
+      "EmployeeID": "a4522775-9ffc-4097-b9e6-ec43640cc638",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739750400000+0000)/",
+          "PayPeriodEndDate": "/Date(1740873600000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.6
+        }
+      ],
+      "StartDate": "/Date(1740614400000+0000)/",
+      "EndDate": "/Date(1740614400000+0000)/",
+      "UpdatedDateUTC": "/Date(1740706852000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "7078a65c-cd8a-426a-a213-caff746723d5",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1739923200000+0000)/",
+          "PayPeriodEndDate": "/Date(1742256000000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "sick leave",
+      "StartDate": "/Date(1740441600000+0000)/",
+      "EndDate": "/Date(1740470400000+0000)/",
+      "UpdatedDateUTC": "/Date(1740518554000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "652f2ce2-9f78-4612-a423-cb2ebc212acb",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 0.0167
+        }
+      ],
+      "Title": "Liv golf",
+      "StartDate": "/Date(1739750400000+0000)/",
+      "EndDate": "/Date(1739750460000+0000)/",
+      "UpdatedDateUTC": "/Date(1737432748000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "68340e37-0a15-4040-8bf1-c0d4c5d65995",
+      "EmployeeID": "f6bc608c-5b97-47a7-a1b5-a3816369656c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.4848
+        }
+      ],
+      "StartDate": "/Date(1739491200000+0000)/",
+      "EndDate": "/Date(1739491200000+0000)/",
+      "UpdatedDateUTC": "/Date(1739493137000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "b3d445c5-dc4d-4c52-a931-0f519887a984",
+      "EmployeeID": "295772c7-29ed-4369-a19c-3f47233005e3",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.8788
+        }
+      ],
+      "StartDate": "/Date(1739145600000+0000)/",
+      "EndDate": "/Date(1739145600000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490450000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "a0f24d72-e001-4b47-8dbe-3f72ab45f471",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.4848
+        }
+      ],
+      "Title": "Super Bowl Monday ",
+      "StartDate": "/Date(1739145600000+0000)/",
+      "EndDate": "/Date(1739145600000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490554000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "e740a831-edff-4b68-a479-123714bb0a8f",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.7576
+        }
+      ],
+      "Title": "Engagement party ",
+      "StartDate": "/Date(1738886400000+0000)/",
+      "EndDate": "/Date(1739145600000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490401000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "65a86cc6-e466-4203-bd32-e8ebcc9ab166",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8
+        }
+      ],
+      "Title": "colonoscopy ",
+      "StartDate": "/Date(1738886400000+0000)/",
+      "EndDate": "/Date(1738915200000+0000)/",
+      "UpdatedDateUTC": "/Date(1738043820000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "02fb99e6-8ed6-40f5-a6a0-ff06cfc5fe2f",
+      "EmployeeID": "85b116b2-341a-47af-93ba-153be18e5021",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.7576
+        }
+      ],
+      "Title": "Sick",
+      "StartDate": "/Date(1738800000000+0000)/",
+      "EndDate": "/Date(1738886400000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490593000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "15de3c9f-f1ef-490d-9275-5ee944d6b229",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 23.6364
+        }
+      ],
+      "Title": "Sick leave",
+      "StartDate": "/Date(1738108800000+0000)/",
+      "EndDate": "/Date(1738281600000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490227000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "89b0aaa5-eaa0-4922-be13-360b9e0cae67",
+      "EmployeeID": "f610f434-3ec6-4542-bb9a-7c7c122929df",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 40
+        }
+      ],
+      "StartDate": "/Date(1737331200000+0000)/",
+      "EndDate": "/Date(1737676800000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490094000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "c6723dfa-e199-4771-b0fe-630b387b0d5a",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.7576
+        }
+      ],
+      "Title": "Wedding ",
+      "StartDate": "/Date(1737590400000+0000)/",
+      "EndDate": "/Date(1737676800000+0000)/",
+      "UpdatedDateUTC": "/Date(1736200109000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "bf2c2eb3-a8c5-453e-a2d1-b1f249c1c276",
+      "EmployeeID": "f6bc608c-5b97-47a7-a1b5-a3816369656c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1737244800000+0000)/",
+          "PayPeriodEndDate": "/Date(1739836800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "Title": "Sick",
+      "StartDate": "/Date(1737504000000+0000)/",
+      "EndDate": "/Date(1737590400000+0000)/",
+      "UpdatedDateUTC": "/Date(1739490179000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "e5342f3f-8b74-4a8e-bb0b-e0cd8e949482",
+      "EmployeeID": "f610f434-3ec6-4542-bb9a-7c7c122929df",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 80
+        }
+      ],
+      "StartDate": "/Date(1736121600000+0000)/",
+      "EndDate": "/Date(1737072000000+0000)/",
+      "UpdatedDateUTC": "/Date(1736921151000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "3162748d-c7a3-4170-893d-f632f93f6831",
+      "EmployeeID": "85b116b2-341a-47af-93ba-153be18e5021",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 126.0605
+        }
+      ],
+      "Title": "Mandatory Xmas Leave & 2 weeks extended leave",
+      "StartDate": "/Date(1734998400000+0000)/",
+      "EndDate": "/Date(1737072000000+0000)/",
+      "UpdatedDateUTC": "/Date(1736975971000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "a960cde8-9552-4dfb-9d0d-5e6b24396ce3",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.4848
+        }
+      ],
+      "Title": "specialist for Jayden",
+      "StartDate": "/Date(1736985600000+0000)/",
+      "EndDate": "/Date(1736985600000+0000)/",
+      "UpdatedDateUTC": "/Date(1736923703000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "dc98c547-3b5b-4c83-81b2-8897ef4c8dbc",
+      "EmployeeID": "aaa42038-0eaf-4a8e-8ef5-57c0209c9e8c",
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1736121600000+0000)/",
+          "PayPeriodEndDate": "/Date(1737244800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 41.6357
+        }
+      ],
+      "Title": "no sick leave available",
+      "StartDate": "/Date(1736294400000+0000)/",
+      "EndDate": "/Date(1736985600000+0000)/",
+      "UpdatedDateUTC": "/Date(1737496905000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "fb1ca845-aa1d-43be-b22b-de5b999b0f15",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "StartDate": "/Date(1736726400000+0000)/",
+      "EndDate": "/Date(1736812800000+0000)/",
+      "UpdatedDateUTC": "/Date(1736979752000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "0db897e6-91a1-43bd-b8d2-1588ff7c30b1",
+      "EmployeeID": "96818292-2f14-4920-a07b-cb8798c42a96",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 97.303
+        }
+      ],
+      "StartDate": "/Date(1734912000000+0000)/",
+      "EndDate": "/Date(1736726400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736924405000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "254c0ee2-6821-4f44-84a6-0f2483bd05e2",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "StartDate": "/Date(1736208000000+0000)/",
+      "EndDate": "/Date(1736294400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736976506000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "d85e952b-7696-4ceb-9788-de014dfec291",
+      "EmployeeID": "aaa42038-0eaf-4a8e-8ef5-57c0209c9e8c",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1736121600000+0000)/",
+          "PayPeriodEndDate": "/Date(1737244800000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 8.3643
+        }
+      ],
+      "StartDate": "/Date(1736208000000+0000)/",
+      "EndDate": "/Date(1736208000000+0000)/",
+      "UpdatedDateUTC": "/Date(1737496826000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "745c1b96-fa1d-44eb-833c-4da61b5ea29c",
+      "EmployeeID": "12a31b4a-bf1d-4643-8e62-96605aa09921",
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.4848
+        }
+      ],
+      "StartDate": "/Date(1736121600000+0000)/",
+      "EndDate": "/Date(1736121600000+0000)/",
+      "UpdatedDateUTC": "/Date(1736979648000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "11017873-3352-41e4-8f52-03a4d867eab5",
+      "EmployeeID": "ee1229b8-011a-488b-a563-f9083076bdb0",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 44.9091
+        }
+      ],
+      "Title": "compulsory Xmas leave  + Jan 6th",
+      "StartDate": "/Date(1735257600000+0000)/",
+      "EndDate": "/Date(1736121600000+0000)/",
+      "UpdatedDateUTC": "/Date(1736976429000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "68a284a3-d21b-4258-b6d9-212326846f43",
+      "EmployeeID": "6d7d9d8e-fc06-4ff5-9a56-f3c7606afdd2",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 55.1505
+        }
+      ],
+      "Title": "Christmas Leave ",
+      "StartDate": "/Date(1734739200000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1734320705000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "93f683f8-eea4-48cb-be5c-57853676791d",
+      "EmployeeID": "832a5ef6-2cb6-4dde-8759-f338fc96197c",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.7576
+        }
+      ],
+      "Title": "xmas leave",
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1730670413000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "99709aae-3fd0-4718-bb3a-703c92d47194",
+      "EmployeeID": "2559dcf2-b11f-44ad-8dba-c3adff7aeb25",
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 15.7576
+        }
+      ],
+      "Title": "Christmas holidays",
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1731287883000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "6e4651cf-294b-40f5-9f1b-6d850cfe523e",
+      "EmployeeID": "61b2ae94-7bc1-4781-b5cd-7e5af499db91",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "Title": "christmas break",
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1731534369000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "5364a34a-3695-470a-8008-1b377f9f5091",
+      "EmployeeID": "04eb259c-eea6-40c9-9945-9f88435479b7",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9697
+        }
+      ],
+      "Title": "Christmas ",
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1731534379000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "b924be11-26ab-4875-bace-9b5277443ced",
+      "EmployeeID": "c102db9c-39ca-4f01-8c55-fc78c6f62556",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 52.394
+        }
+      ],
+      "Title": "Christmas shut down ",
+      "StartDate": "/Date(1734912000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736923971000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "32055514-8da7-4d6d-ac82-396ca232c89d",
+      "EmployeeID": "a3a7d508-abc0-4653-b727-7cbe6be72e7b",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 37.4243
+        }
+      ],
+      "Title": "Xmas leave ",
+      "StartDate": "/Date(1735257600000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736976226000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "489101b4-a738-4e96-8a0f-0ef1b125ed32",
+      "EmployeeID": "296fe250-20b0-4fef-84d6-f08630cc3781",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 37.4239
+        }
+      ],
+      "Title": "Annual leave",
+      "StartDate": "/Date(1735257600000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1734312190000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "fa32635a-5c60-4446-b590-27d7cfd74d3d",
+      "EmployeeID": "12a31b4a-bf1d-4643-8e62-96605aa09921",
+      "LeaveTypeID": "4b1a11ab-53e6-488a-ae63-cfea36956636",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 14.9696
+        }
+      ],
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736980114000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "a824a3ac-886d-470b-a85f-c05767dc144e",
+      "EmployeeID": "82b572c6-6fc0-465f-83d8-a2eb4ad6eb02",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 55.1515
+        }
+      ],
+      "Title": "Xmas Leave",
+      "StartDate": "/Date(1734912000000+0000)/",
+      "EndDate": "/Date(1735862400000+0000)/",
+      "UpdatedDateUTC": "/Date(1736975607000+0000)/",
+      "PayOutType": "DEFAULT"
+    },
+    {
+      "LeaveApplicationID": "61e85c7f-5b97-42d0-ba95-b8c4a394ace7",
+      "EmployeeID": "295772c7-29ed-4369-a19c-3f47233005e3",
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "LeavePeriods": [
+        {
+          "PayPeriodStartDate": "/Date(1734566400000+0000)/",
+          "PayPeriodEndDate": "/Date(1737158400000+0000)/",
+          "LeavePeriodStatus": "PROCESSED",
+          "NumberOfUnits": 7.8788
+        }
+      ],
+      "StartDate": "/Date(1735776000000+0000)/",
+      "EndDate": "/Date(1735776000000+0000)/",
+      "UpdatedDateUTC": "/Date(1736923278000+0000)/",
+      "PayOutType": "DEFAULT"
+    }
+  ]
+}

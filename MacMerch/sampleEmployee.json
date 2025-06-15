@@ -1,0 +1,149 @@
+{
+  "Id": "10d25a0e-45fe-43bb-bcca-047775245f74",
+  "Status": "OK",
+  "ProviderName": "API Explorer",
+  "DateTimeUTC": "/Date(1749798911765)/",
+  "Employees": [
+    {
+      "EmployeeID": "76e631e4-6ae2-442f-ae6b-7adbc9b2fedd",
+      "Title": "",
+      "FirstName": "Justine",
+      "MiddleNames": "",
+      "LastName": "Merrin",
+      "Status": "ACTIVE",
+      "Email": "justinemerrin@gmail.com",
+      "DateOfBirth": "/Date(875145600000+0000)/",
+      "JobTitle": "Territory Manager - South Brisbane",
+      "HomeAddress": {
+        "AddressLine1": "18 Beatson Tce",
+        "City": "Alderley",
+        "Region": "QLD",
+        "PostalCode": "4051",
+        "Country": "AUSTRALIA"
+      },
+      "Phone": "0402549405",
+      "Mobile": "",
+      "StartDate": "/Date(1746403200000+0000)/",
+      "Classification": "",
+      "OrdinaryEarningsRateID": "e9c841bf-9ef5-4dc7-bf62-465a27a95500",
+      "PayrollCalendarID": "7d232898-bc85-4e3d-bbeb-5cedadccb767",
+      "UpdatedDateUTC": "/Date(1749188774000+0000)/",
+      "EmployeeGroupName": "Queensland",
+      "IsAuthorisedToApproveLeave": false,
+      "IsAuthorisedToApproveTimesheets": false,
+      "TaxDeclaration": {
+        "TaxFileNumber": "***-***-029",
+        "EmploymentBasis": "FULLTIME",
+        "AustralianResidentForTaxPurposes": true,
+        "TaxFreeThresholdClaimed": true,
+        "HasHELPDebt": false,
+        "HasSFSSDebt": false,
+        "EligibleToReceiveLeaveLoading": false,
+        "UpdatedDateUTC": "/Date(1749188774000+0000)/",
+        "HasTradeSupportLoanDebt": false,
+        "ResidencyStatus": "AUSTRALIANRESIDENT",
+        "IncludeLeaveLoadingInSGC": false,
+        "HasLoanOrStudentDebt": false,
+        "TaxScaleType": "REGULAR"
+      },
+      "BankAccounts": [
+        {
+          "StatementText": "Monthly Pay",
+          "AccountName": "Justine Merrin",
+          "BSB": "633123",
+          "AccountNumber": "164584781",
+          "Remainder": true
+        }
+      ],
+      "OpeningBalances": {
+        "OpeningBalanceDate": "/Date(1746489600000+0000)/",
+        "EarningsLines": [],
+        "DeductionLines": [],
+        "SuperLines": [],
+        "ReimbursementLines": [],
+        "LeaveLines": [
+          {
+            "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+            "NumberOfUnits": 0
+          },
+          {
+            "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+            "NumberOfUnits": 0
+          }
+        ]
+      },
+      "PayTemplate": {
+        "EarningsLines": [
+          {
+            "EarningsRateID": "e9c841bf-9ef5-4dc7-bf62-465a27a95500",
+            "CalculationType": "ANNUALSALARY",
+            "AnnualSalary": 70000,
+            "NumberOfUnitsPerWeek": 38
+          },
+          {
+            "EarningsRateID": "01d1dd7e-db21-4962-a706-f5a27e6c85f2",
+            "CalculationType": "ENTEREARNINGSRATE",
+            "FixedAmount": 1416.67
+          },
+          {
+            "EarningsRateID": "4c2805df-2de5-436a-b6d2-6b4a441a373d",
+            "CalculationType": "ENTEREARNINGSRATE",
+            "FixedAmount": 60
+          }
+        ],
+        "DeductionLines": [],
+        "SuperLines": [
+          {
+            "SuperMembershipID": "ec2e96be-69b7-4209-8296-1bea2f8eb4dd",
+            "ContributionType": "SGC",
+            "CalculationType": "STATUTORY",
+            "MinimumMonthlyEarnings": 450,
+            "ExpenseAccountCode": "480",
+            "LiabilityAccountCode": "826"
+          }
+        ],
+        "ReimbursementLines": [],
+        "LeaveLines": [
+          {
+            "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+            "CalculationType": "BASEDONORDINARYEARNINGS",
+            "AnnualNumberOfUnits": 152,
+            "FullTimeNumberOfUnitsPerPeriod": 164.6666,
+            "EntitlementFinalPayPayoutType": "PAIDOUT"
+          },
+          {
+            "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+            "CalculationType": "BASEDONORDINARYEARNINGS",
+            "AnnualNumberOfUnits": 76,
+            "FullTimeNumberOfUnitsPerPeriod": 164.6666,
+            "EntitlementFinalPayPayoutType": "NOTPAIDOUT"
+          }
+        ]
+      },
+      "SuperMemberships": [
+        {
+          "SuperMembershipID": "ec2e96be-69b7-4209-8296-1bea2f8eb4dd",
+          "SuperFundID": "6108d807-3312-40b1-ba5a-70072d27a61f",
+          "EmployeeNumber": "1074791529"
+        }
+      ],
+      "LeaveBalances": [
+        {
+          "LeaveName": "Annual Leave",
+          "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+          "NumberOfUnits": -201.047,
+          "TypeOfUnits": "Hours"
+        },
+        {
+          "LeaveName": "Personal/Carer's Leave",
+          "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+          "NumberOfUnits": 2.9231,
+          "TypeOfUnits": "Hours"
+        }
+      ],
+      "IsSTP2Qualified": true,
+      "IncomeType": "SALARYANDWAGES",
+      "EmploymentType": "EMPLOYEE"
+    }
+  ]
+}
