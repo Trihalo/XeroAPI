@@ -1,0 +1,108 @@
+{
+  "LeaveTypes": [
+    {
+      "LeaveTypeID": "bc8d2804-62af-4432-a7a7-a1a9f23793f5",
+      "Name": "Annual Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": true,
+      "ShowOnPayslip": true,
+      "UpdatedDateUTC": "/Date(1736920267000+0000)/",
+      "CurrentRecord": true,
+      "LeaveCategoryCode": "ANNUALLEAVE",
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "921c6d2f-2d66-4544-b091-d1872a703a4a",
+      "Name": "Long Service Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": true,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1676442284000+0000)/",
+      "CurrentRecord": true,
+      "LeaveCategoryCode": "LONGSERVICELEAVE",
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "1cd8a687-4e13-441f-bbde-40fbf4411df5",
+      "Name": "Parental Leave (unpaid)",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1592808282000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "31f12034-8222-4f37-8774-744b7d236703",
+      "Name": "Personal/Carer's Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": true,
+      "ShowOnPayslip": true,
+      "UpdatedDateUTC": "/Date(1739848420000+0000)/",
+      "CurrentRecord": true,
+      "LeaveCategoryCode": "PERSONALSICKCARERSLEAVE",
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "f389da70-37a6-449c-8e4a-591102d3e4c2",
+      "Name": "Carer's Leave (unpaid)",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1592808282000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "83f7c0f4-aba0-4e8f-88fa-cae5ff29cc16",
+      "Name": "Compassionate Leave (paid)",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": true,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1676442284000+0000)/",
+      "CurrentRecord": true,
+      "LeaveCategoryCode": "COMPASSIONATEANDBEREAVEMENTLEAVE",
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "451fe39e-3713-43f1-a1ac-efc165fa141b",
+      "Name": "Compassionate Leave (unpaid)",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1592808282000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "7533cd1a-34ba-4b3d-9fcf-572e6c39c5b8",
+      "Name": "Community Service Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": false,
+      "UpdatedDateUTC": "/Date(1592808282000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "4b1a11ab-53e6-488a-ae63-cfea36956636",
+      "Name": "Other Unpaid Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": true,
+      "UpdatedDateUTC": "/Date(1689124779000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    },
+    {
+      "LeaveTypeID": "91d1a4e6-643b-49c8-ac04-fb936929647b",
+      "Name": "Unpaid Leave",
+      "TypeOfUnits": "Hours",
+      "IsPaidLeave": false,
+      "ShowOnPayslip": true,
+      "UpdatedDateUTC": "/Date(1608251758000+0000)/",
+      "CurrentRecord": true,
+      "SGCExempt": false
+    }
+  ]
+}
