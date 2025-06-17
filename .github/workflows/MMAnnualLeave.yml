@@ -1,0 +1,39 @@
+name: Mac Merch Annual Leave Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 1 * *"
+    - cron: "0 21 18 * *"
+
+jobs:
+  run-annual-leave-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r MacMerch/requirements.txt
+
+      - name: Set up Google Cloud credentials
+        shell: bash
+        run: |
+          echo '${{ secrets.MAC_MERCHANDISING_BQACCESS }}' > /tmp/key.json
+          echo "MAC_MERCHANDISING_BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+
+      - name: Run Annual Leave Update Script
+        working-directory: MacMerch
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.MAC_MERCHANDISING_CLIENT_ID }}
+          MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.MAC_MERCHANDISING_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_MAC_MERCHANDISING }}
+        run: |
+          python fetchAnnualLeave.py

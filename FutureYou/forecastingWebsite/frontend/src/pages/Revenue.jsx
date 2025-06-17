@@ -48,8 +48,6 @@ function Revenue() {
   });
 
   const mtdRevenueByGroup = groupRecruitersByAreaWeek(recruiterTogetherByWeek);
-
-  console.log(cumulativeActuals);
   const rows = allAreas.map((area) => {
     const forecastThisWeek =
       forecastByAreaForWeek[area]?.[currentWeekIndex] || 0;
