@@ -28,10 +28,10 @@ jobs:
           # 🔹 Secrets (These remain unchanged)
           GH_PAT: ${{ secrets.GH_PAT }}
 
-          MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
-          MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
+          MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.MAC_MERCHANDISING_CLIENT_ID }}
+          MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.MAC_MERCHANDISING_CLIENT_SECRET }}
 
           # 🔹 Variables (Now using GitHub Variables instead of Secrets)
-          XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
+          XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_MAC_MERCHANDISING }}
         run: |
           python fetchAnnualLeave.py
