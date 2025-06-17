@@ -5,3 +5,4 @@ python-dotenv
 google-cloud-bigquery
 google-auth
 google-auth-oauthlib
+pyarrow
