@@ -21,6 +21,13 @@ from xeroAuthHelper import getXeroAccessToken
 
 FULL_RESET = False 
 
+quarters = {
+    "Jan": "Q3", "Feb": "Q3", "Mar": "Q3",
+    "Apr": "Q4", "May": "Q4", "Jun": "Q4",
+    "Jul": "Q1", "Aug": "Q1", "Sep": "Q1",
+    "Oct": "Q2", "Nov": "Q2", "Dec": "Q2"
+}
+
 # --- BigQuery Functions ---
 def export_to_bigquery(rows):
     if not rows:
@@ -203,6 +210,7 @@ def extract_invoice_lines(invoice, journal_totals):
     invoice_month = parsed_date.strftime("%B")
     invoice_week = week_of_company_month(parsed_date)
     company_month = get_company_month(parsed_date)
+    company_quarter = quarters[company_month]
     currency_rate = invoice.get("CurrencyRate", 1)
     currency_code = invoice.get("CurrencyCode", "")
     updated_date = parse_xero_date(invoice.get("UpdatedDateUTC", ""))
@@ -284,6 +292,7 @@ def extract_invoice_lines(invoice, journal_totals):
                     "Currency Rate": currency_rate,
                     "Updated Date": updated_date_str,
                     "InvoiceID": invoice.get("InvoiceID", ""),
+                    "Quarter": company_quarter,
                 })
     else:
         valid_lines = [line for line in line_items if is_valid_line(line)]
@@ -356,6 +365,7 @@ def extract_invoice_lines(invoice, journal_totals):
                 "Currency Rate": currency_rate,
                 "Updated Date": updated_date_str,
                 "InvoiceID": invoice.get("InvoiceID", ""),
+                "Quarter": company_quarter,
             })
     return rows
 
@@ -536,7 +546,9 @@ def main():
             "# Placement": "",
             "Currency Code": "AUD",
             "Currency Rate": currency_rate,
-            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else ""
+            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else "",
+            "InvoiceID": row.get("InvoiceID", ""),
+            "Quarter": quarters.get(get_company_month(date), ""),
         })
 
     # You can keep or remove the CSV export
