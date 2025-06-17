@@ -1,0 +1,37 @@
+name: Mac Merch Annual Leave Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 1 * *"
+    - cron: "0 21 18 * *"
+
+jobs:
+  run-annual-leave-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install -r MacMerch/requirements.txt
+
+      - name: Run ATB Request Script
+        working-directory: FutureYou
+        env:
+          # 🔹 Secrets (These remain unchanged)
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_ID }}
+          MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.FUTUREYOU_CONTRACTING_CLIENT_SECRET }}
+
+          # 🔹 Variables (Now using GitHub Variables instead of Secrets)
+          XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_CONTRACTING }}
+        run: |
+          python fetchAnnualLeave.py

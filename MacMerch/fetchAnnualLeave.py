@@ -4,7 +4,6 @@ import os
 import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
-from datetime import datetime
 import json
 from dotenv import load_dotenv
 load_dotenv()
