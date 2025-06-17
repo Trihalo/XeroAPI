@@ -22,6 +22,12 @@ jobs:
         run: |
           pip install -r MacMerch/requirements.txt
 
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.MAC_MERCHANDISING_BQACCESS }}' > /tmp/key.json
+          echo "BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+          shell: bash
+
       - name: Run Annual Leave Update Script
         working-directory: MacMerch
         env:
