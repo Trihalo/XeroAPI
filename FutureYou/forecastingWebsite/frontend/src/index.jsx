@@ -26,7 +26,10 @@ function AppRoutes() {
   // Redirect to login if no token
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
+    const publicPaths = ["/", "/password"];
+    const currentPath = window.location.pathname;
+
+    if (!token && !publicPaths.includes(currentPath)) {
       navigate("/");
     }
   }, [navigate]);
