@@ -9,9 +9,10 @@ function Legends() {
   const lastUpdatedTime = localStorage.getItem(
     "revenue_table_last_modified_time"
   );
-
   const fy = "FY25";
+
   const { allRecruiters, loading: recruiterLoading } = useRecruiterData();
+  const [selectedQuarter, setSelectedQuarter] = useState("Total");
 
   useEffect(() => {
     const loadData = async () => {
@@ -20,7 +21,6 @@ function Legends() {
       setRevenueData(data);
       setLoading(false);
     };
-
     loadData();
   }, [fy]);
 
@@ -29,16 +29,38 @@ function Legends() {
   const isLoading = loading || recruiterLoading;
 
   const typeLookup = consultantTypeTotals.reduce((acc, row) => {
-    if (!acc[row.Consultant]) {
-      acc[row.Consultant] = {};
-    }
-    acc[row.Consultant][row.Type] = row.TotalMargin;
+    const { Consultant, Type, Quarter, TotalMargin } = row;
+    if (!acc[Consultant]) acc[Consultant] = {};
+    if (!acc[Consultant][Quarter])
+      acc[Consultant][Quarter] = { Perm: 0, Temp: 0 };
+    acc[Consultant][Quarter][Type] = TotalMargin;
     return acc;
   }, {});
 
-  const filteredConsultantTotals = consultantTotals.filter((row) =>
-    allRecruiters.includes(row.Consultant)
+  const getConsultantMargin = (consultant, type) => {
+    if (selectedQuarter === "Total") {
+      return ["Q1", "Q2", "Q3", "Q4"].reduce((sum, q) => {
+        return sum + (typeLookup[consultant]?.[q]?.[type] || 0);
+      }, 0);
+    }
+    return typeLookup[consultant]?.[selectedQuarter]?.[type] || 0;
+  };
+
+  const uniqueConsultants = Array.from(
+    new Set(
+      consultantTotals
+        .filter((row) => allRecruiters.includes(row.Consultant))
+        .map((row) => row.Consultant)
+    )
   );
+
+  const sortedConsultants = uniqueConsultants.sort((a, b) => {
+    const aTotal =
+      getConsultantMargin(a, "Perm") + getConsultantMargin(a, "Temp");
+    const bTotal =
+      getConsultantMargin(b, "Perm") + getConsultantMargin(b, "Temp");
+    return bTotal - aTotal;
+  });
 
   return (
     <div className="min-h-screen bg-base-300 text-base-content flex flex-col">
@@ -55,10 +77,26 @@ function Legends() {
                 Loading legends table...
               </p>
             </div>
-          ) : filteredConsultantTotals.length === 0 ? (
+          ) : sortedConsultants.length === 0 ? (
             <div>No data available.</div>
           ) : (
             <>
+              <div className="mb-6 flex gap-4">
+                {["Total", "Q1", "Q2", "Q3", "Q4"].map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => setSelectedQuarter(label)}
+                    className={`px-4 py-2 rounded-lg ${
+                      selectedQuarter === label
+                        ? "bg-secondary text-white"
+                        : "bg-base-300 text-base-content"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <table className="text-sm text-left border border-gray-200 mb-6 rounded-lg">
                 <thead className="bg-base-300 text-base-content border-gray-200">
                   <tr>
@@ -73,15 +111,14 @@ function Legends() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredConsultantTotals.map((row, index) => {
-                    const consultant = row.Consultant;
-                    const total = row.TotalMargin || 0;
-                    const temp = typeLookup[consultant]?.["Temp"] || 0;
-                    const perm = typeLookup[consultant]?.["Perm"] || 0;
+                  {sortedConsultants.map((consultant, index) => {
+                    const temp = getConsultantMargin(consultant, "Temp");
+                    const perm = getConsultantMargin(consultant, "Perm");
+                    const total = temp + perm;
 
                     return (
                       <tr
-                        key={index}
+                        key={consultant}
                         className={`border-b border-gray-200 ${
                           index % 2 === 0 ? "bg-base-100" : "bg-base-200"
                         }`}
@@ -100,33 +137,32 @@ function Legends() {
                     );
                   })}
 
-                  {/* Total row */}
+                  {/* Totals Row */}
                   <tr className="font-semibold bg-base-300 border-t border-gray-300">
                     <td className="py-2 px-4">Total</td>
                     <td className="py-2 px-4 text-right">
                       {Math.round(
-                        filteredConsultantTotals.reduce((sum, row) => {
-                          const perm =
-                            typeLookup[row.Consultant]?.["Perm"] || 0;
-                          return sum + perm;
-                        }, 0)
-                      ).toLocaleString("en-AU")}
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      {Math.round(
-                        filteredConsultantTotals.reduce((sum, row) => {
-                          const temp =
-                            typeLookup[row.Consultant]?.["Temp"] || 0;
-                          return sum + temp;
-                        }, 0)
-                      ).toLocaleString("en-AU")}
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      {Math.round(
-                        filteredConsultantTotals.reduce(
-                          (sum, row) => sum + (row.TotalMargin || 0),
+                        sortedConsultants.reduce(
+                          (sum, c) => sum + getConsultantMargin(c, "Perm"),
                           0
                         )
+                      ).toLocaleString("en-AU")}
+                    </td>
+                    <td className="py-2 px-4 text-right">
+                      {Math.round(
+                        sortedConsultants.reduce(
+                          (sum, c) => sum + getConsultantMargin(c, "Temp"),
+                          0
+                        )
+                      ).toLocaleString("en-AU")}
+                    </td>
+                    <td className="py-2 px-4 text-right">
+                      {Math.round(
+                        sortedConsultants.reduce((sum, c) => {
+                          const temp = getConsultantMargin(c, "Temp");
+                          const perm = getConsultantMargin(c, "Perm");
+                          return sum + temp + perm;
+                        }, 0)
                       ).toLocaleString("en-AU")}
                     </td>
                   </tr>

@@ -542,10 +542,11 @@ def get_consultant_margins():
     query1 = """
     SELECT 
       Consultant,
-      SUM(Margin) AS TotalMargin
+      SUM(Margin) AS TotalMargin,
+      Quarter
     FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
     WHERE FinancialYear = @fy
-    GROUP BY Consultant
+    GROUP BY Consultant, Quarter
     ORDER BY TotalMargin DESC
     """
 
@@ -554,11 +555,12 @@ def get_consultant_margins():
     SELECT 
       Consultant,
       Type,
-      SUM(Margin) AS TotalMargin
+      SUM(Margin) AS TotalMargin,
+      Quarter
     FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
     WHERE FinancialYear = @fy
-    GROUP BY Consultant, Type
-    ORDER BY Consultant, Type
+    GROUP BY Consultant, Type, Quarter
+    ORDER BY Consultant, Type, Quarter
     """
 
     job_config = bigquery.QueryJobConfig(

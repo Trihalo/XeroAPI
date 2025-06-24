@@ -440,6 +440,7 @@ def extract_credit_note_lines(cn):
             "Currency Rate": currency_rate,
             "Updated Date": parse_xero_date(cn.get("UpdatedDateUTC", "")).strftime("%-d/%-m/%Y") if cn.get("UpdatedDateUTC") else "",
             "InvoiceID": cn.get("CreditNoteID", ""),
+            "Quarter": quarters.get(get_company_month(parsed_date), ""),
         })
 
     return rows
