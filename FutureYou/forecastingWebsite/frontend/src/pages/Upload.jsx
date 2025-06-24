@@ -77,6 +77,7 @@ function Upload() {
       }));
 
       setRows(enrichedRows);
+      sumActualsPast();
       setFetching(false);
     };
 
@@ -93,6 +94,14 @@ function Upload() {
       user: latest.uploadUser,
     };
   }, [rows]);
+
+  // ============= SUMMATION FORMULAS =============
+
+  const sumActualsPast = (type) => {
+    return Object.entries(actualsByWeek[type] || {})
+      .filter(([week]) => Number(week) < currentWeekIndex)
+      .reduce((sum, [_, value]) => sum + value, 0);
+  };
 
   const handleChange = (index, field, value) => {
     const updated = [...rows];
@@ -334,6 +343,59 @@ function Upload() {
                 Upload Forecast
               </button>
 
+              <div className="mt-6 text-sm text-gray-500">
+                <p>
+                  <span className="font-semibold">
+                    {recruiterName.split(" ")[0]}'s {currentMonth} Forecast:
+                  </span>
+                  <span className="text-sm space-x-4">
+                    <span></span>
+                    <span>
+                      <strong>
+                        {Math.round(sumActualsPast("Perm")).toLocaleString()}
+                      </strong>
+                      {""}
+                      <span className="text-gray-500"> (Perm Actual) + </span>
+                      <strong>
+                        {Math.round(sumActualsPast("Temp")).toLocaleString()}
+                      </strong>{" "}
+                      <span className="text-gray-500"> (Temp Actual) + </span>
+                      <strong>
+                        {Math.round(
+                          rows
+                            .filter((row) => row.week >= currentWeekIndex)
+                            .reduce(
+                              (sum, row) =>
+                                sum +
+                                (Number(row.revenue) || 0) +
+                                (Number(row.tempRevenue) || 0),
+                              0
+                            )
+                        ).toLocaleString()}
+                      </strong>{" "}
+                      <span className="text-gray-500"> (Forecast) = </span>
+                      <span className="text-primary text-lg">
+                        <strong>
+                          $
+                          {Math.round(
+                            sumActualsPast("Perm") +
+                              sumActualsPast("Temp") +
+                              rows
+                                .filter((row) => row.week >= currentWeekIndex)
+                                .reduce(
+                                  (sum, row) =>
+                                    sum +
+                                    (Number(row.revenue) || 0) +
+                                    (Number(row.tempRevenue) || 0),
+                                  0
+                                )
+                          ).toLocaleString()}
+                        </strong>
+                      </span>
+                    </span>
+                  </span>
+                </p>
+              </div>
               <div className="mt-12 space-y-8 text-sm">
                 {/* PERM SECTION */}
                 <div>

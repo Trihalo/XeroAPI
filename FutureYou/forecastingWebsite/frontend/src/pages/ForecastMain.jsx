@@ -350,13 +350,23 @@ function ForecastMain() {
                                         : "border-x border-gray-200"
                                     }`}
                                   >
-                                    {amt > 0
-                                      ? Math.round(amt).toLocaleString()
+                                    {amt !== 0
+                                      ? amt < 0
+                                        ? `(${Math.abs(
+                                            Math.round(amt)
+                                          ).toLocaleString()})`
+                                        : Math.round(amt).toLocaleString()
                                       : "-"}
                                   </td>
                                 ))}
                                 <td className="py-2 px-4 text-left font-medium">
-                                  {Math.round(rowTotal).toLocaleString()}
+                                  {rowTotal !== 0
+                                    ? rowTotal < 0
+                                      ? `(${Math.abs(
+                                          Math.round(rowTotal)
+                                        ).toLocaleString()})`
+                                      : Math.round(rowTotal).toLocaleString()
+                                    : "-"}
                                 </td>
                               </tr>
                             ))}
@@ -365,11 +375,23 @@ function ForecastMain() {
                               <td className="py-2 px-4">Total</td>
                               {totals.map((amt, i) => (
                                 <td key={i} className="py-2 px-4 text-left">
-                                  {Math.round(amt).toLocaleString()}
+                                  {amt !== 0
+                                    ? amt < 0
+                                      ? `(${Math.abs(
+                                          Math.round(amt)
+                                        ).toLocaleString()})`
+                                      : Math.round(amt).toLocaleString()
+                                    : "-"}
                                 </td>
                               ))}
-                              <td className="py-2 px-4 text-left">
-                                {Math.round(totalSum).toLocaleString()}
+                              <td className="py-2 px-4 text-left font-semibold">
+                                {totalSum !== 0
+                                  ? totalSum < 0
+                                    ? `(${Math.abs(
+                                        Math.round(totalSum)
+                                      ).toLocaleString()})`
+                                    : Math.round(totalSum).toLocaleString()
+                                  : "-"}
                               </td>
                             </tr>
                           </tbody>
