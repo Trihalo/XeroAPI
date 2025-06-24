@@ -204,6 +204,19 @@ export const fetchMonthlyTargets = async (fy) => {
   }
 };
 
+export const fetchLegendsRevenue = async (fy) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/legends`, {
+      params: { fy },
+      headers: getAuthHeaders(),
+    });
+    return response.data; // Expected: array of { Consultant, Type, Revenue }
+  } catch (error) {
+    console.error("❌ Failed to fetch legends revenue:", error);
+    return [];
+  }
+};
+
 // =================== FIRESTORE APIs =========================
 
 export const getAreas = async () => {

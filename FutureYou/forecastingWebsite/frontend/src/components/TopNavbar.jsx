@@ -53,6 +53,14 @@ function TopNavbar({ userName = "User" }) {
         {role === "admin" && (
           <button
             className="hover:underline"
+            onClick={() => navigate("/legends")}
+          >
+            Legends
+          </button>
+        )}
+        {role === "admin" && (
+          <button
+            className="hover:underline"
             onClick={() => navigate("/dashboard")}
           >
             Revenue

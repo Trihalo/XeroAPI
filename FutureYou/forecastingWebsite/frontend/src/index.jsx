@@ -14,6 +14,7 @@ import Upload from "./pages/Upload.jsx";
 import ForecastMain from "./pages/ForecastMain.jsx";
 import Password from "./pages/Password.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import Legends from "./pages/Legends.jsx";
 
 import { fetchAndStoreInvoiceData } from "./utils/getInvoiceInfo.js";
 
@@ -58,6 +59,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/forecasts/:recruiterName" element={<Upload />} />
         <Route path="/forecasts" element={<ForecastMain />} />
+        <Route path="/legends" element={<Legends />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
     </Routes>
