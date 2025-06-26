@@ -153,7 +153,7 @@ function Upload() {
               <div className="overflow-x-auto">
                 <table className="table-auto text-sm">
                   <thead>
-                    <tr className="bg-base-300 text-base-content border-b border-gray-300">
+                    <tr className="bg-base-300 text-base-content border-b border-base-300">
                       <th className="text-left px-4 py-2 min-w-[60px] max-w-[80px]">
                         Week
                       </th>
@@ -187,20 +187,24 @@ function Upload() {
                       return (
                         <tr
                           key={idx}
-                          className="border-b border-gray-200 border-x border-gray-200"
+                          className="border-b border-base-300 border-x border-base-300"
                         >
-                          <td className="px-4 py-2 text-nowrap border-x border-gray-200">
+                          <td className="px-4 py-2 text-nowrap border-x border-base-300">
                             Wk {row.week}
                           </td>
-                          <td className="px-4 py-2 text-sm text-gray-500 text-nowrap border-x border-gray-200">
+                          <td className="px-4 py-2 text-sm text-gray-500 text-nowrap border-x border-base-300">
                             {row.range}
                           </td>
-                          <td className="px-4 py-2 border-x border-gray-200">
+                          <td
+                            className={`px-4 py-2 border-x border-base-300 ${
+                              !isEditable ? "bg-base-300" : ""
+                            }`}
+                          >
                             <input
                               type="number"
                               className={`bg-transparent focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-40 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed text-base-300"
                                   : ""
                               }`}
                               placeholder="$"
@@ -212,12 +216,17 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
-                          <td className="px-4 py-2 border-x border-gray-200 border-r-5">
+
+                          <td
+                            className={`px-4 py-2 border-x border-base-300 border-r-5 ${
+                              !isEditable ? "bg-base-300" : ""
+                            }`}
+                          >
                             <input
                               type="number"
-                              className={`bg-transparent focus:outline-none ${
+                              className={`focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-40 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed text-base-300"
                                   : ""
                               }`}
                               placeholder="$"
@@ -233,8 +242,9 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
+
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
@@ -245,7 +255,7 @@ function Upload() {
                               : "-"}
                           </td>
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
@@ -256,7 +266,7 @@ function Upload() {
                               : "-"}
                           </td>
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
