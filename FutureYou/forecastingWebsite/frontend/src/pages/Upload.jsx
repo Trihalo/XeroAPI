@@ -173,7 +173,7 @@ function Upload() {
                         Actual Temp
                       </th>
                       <th className="text-left px-4 py-2 min-w-[120px] max-w-[160px]">
-                        Total Variance
+                        Actual Total
                       </th>
                       <th className="text-left px-4 py-2 min-w-[300px] max-w-[300px]">
                         Notes
@@ -276,26 +276,21 @@ function Upload() {
                                     actualsByWeek["Perm"][row.week] || 0;
                                   const actualTemp =
                                     actualsByWeek["Temp"][row.week] || 0;
-                                  const forecastPerm = Number(row.revenue || 0);
-                                  const forecastTemp = Number(
-                                    row.tempRevenue || 0
-                                  );
-                                  const variance = Math.round(
-                                    actualPerm +
-                                      actualTemp -
-                                      (forecastPerm + forecastTemp),
-                                    0
+                                  const TotalRev = Math.round(
+                                    actualPerm + actualTemp
                                   );
 
-                                  const absVal =
-                                    Math.abs(variance).toLocaleString();
+                                  const absTotal =
+                                    Math.abs(TotalRev).toLocaleString();
                                   const formatted =
-                                    variance < 0 ? `(${absVal})` : `${absVal}`;
+                                    TotalRev < 0
+                                      ? `(${absTotal})`
+                                      : `${absTotal}`;
 
                                   return (
                                     <span
                                       className={
-                                        variance < 0
+                                        TotalRev < 0
                                           ? "text-secondary"
                                           : "text-gray-600"
                                       }
