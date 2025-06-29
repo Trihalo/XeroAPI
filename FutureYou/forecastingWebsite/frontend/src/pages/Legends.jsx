@@ -9,7 +9,7 @@ function Legends() {
   const lastUpdatedTime = localStorage.getItem(
     "revenue_table_last_modified_time"
   );
-  const fy = "FY25";
+  const fy = "FY26";
 
   const { allRecruiters, loading: recruiterLoading } = useRecruiterData();
   const [selectedQuarter, setSelectedQuarter] = useState("Total");
