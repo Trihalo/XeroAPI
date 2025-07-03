@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
-FULL_RESET = False 
+FULL_RESET = True 
 
 quarters = {
     "Jan": "Q3", "Feb": "Q3", "Mar": "Q3",

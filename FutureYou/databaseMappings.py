@@ -26,6 +26,7 @@ consultant_area_mapping = {
     "PEK001 Kevin Howell": "Technology",
     "SEA002 Ben Wainwright": "Executive",
     "SRA003 Natalie Gibbins": "Sales, Marketing & Digital",
+    "SCB014 Chloe Bowditch": "Business Support"
 }
 
 # Shared base mapping
