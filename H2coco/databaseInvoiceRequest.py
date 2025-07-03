@@ -10,7 +10,6 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
 from dotenv import load_dotenv
-from CustomerTiers import customer_tiers
 import pytz
 
 load_dotenv()
@@ -35,17 +34,6 @@ def parse_xero_date(date_str):
         return utc_dt.astimezone(aest)
     return None
 
-def assign_customer_tier(name):
-    if not name:
-        return 3
-    name_lower = name.lower()
-    if name_lower in customer_tiers["exact_matches"]:
-        return int(customer_tiers["exact_matches"][name_lower].replace("Tier ", ""))
-    for keyword, tier in customer_tiers["keyword_matches"].items():
-        if keyword in name_lower:
-            return int(tier.replace("Tier ", ""))
-    return 3
-
 def clean_small_numbers(val, threshold=1e-8):
     return 0 if abs(val) < threshold else val
 
@@ -55,9 +43,9 @@ def export_to_bigquery(rows):
         return
 
     key_path = os.getenv("H2COCO_BQACCESS")
-    project_id = "h2financedata"
-    dataset_id = "xero"
-    table_id = "accounts-receivable"
+    project_id = "h2coco"
+    dataset_id = "FinancialData"
+    table_id = "AR"
     table_ref = f"{project_id}.{dataset_id}.{table_id}"
 
     try:
@@ -91,6 +79,12 @@ def export_to_bigquery(rows):
                 placeholders = ", ".join(f"'{id}'" for id in updated_ids)
                 client.query(f"DELETE FROM `{table_ref}` WHERE InvoiceID IN ({placeholders})").result()
                 print(f"✅ Deleted {len(updated_ids)} updated invoices from BigQuery.")
+
+        date_columns = ["InvoiceDate", "DueDate", "FullyPaidOffDate", "UpdatedDate"]
+
+        for col in date_columns:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col], errors="coerce")
 
         pandas_gbq.to_gbq(
             df,
@@ -133,7 +127,18 @@ def export_to_csv(rows, filename="xero_export.csv"):
     df.to_csv(filename, index=False)
     print(f"📄 Exported {len(df)} rows to {filename}")
 
-def transform_invoice_data(rows):
+def map_credit_note_allocations(credit_notes):
+    allocation_map = {}
+    for note in credit_notes:
+        rate = float(note.get("CurrencyRate") or 1)
+        for alloc in note.get("Allocations", []):
+            invoice_id = alloc.get("Invoice", {}).get("InvoiceID")
+            amount = float(alloc.get("AppliedAmount") or 0) / rate
+            if invoice_id:
+                allocation_map[invoice_id] = allocation_map.get(invoice_id, 0) + amount
+    return allocation_map
+
+def transform_invoice_data(rows, allocation_map=None):
     today = datetime.now(tz=timezone.utc)
     for r in rows:
         try:
@@ -148,18 +153,8 @@ def transform_invoice_data(rows):
 
             r["InvoiceDate"] = invoice_date
             r["DueDate"] = due_date
-            r["FullyPaidOffDate"] = paid_date if paid_date else "N/A"
+            r["FullyPaidOffDate"] = paid_date if paid_date else None
             r["UpdatedDate"] = updated_date
-            
-            if paid_date: effective_date = paid_date
-            elif status == "AUTHORISED": effective_date = today
-            else: effective_date = None
-
-            r["AgeingDays"] = (effective_date - invoice_date).days if effective_date and invoice_date else 0
-            r["OverdueDays"] = max(0, (effective_date - due_date).days) if effective_date and due_date else 0
-            r["PaymentTermsDays"] = (due_date - invoice_date).days if due_date and invoice_date else 0
-            r["PaymentOverdueDays"] = (paid_date - due_date).days if paid_date and due_date else 0
-
 
             r["SubtotalSource"] = r.get("SubTotal")
             r["TotalTaxSource"] = r.get("TotalTax")
@@ -167,16 +162,14 @@ def transform_invoice_data(rows):
             rate = float(r.get("CurrencyRate") or 1)
             r["CurrencyRate"] = rate
             subtotal = float(r.get("SubTotal", 0))
-            tax = float(r.get("TotalTax"))
+            tax = float(r.get("TotalTax", 0))
 
             r["InvoiceAmountAUD"] = (subtotal + tax) / rate if rate else 0
             r["AmountPaidAUD"] = r.get("AmountPaid") / rate if rate else 0
 
-            # Handle credited amount
-            credited = sum(c.get("AppliedAmount", 0) for c in r.get("CreditNotes", [])) / rate
+            credited = allocation_map.get(r["InvoiceID"], 0) if allocation_map else 0
             r["CreditedAmountAUD"] = credited
 
-            # Adjust outstanding amount
             r["OutstandingAmountAUD"] = clean_small_numbers(
                 r["InvoiceAmountAUD"] - r["AmountPaidAUD"] - credited
             )
@@ -184,25 +177,65 @@ def transform_invoice_data(rows):
             r["InvoiceNumber"] = r.get("InvoiceNumber")
             r["ContactName"] = r.get("Contact", {}).get("Name")
             r["CurrencyCode"] = r.get("CurrencyCode")
-            r["CustomerTier"] = assign_customer_tier(r["ContactName"])
+            r["Type"] = "Invoice"
 
         except Exception as e:
             print(f"⚠️ Error transforming invoice {r.get('InvoiceID')}: {e}")
 
-    date_fields = ["InvoiceDate", "DueDate", "FullyPaidOffDate", "UpdatedDate"]
-    for r in rows:
-        for field in date_fields:
-            if isinstance(r.get(field), datetime):
-                r[field] = r[field].strftime("%d/%m/%Y")
-
     desired_fields = [
-        "InvoiceID", "InvoiceNumber", "Reference", "ContactName", "CustomerTier",
-        "InvoiceDate", "AgeingDays", "DueDate", "OverdueDays", "PaymentTermsDays", "Status",
-        "FullyPaidOffDate", "PaymentOverdueDays", "CurrencyCode", "CurrencyRate",
+        "Type",
+        "InvoiceID", "InvoiceNumber", "Reference", "ContactName",
+        "InvoiceDate", "DueDate", "Status",
+        "FullyPaidOffDate", "CurrencyCode", "CurrencyRate",
         "SubtotalSource", "TotalTaxSource", "InvoiceAmountAUD",
         "AmountPaidAUD", "CreditedAmountAUD", "OutstandingAmountAUD", "UpdatedDate"
     ]
     return [{k: r.get(k) for k in desired_fields} for r in rows]
+
+def transform_credit_notes(credit_notes):
+    rows = []
+    for note in credit_notes:
+        try:
+            if note.get("Type") != "ACCRECCREDIT":
+                # Skip AP credits
+                continue
+
+            date = parse_xero_date(note.get("Date"))
+            due_date = parse_xero_date(note.get("DueDate"))
+            updated = parse_xero_date(note.get("UpdatedDateUTC"))
+            paid_date = parse_xero_date(note.get("FullyPaidOnDate"))
+
+            rate = float(note.get("CurrencyRate") or 1)
+            subtotal = float(note.get("SubTotal", 0))
+            tax = float(note.get("TotalTax", 0))
+            amount = (subtotal + tax) / rate if rate else 0
+
+            contact_name = note.get("Contact", {}).get("Name")
+
+            rows.append({
+                "Type": "CreditNote",
+                "InvoiceID": note.get("CreditNoteID"),
+                "InvoiceNumber": note.get("CreditNoteNumber"),
+                "Reference": note.get("Reference"),
+                "ContactName": contact_name,
+                "InvoiceDate": date if date else None,
+                "DueDate": due_date if due_date else None,
+                "Status": note.get("Status"),
+                "FullyPaidOffDate": paid_date if paid_date else None,
+                "CurrencyCode": note.get("CurrencyCode"),
+                "CurrencyRate": rate,
+                "SubtotalSource": subtotal,
+                "TotalTaxSource": tax,
+                "InvoiceAmountAUD": amount,
+                "AmountPaidAUD": 0,
+                "CreditedAmountAUD": 0,
+                "OutstandingAmountAUD": -amount,
+                "UpdatedDate": updated if updated else None,
+            })
+        except Exception as e:
+            print(f"⚠️ Error transforming credit note {note.get('CreditNoteID')}: {e}")
+    return rows
+
 
 def main():
     client = "H2COCO"
@@ -217,16 +250,27 @@ def main():
         "page": 1,
         "pageSize": 1000
     }
+    credit_params = {
+        "where": 'Date>=DateTime(2024,07,01)' if FULL_RESET else f'UpdatedDateUTC>={updated_date_str}',
+        "page": 1,
+        "pageSize": 1000
+    }
 
     invoices = fetch_all("Invoices", access_token, tenant_id, invoice_params)
+    credit_notes = fetch_all("CreditNotes", access_token, tenant_id, credit_params)
     invoices = [inv for inv in invoices if inv.get("Status", "").upper() not in ["VOIDED", "DELETED"]]
 
-    print(f"Fetched {len(invoices)} invoices")
+    print(f"Fetched {len(invoices)} invoices, {len(credit_notes)} credit notes")
 
-    all_rows = transform_invoice_data(invoices)
-    export_to_csv(all_rows, "xero_export.csv")
-    export_to_csv(invoices, "raw_file.csv")
-    # export_to_bigquery(all_rows)
+    allocation_map = map_credit_note_allocations(credit_notes)
+
+    invoice_rows = transform_invoice_data(invoices, allocation_map=allocation_map)
+    credit_rows = transform_credit_notes(credit_notes)
+
+    all_rows = invoice_rows + credit_rows
+
+    export_to_csv(all_rows, "xero_combined_export.csv")
+    export_to_bigquery(all_rows)
 
 if __name__ == "__main__":
     main()

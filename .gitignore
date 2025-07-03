@@ -10,6 +10,7 @@ FutureYou/*.json
 .DS_Store/
 H2coco/*.xlsx
 H2coco/*.json
+H2coco/*.csv
 H2coco/logs
 H2coco/PO_Payment_Status
 helpers/__pycache__/
