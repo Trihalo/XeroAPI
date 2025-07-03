@@ -97,77 +97,83 @@ function Legends() {
                 ))}
               </div>
 
-              <table className="text-sm text-left border border-gray-200 mb-6 rounded-lg">
-                <thead className="bg-base-300 text-base-content border-gray-200">
-                  <tr>
-                    <th className="py-2 px-4 text-left min-w-[200px]">
-                      Consultant
-                    </th>
-                    <th className="py-2 px-4 text-right min-w-[200px]">Perm</th>
-                    <th className="py-2 px-4 text-right min-w-[200px]">Temp</th>
-                    <th className="py-2 px-4 text-right min-w-[200px]">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedConsultants.map((consultant, index) => {
-                    const temp = getConsultantMargin(consultant, "Temp");
-                    const perm = getConsultantMargin(consultant, "Perm");
-                    const total = temp + perm;
+              <div className="w-full max-w-2xl overflow-x-auto rounded-lg border border-gray-200 mb-6">
+                <table className="min-w-full text-sm text-left">
+                  <thead className="bg-base-300 text-base-content border-gray-200">
+                    <tr>
+                      <th className="py-2 px-4 text-left whitespace-nowrap">
+                        Consultant
+                      </th>
+                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                        Perm
+                      </th>
+                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                        Temp
+                      </th>
+                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedConsultants.map((consultant, index) => {
+                      const temp = getConsultantMargin(consultant, "Temp");
+                      const perm = getConsultantMargin(consultant, "Perm");
+                      const total = temp + perm;
 
-                    return (
-                      <tr
-                        key={consultant}
-                        className={`border-b border-gray-200 ${
-                          index % 2 === 0 ? "bg-base-100" : "bg-base-200"
-                        }`}
-                      >
-                        <td className="py-2 px-4">{consultant}</td>
-                        <td className="py-2 px-4 text-right">
-                          {Math.round(perm).toLocaleString("en-AU")}
-                        </td>
-                        <td className="py-2 px-4 text-right">
-                          {Math.round(temp).toLocaleString("en-AU")}
-                        </td>
-                        <td className="py-2 px-4 text-right font-semibold">
-                          {Math.round(total).toLocaleString("en-AU")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {/* Totals Row */}
-                  <tr className="font-semibold bg-base-300 border-t border-gray-300">
-                    <td className="py-2 px-4">Total</td>
-                    <td className="py-2 px-4 text-right">
-                      {Math.round(
-                        sortedConsultants.reduce(
-                          (sum, c) => sum + getConsultantMargin(c, "Perm"),
-                          0
-                        )
-                      ).toLocaleString("en-AU")}
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      {Math.round(
-                        sortedConsultants.reduce(
-                          (sum, c) => sum + getConsultantMargin(c, "Temp"),
-                          0
-                        )
-                      ).toLocaleString("en-AU")}
-                    </td>
-                    <td className="py-2 px-4 text-right">
-                      {Math.round(
-                        sortedConsultants.reduce((sum, c) => {
-                          const temp = getConsultantMargin(c, "Temp");
-                          const perm = getConsultantMargin(c, "Perm");
-                          return sum + temp + perm;
-                        }, 0)
-                      ).toLocaleString("en-AU")}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      return (
+                        <tr
+                          key={consultant}
+                          className={`border-b border-gray-200 ${
+                            index % 2 === 0 ? "bg-base-100" : "bg-base-200"
+                          }`}
+                        >
+                          <td className="py-2 px-4 whitespace-nowrap">
+                            {consultant}
+                          </td>
+                          <td className="py-2 px-4 text-right whitespace-nowrap">
+                            {Math.round(perm).toLocaleString("en-AU")}
+                          </td>
+                          <td className="py-2 px-4 text-right whitespace-nowrap">
+                            {Math.round(temp).toLocaleString("en-AU")}
+                          </td>
+                          <td className="py-2 px-4 text-right font-semibold whitespace-nowrap">
+                            {Math.round(total).toLocaleString("en-AU")}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="font-semibold bg-base-300 border-t border-gray-300">
+                      <td className="py-2 px-4 whitespace-nowrap">Total</td>
+                      <td className="py-2 px-4 text-right whitespace-nowrap">
+                        {Math.round(
+                          sortedConsultants.reduce(
+                            (sum, c) => sum + getConsultantMargin(c, "Perm"),
+                            0
+                          )
+                        ).toLocaleString("en-AU")}
+                      </td>
+                      <td className="py-2 px-4 text-right whitespace-nowrap">
+                        {Math.round(
+                          sortedConsultants.reduce(
+                            (sum, c) => sum + getConsultantMargin(c, "Temp"),
+                            0
+                          )
+                        ).toLocaleString("en-AU")}
+                      </td>
+                      <td className="py-2 px-4 text-right whitespace-nowrap">
+                        {Math.round(
+                          sortedConsultants.reduce((sum, c) => {
+                            const temp = getConsultantMargin(c, "Temp");
+                            const perm = getConsultantMargin(c, "Perm");
+                            return sum + temp + perm;
+                          }, 0)
+                        ).toLocaleString("en-AU")}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
               {lastUpdatedTime && (
                 <div className="text-sm text-gray-500 mt-1">
