@@ -50,14 +50,12 @@ function TopNavbar({ userName = "User" }) {
         >
           Forecasts
         </button>
-        {role === "admin" && (
-          <button
-            className="hover:underline"
-            onClick={() => navigate("/legends")}
-          >
-            Legends
-          </button>
-        )}
+        <button
+          className="hover:underline"
+          onClick={() => navigate("/legends")}
+        >
+          Legends
+        </button>
         {role === "admin" && (
           <button
             className="hover:underline"
@@ -94,6 +92,15 @@ function TopNavbar({ userName = "User" }) {
             }}
           >
             Forecasts
+          </button>
+          <button
+            className="w-full text-left px-4 py-2 rounded hover:bg-base-200 text-base-content"
+            onClick={() => {
+              navigate("/legends");
+              setMenuOpen(false);
+            }}
+          >
+            Legends
           </button>
           {role === "admin" && (
             <button
