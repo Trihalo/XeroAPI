@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import TopNavbar from "../components/TopNavbar.jsx";
 import { fetchLegendsRevenue } from "../api.js";
 import { useRecruiterData } from "../hooks/useRecruiterData.js";
-import { Building2, User } from "lucide-react";
 
 function Legends() {
   const [revenueData, setRevenueData] = useState({});
@@ -134,25 +133,26 @@ function Legends() {
               <div className="mb-6 flex gap-4 items-center">
                 <div className="flex items-center gap-2">
                   <span className="text-sm">Group By:</span>
-                  <label className="swap swap-flip text-2xl">
-                    <input
-                      type="checkbox"
-                      onChange={() =>
-                        setViewMode(
-                          viewMode === "Consultant" ? "Area" : "Consultant"
-                        )
-                      }
-                      checked={viewMode === "Area"}
-                    />
-                    <div className="swap-on flex items-center gap-1">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <span className="text-sm">Area</span>
-                    </div>
-                    <div className="swap-off flex items-center gap-1">
-                      <User className="w-4 h-4 text-primary" />
-                      <span className="text-sm">Consultant</span>
-                    </div>
-                  </label>
+                  <div className="btn-group">
+                    <button
+                      className={`btn btn-sm gap-1 ${
+                        viewMode === "Consultant"
+                          ? "bg-secondary text-white"
+                          : ""
+                      }`}
+                      onClick={() => setViewMode("Consultant")}
+                    >
+                      Consultant
+                    </button>
+                    <button
+                      className={`btn btn-sm gap-1 ${
+                        viewMode === "Area" ? "bg-secondary text-white" : ""
+                      }`}
+                      onClick={() => setViewMode("Area")}
+                    >
+                      Area
+                    </button>
+                  </div>
                 </div>
               </div>
 
