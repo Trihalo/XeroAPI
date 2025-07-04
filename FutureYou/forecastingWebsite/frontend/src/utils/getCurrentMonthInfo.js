@@ -22,6 +22,8 @@ export function getCurrentMonthInfo(calendar, today = new Date()) {
   );
 
   const currentWeekIndex = matchedEntry.week;
+  const previousMonth = matchedEntry.previousMonth;
+  const previousMonthFY = matchedEntry.previousMonthFY;
 
   const formattedDate = `${today.getDate()}/${today.getMonth() + 1}/${today
     .getFullYear()
@@ -38,5 +40,7 @@ export function getCurrentMonthInfo(calendar, today = new Date()) {
     weeksInMonth,
     currentWeekIndex,
     weekLabel,
+    previousMonth,
+    previousMonthFY,
   };
 }

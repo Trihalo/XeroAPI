@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import TopNavbar from "../components/TopNavbar.jsx";
 import { fetchLegendsRevenue } from "../api.js";
 import { useRecruiterData } from "../hooks/useRecruiterData.js";
+import { Building2, User } from "lucide-react";
 
 function Legends() {
   const [revenueData, setRevenueData] = useState({});
@@ -13,12 +14,14 @@ function Legends() {
 
   const { allRecruiters, loading: recruiterLoading } = useRecruiterData();
   const [selectedQuarter, setSelectedQuarter] = useState("Total");
+  const [viewMode, setViewMode] = useState("Consultant");
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       const data = await fetchLegendsRevenue(fy);
       setRevenueData(data);
+      console.log("Legends data loaded:", data);
       setLoading(false);
     };
     loadData();
@@ -46,19 +49,50 @@ function Legends() {
     return typeLookup[consultant]?.[selectedQuarter]?.[type] || 0;
   };
 
+  const getAreaMargin = (area, type) => {
+    if (selectedQuarter === "Total") {
+      return ["Q1", "Q2", "Q3", "Q4"].reduce((sum, q) => {
+        return sum + (areaTypeLookup[area]?.[q]?.[type] || 0);
+      }, 0);
+    }
+    return areaTypeLookup[area]?.[selectedQuarter]?.[type] || 0;
+  };
+
   const uniqueConsultants = Array.from(
     new Set(
-      consultantTotals
+      consultantTypeTotals
         .filter((row) => allRecruiters.includes(row.Consultant))
         .map((row) => row.Consultant)
     )
   );
+
+  const uniqueAreas = Array.from(
+    new Set(
+      consultantTypeTotals
+        .filter((row) => allRecruiters.includes(row.Consultant))
+        .map((row) => row.Area)
+    )
+  );
+
+  const areaTypeLookup = consultantTypeTotals.reduce((acc, row) => {
+    const { Area, Type, Quarter, TotalMargin } = row;
+    if (!acc[Area]) acc[Area] = {};
+    if (!acc[Area][Quarter]) acc[Area][Quarter] = { Perm: 0, Temp: 0 };
+    acc[Area][Quarter][Type] = (acc[Area][Quarter][Type] || 0) + TotalMargin;
+    return acc;
+  }, {});
 
   const sortedConsultants = uniqueConsultants.sort((a, b) => {
     const aTotal =
       getConsultantMargin(a, "Perm") + getConsultantMargin(a, "Temp");
     const bTotal =
       getConsultantMargin(b, "Perm") + getConsultantMargin(b, "Temp");
+    return bTotal - aTotal;
+  });
+
+  const sortedAreas = uniqueAreas.sort((a, b) => {
+    const aTotal = getAreaMargin(a, "Perm") + getAreaMargin(a, "Temp");
+    const bTotal = getAreaMargin(b, "Perm") + getAreaMargin(b, "Temp");
     return bTotal - aTotal;
   });
 
@@ -97,76 +131,156 @@ function Legends() {
                 ))}
               </div>
 
+              <div className="mb-6 flex gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">Group By:</span>
+                  <label className="swap swap-flip text-2xl">
+                    <input
+                      type="checkbox"
+                      onChange={() =>
+                        setViewMode(
+                          viewMode === "Consultant" ? "Area" : "Consultant"
+                        )
+                      }
+                      checked={viewMode === "Area"}
+                    />
+                    <div className="swap-on flex items-center gap-1">
+                      <Building2 className="w-4 h-4 text-primary" />
+                      <span className="text-sm">Area</span>
+                    </div>
+                    <div className="swap-off flex items-center gap-1">
+                      <User className="w-4 h-4 text-primary" />
+                      <span className="text-sm">Consultant</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div className="w-full max-w-2xl overflow-x-auto rounded-lg border border-gray-200 mb-6">
-                <table className="min-w-full text-sm text-left">
+                <table className="min-w-full table-fixed text-sm text-left">
                   <thead className="bg-base-300 text-base-content border-gray-200">
                     <tr>
-                      <th className="py-2 px-4 text-left whitespace-nowrap">
-                        Consultant
+                      <th className="w-2/5 py-2 px-4 whitespace-nowrap">
+                        {viewMode === "Consultant" ? "Consultant" : "Area"}
                       </th>
-                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                      <th className="w-1/5 py-2 px-4 text-right whitespace-nowrap">
                         Perm
                       </th>
-                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                      <th className="w-1/5 py-2 px-4 text-right whitespace-nowrap">
                         Temp
                       </th>
-                      <th className="py-2 px-4 text-right whitespace-nowrap">
+                      <th className="w-1/5 py-2 px-4 text-right whitespace-nowrap">
                         Total
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {sortedConsultants.map((consultant, index) => {
-                      const temp = getConsultantMargin(consultant, "Temp");
-                      const perm = getConsultantMargin(consultant, "Perm");
-                      const total = temp + perm;
 
-                      return (
-                        <tr
-                          key={consultant}
-                          className={`border-b border-gray-200 ${
-                            index % 2 === 0 ? "bg-base-100" : "bg-base-200"
-                          }`}
-                        >
-                          <td className="py-2 px-4 whitespace-nowrap">
-                            {consultant}
-                          </td>
-                          <td className="py-2 px-4 text-right whitespace-nowrap">
-                            {Math.round(perm).toLocaleString("en-AU")}
-                          </td>
-                          <td className="py-2 px-4 text-right whitespace-nowrap">
-                            {Math.round(temp).toLocaleString("en-AU")}
-                          </td>
-                          <td className="py-2 px-4 text-right font-semibold whitespace-nowrap">
-                            {Math.round(total).toLocaleString("en-AU")}
-                          </td>
-                        </tr>
-                      );
+                  <tbody>
+                    {(viewMode === "Consultant"
+                      ? sortedConsultants
+                      : sortedAreas
+                    ).map((item, index) => {
+                      if (viewMode === "Consultant") {
+                        const perm = getConsultantMargin(item, "Perm");
+                        const temp = getConsultantMargin(item, "Temp");
+                        const total = perm + temp;
+
+                        return (
+                          <tr
+                            key={item}
+                            className={`border-b border-gray-200 ${
+                              index % 2 === 0 ? "bg-base-100" : "bg-base-200"
+                            }`}
+                          >
+                            <td className="py-2 px-4 whitespace-nowrap">
+                              {item}
+                            </td>
+                            <td className="py-2 px-4 text-right whitespace-nowrap">
+                              {Math.round(perm).toLocaleString("en-AU")}
+                            </td>
+                            <td className="py-2 px-4 text-right whitespace-nowrap">
+                              {Math.round(temp).toLocaleString("en-AU")}
+                            </td>
+                            <td className="py-2 px-4 text-right font-semibold whitespace-nowrap">
+                              {Math.round(total).toLocaleString("en-AU")}
+                            </td>
+                          </tr>
+                        );
+                      } else {
+                        const perm = getAreaMargin(item, "Perm");
+                        const temp = getAreaMargin(item, "Temp");
+                        const total = perm + temp;
+
+                        return (
+                          <tr
+                            key={item}
+                            className={`border-b border-gray-200 ${
+                              index % 2 === 0 ? "bg-base-100" : "bg-base-200"
+                            }`}
+                          >
+                            <td className="py-2 px-4 whitespace-nowrap">
+                              {item}
+                            </td>
+                            <td className="py-2 px-4 text-right whitespace-nowrap">
+                              {Math.round(perm).toLocaleString("en-AU")}
+                            </td>
+                            <td className="py-2 px-4 text-right whitespace-nowrap">
+                              {Math.round(temp).toLocaleString("en-AU")}
+                            </td>
+                            <td className="py-2 px-4 text-right font-semibold whitespace-nowrap">
+                              {Math.round(total).toLocaleString("en-AU")}
+                            </td>
+                          </tr>
+                        );
+                      }
                     })}
                     <tr className="font-semibold bg-base-300 border-t border-gray-300">
                       <td className="py-2 px-4 whitespace-nowrap">Total</td>
                       <td className="py-2 px-4 text-right whitespace-nowrap">
                         {Math.round(
-                          sortedConsultants.reduce(
-                            (sum, c) => sum + getConsultantMargin(c, "Perm"),
+                          (viewMode === "Consultant"
+                            ? sortedConsultants
+                            : sortedAreas
+                          ).reduce(
+                            (sum, item) =>
+                              sum +
+                              (viewMode === "Consultant"
+                                ? getConsultantMargin(item, "Perm")
+                                : getAreaMargin(item, "Perm")),
                             0
                           )
                         ).toLocaleString("en-AU")}
                       </td>
                       <td className="py-2 px-4 text-right whitespace-nowrap">
                         {Math.round(
-                          sortedConsultants.reduce(
-                            (sum, c) => sum + getConsultantMargin(c, "Temp"),
+                          (viewMode === "Consultant"
+                            ? sortedConsultants
+                            : sortedAreas
+                          ).reduce(
+                            (sum, item) =>
+                              sum +
+                              (viewMode === "Consultant"
+                                ? getConsultantMargin(item, "Temp")
+                                : getAreaMargin(item, "Temp")),
                             0
                           )
                         ).toLocaleString("en-AU")}
                       </td>
                       <td className="py-2 px-4 text-right whitespace-nowrap">
                         {Math.round(
-                          sortedConsultants.reduce((sum, c) => {
-                            const temp = getConsultantMargin(c, "Temp");
-                            const perm = getConsultantMargin(c, "Perm");
-                            return sum + temp + perm;
+                          (viewMode === "Consultant"
+                            ? sortedConsultants
+                            : sortedAreas
+                          ).reduce((sum, item) => {
+                            const perm =
+                              viewMode === "Consultant"
+                                ? getConsultantMargin(item, "Perm")
+                                : getAreaMargin(item, "Perm");
+                            const temp =
+                              viewMode === "Consultant"
+                                ? getConsultantMargin(item, "Temp")
+                                : getAreaMargin(item, "Temp");
+                            return sum + perm + temp;
                           }, 0)
                         ).toLocaleString("en-AU")}
                       </td>
