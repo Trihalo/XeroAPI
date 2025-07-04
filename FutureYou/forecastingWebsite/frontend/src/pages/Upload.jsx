@@ -4,7 +4,10 @@ import TopNavbar from "../components/TopNavbar.jsx";
 import calendar from "../data/calendar.js";
 import { getCurrentMonthInfo } from "../utils/getCurrentMonthInfo.js";
 import { uploadForecastToBQ, fetchForecastForRecruiter } from "../api";
-import { getStoredInvoiceData } from "../utils/getInvoiceInfo";
+import {
+  getStoredInvoiceData,
+  getStoredPrevInvoiceData,
+} from "../utils/getInvoiceInfo";
 
 function Upload() {
   const navigate = useNavigate();
@@ -13,8 +16,10 @@ function Upload() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const invoiceData = getStoredInvoiceData();
+  const prevInvoiceData = getStoredPrevInvoiceData();
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+  const [showingPreviousMonth, setShowingPreviousMonth] = useState(false);
 
   useEffect(() => {
     if (alertMessage) {
@@ -23,8 +28,14 @@ function Upload() {
     }
   }, [alertMessage]);
 
-  const { currentFY, currentMonth, weeksInMonth, currentWeekIndex } =
-    getCurrentMonthInfo(calendar);
+  const {
+    currentFY,
+    currentMonth,
+    weeksInMonth,
+    currentWeekIndex,
+    previousMonth,
+    previousMonthFY,
+  } = getCurrentMonthInfo(calendar);
 
   // For testing purposes
   // const { weeksInMonth } = getCurrentMonthInfo(calendar);
@@ -52,6 +63,10 @@ function Upload() {
   }, [invoiceData, recruiterName]);
 
   const permInvoices = invoiceData
+    .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
+    .sort((a, b) => Number(a.Week) - Number(b.Week));
+
+  const permInvoicesPrev = prevInvoiceData
     .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
     .sort((a, b) => Number(a.Week) - Number(b.Week));
 
@@ -404,13 +419,36 @@ function Upload() {
               <div className="mt-12 space-y-8 text-sm">
                 {/* PERM SECTION */}
                 <div>
+                  <div className="mb-2 flex gap-4 items-center">
+                    <button
+                      className="btn btn-sm btn-soft"
+                      onClick={() =>
+                        setShowingPreviousMonth(!showingPreviousMonth)
+                      }
+                    >
+                      {showingPreviousMonth
+                        ? `Show Current Month's Invoices`
+                        : `Show Previous Month's Invoices`}
+                    </button>
+                  </div>
+
                   <h3 className="text-base font-semibold text-primary">
                     Actual Perm Invoiced Revenue for{" "}
-                    <span className="text-secondary">{currentMonth}</span>
+                    <span className="text-secondary">
+                      {showingPreviousMonth ? previousMonth : currentMonth}
+                    </span>
+                    <span className="text-secondary">
+                      {" ("}
+                      {showingPreviousMonth ? previousMonthFY : currentFY}
+                      {")"}
+                    </span>
                   </h3>
-                  {permInvoices.length === 0 ? (
+
+                  {(showingPreviousMonth ? permInvoicesPrev : permInvoices)
+                    .length === 0 ? (
                     <p className="text-sm text-gray-500 mt-2">
-                      No perm invoices for {currentMonth}.
+                      No perm invoices for{" "}
+                      {showingPreviousMonth ? previousMonth : currentMonth}.
                     </p>
                   ) : (
                     <table className="table w-auto mt-2">
@@ -423,7 +461,10 @@ function Upload() {
                         </tr>
                       </thead>
                       <tbody>
-                        {permInvoices.map((inv, idx) => (
+                        {(showingPreviousMonth
+                          ? permInvoicesPrev
+                          : permInvoices
+                        ).map((inv, idx) => (
                           <tr key={idx}>
                             <td>Wk {inv.Week}</td>
                             <td>{inv.InvoiceNumber}</td>
@@ -434,6 +475,25 @@ function Upload() {
                           </tr>
                         ))}
                       </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan="3" className="text-right font-semibold">
+                            Total Margin:
+                          </td>
+                          <td className="font-semibold">
+                            $
+                            {Math.round(
+                              (showingPreviousMonth
+                                ? permInvoicesPrev
+                                : permInvoices
+                              ).reduce(
+                                (sum, inv) => sum + (Number(inv.Margin) || 0),
+                                0
+                              )
+                            ).toLocaleString()}
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
                   )}
                 </div>
