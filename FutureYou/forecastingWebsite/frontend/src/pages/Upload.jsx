@@ -126,8 +126,26 @@ function Upload() {
 
   const handleSubmit = async () => {
     setLoading(true);
+
+    const cleanedRows = rows.map((row) => ({
+      key: row.key,
+      fy: row.fy,
+      month: row.month,
+      week: row.week,
+      range: row.range,
+      revenue: Number(row.revenue) || 0,
+      tempRevenue: Number(row.tempRevenue) || 0,
+      notes: row.notes || "",
+      name: row.name,
+      uploadMonth: row.uploadMonth,
+      uploadWeek: row.uploadWeek,
+      uploadYear: row.uploadYear,
+      uploadTimestamp: row.uploadTimestamp,
+      uploadUser: row.uploadUser,
+    }));
+
     try {
-      const result = await uploadForecastToBQ(rows);
+      const result = await uploadForecastToBQ(cleanedRows);
       if (result.success) {
         setAlertMessage(result.message);
         setShowAlert(true);
