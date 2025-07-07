@@ -150,7 +150,7 @@ def processAtbData(data, client_tokens):
     df = pd.DataFrame(invoices)
 
     # Set up BigQuery configuration
-    key_path = os.getenv("BQACCESS")
+    key_path = os.getenv("FUTUREYOU_BQACCESS")
     project_id = "futureyou-458212"
     dataset_id = "InvoiceData"
     table_id = "ATBEnquiry"
