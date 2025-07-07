@@ -19,7 +19,7 @@ from helpers.databaseHelpers import parse_xero_date, get_company_month, get_fina
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
-FULL_RESET = True 
+FULL_RESET = False
 
 quarters = {
     "Jan": "Q3", "Feb": "Q3", "Mar": "Q3",
