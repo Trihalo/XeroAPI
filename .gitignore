@@ -22,3 +22,4 @@ FutureYou/forecastingWebsite/backend/*.json
 dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
 dashboardWebsite/backend/uploads/*.xlsx
+.DS_Store
