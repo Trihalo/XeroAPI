@@ -1,4 +1,8 @@
 requests
 dotenv
+python-dotenv
 pandas
 openpyxl
+google-cloud-bigquery
+google-auth
+pandas-gbq
