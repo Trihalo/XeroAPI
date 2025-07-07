@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import RequestButton from "../components/RequestButton";
 import {
@@ -6,6 +6,7 @@ import {
   triggerTestEmail,
   triggerFutureYouReports,
   triggerH2cocoTradeFinance,
+  triggerUpdateFYATBDatabase,
   triggerCosmoBillsApprover,
   triggerUpdateRevenueDatabase,
   uploadFile,
@@ -52,7 +53,7 @@ export default function Dashboard() {
       clientName: "FutureYou",
       scripts: [
         {
-          name: "ATB & Overdue Request",
+          name: "ATB & Overdue Files",
           description:
             "Generates an Aged Trial Balance report that includes both FutureYou Recruitment and Contracting Invoices",
           action: triggerFutureYouReports,
@@ -65,6 +66,14 @@ export default function Dashboard() {
             "Updates the Invoice Revenue BigQuery Database by updating invoices that have been changed within the last 24 hours.",
           action: triggerUpdateRevenueDatabase,
           estimatedTime: 30,
+          requiresFileUpload: false,
+        },
+        {
+          name: "Update ATB Database",
+          description:
+            "Updates the ATB BigQuery Database, automatically updating the Master ATB file with the latest data.",
+          action: triggerUpdateFYATBDatabase,
+          estimatedTime: 120,
           requiresFileUpload: false,
         },
       ],
@@ -245,11 +254,11 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 p-6 bg-base-200 pt-10">
-        <p className="text-6xl text-primary-content">Trihalo Accountancy</p>
+        <p className="text-6xl text-base-content">Trihalo Accountancy</p>
         <p className="text-primary pt-8">Let's make this day efficient!</p>
 
         {/* Requests Section */}
-        <div className="mt-6 mr-10 bg-base-100 text-primary-content shadow-lg rounded-box">
+        <div className="mt-6 mr-10 bg-base-100 text-base-content shadow-lg rounded-box">
           <div className="card-body overflow-auto">
             <h2 className="card-title text-2xl">Requests</h2>
 

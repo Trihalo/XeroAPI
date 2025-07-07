@@ -62,7 +62,7 @@ aest = pytz.timezone("Australia/Sydney")
 
 @app.route("/", methods=["GET"])
 def index():
-    return "✅ Forecasting API is live @leo@trihalo.com.au", 200
+    return "✅ Forecasting API is live @leoshi@future-you.com.au", 200
 
 
 @app.route("/login", methods=["POST"])
@@ -530,6 +530,62 @@ def get_monthly_targets():
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500
     
+    
+@app.route("/legends", methods=["GET"])
+@token_required
+def get_consultant_margins():
+    fy = request.args.get("fy")
+    if not fy:
+        return jsonify({"error": "Missing 'fy'"}), 400
+
+    # Query 1: Consultant totals
+    query1 = """
+    SELECT 
+      Consultant,
+      Area,
+      SUM(Margin) AS TotalMargin,
+      Quarter
+    FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
+    WHERE FinancialYear = @fy
+    GROUP BY Consultant, Quarter, Area
+    ORDER BY TotalMargin DESC
+    """
+
+    # Query 2: Consultant + Type totals
+    query2 = """
+    SELECT 
+      Consultant,
+      Area,
+      Type,
+      SUM(Margin) AS TotalMargin,
+      Quarter
+    FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
+    WHERE FinancialYear = @fy
+    GROUP BY Consultant, Type, Quarter, Area
+    ORDER BY Consultant, Type, Quarter, Area
+    """
+
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("fy", "STRING", fy)]
+    )
+
+    try:
+        # Run both queries
+        results1 = client.query(query1, job_config=job_config).result()
+        results2 = client.query(query2, job_config=job_config).result()
+
+        # Build the response
+        response = {
+            "consultantTotals": [dict(row) for row in results1],
+            "consultantTypeTotals": [dict(row) for row in results2],
+        }
+
+        return jsonify(response)
+
+    except Exception as e:
+        print("❌ BigQuery error:", e)
+        return jsonify({"error": str(e)}), 500
+
     
 # ============ FIRESTORE FUNCTIONS ==================
 @app.route("/recruiters", methods=["GET"])

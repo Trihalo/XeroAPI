@@ -4,7 +4,10 @@ import TopNavbar from "../components/TopNavbar.jsx";
 import calendar from "../data/calendar.js";
 import { getCurrentMonthInfo } from "../utils/getCurrentMonthInfo.js";
 import { uploadForecastToBQ, fetchForecastForRecruiter } from "../api";
-import { getStoredInvoiceData } from "../utils/getInvoiceInfo";
+import {
+  getStoredInvoiceData,
+  getStoredPrevInvoiceData,
+} from "../utils/getInvoiceInfo";
 
 function Upload() {
   const navigate = useNavigate();
@@ -13,8 +16,10 @@ function Upload() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const invoiceData = getStoredInvoiceData();
+  const prevInvoiceData = getStoredPrevInvoiceData();
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
+  const [showingPreviousMonth, setShowingPreviousMonth] = useState(false);
 
   useEffect(() => {
     if (alertMessage) {
@@ -23,8 +28,14 @@ function Upload() {
     }
   }, [alertMessage]);
 
-  const { currentFY, currentMonth, weeksInMonth, currentWeekIndex } =
-    getCurrentMonthInfo(calendar);
+  const {
+    currentFY,
+    currentMonth,
+    weeksInMonth,
+    currentWeekIndex,
+    previousMonth,
+    previousMonthFY,
+  } = getCurrentMonthInfo(calendar);
 
   // For testing purposes
   // const { weeksInMonth } = getCurrentMonthInfo(calendar);
@@ -55,6 +66,10 @@ function Upload() {
     .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
     .sort((a, b) => Number(a.Week) - Number(b.Week));
 
+  const permInvoicesPrev = prevInvoiceData
+    .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
+    .sort((a, b) => Number(a.Week) - Number(b.Week));
+
   useEffect(() => {
     const fetchData = async () => {
       setFetching(true);
@@ -77,6 +92,7 @@ function Upload() {
       }));
 
       setRows(enrichedRows);
+      sumActualsPast();
       setFetching(false);
     };
 
@@ -94,6 +110,14 @@ function Upload() {
     };
   }, [rows]);
 
+  // ============= SUMMATION FORMULAS =============
+
+  const sumActualsPast = (type) => {
+    return Object.entries(actualsByWeek[type] || {})
+      .filter(([week]) => Number(week) < currentWeekIndex)
+      .reduce((sum, [_, value]) => sum + value, 0);
+  };
+
   const handleChange = (index, field, value) => {
     const updated = [...rows];
     updated[index][field] = value;
@@ -102,8 +126,26 @@ function Upload() {
 
   const handleSubmit = async () => {
     setLoading(true);
+
+    const cleanedRows = rows.map((row) => ({
+      key: row.key,
+      fy: row.fy,
+      month: row.month,
+      week: row.week,
+      range: row.range,
+      revenue: Number(row.revenue) || 0,
+      tempRevenue: Number(row.tempRevenue) || 0,
+      notes: row.notes || "",
+      name: row.name,
+      uploadMonth: row.uploadMonth,
+      uploadWeek: row.uploadWeek,
+      uploadYear: row.uploadYear,
+      uploadTimestamp: row.uploadTimestamp,
+      uploadUser: row.uploadUser,
+    }));
+
     try {
-      const result = await uploadForecastToBQ(rows);
+      const result = await uploadForecastToBQ(cleanedRows);
       if (result.success) {
         setAlertMessage(result.message);
         setShowAlert(true);
@@ -114,12 +156,12 @@ function Upload() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-200 text-base-content flex-col">
+    <div className="min-h-screen flex bg-base-300 text-base-content flex-col">
       <TopNavbar userName={localStorage.getItem("name")} />
       <main className="flex-1 p-8">
-        <div className="max-w mx-auto bg-white rounded-xl shadow p-6">
+        <div className="max-w mx-auto bg-base-100 rounded-xl shadow p-6">
           <div className="flex items-baseline gap-6 mb-6">
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold text-primary">
               {currentFY} {currentMonth} Forecast Upload
             </h1>
             <button
@@ -144,7 +186,7 @@ function Upload() {
               <div className="overflow-x-auto">
                 <table className="table-auto text-sm">
                   <thead>
-                    <tr className="bg-gray-100 text-gray-700 border-b border-gray-300">
+                    <tr className="bg-base-300 text-base-content border-b border-base-300">
                       <th className="text-left px-4 py-2 min-w-[60px] max-w-[80px]">
                         Week
                       </th>
@@ -164,7 +206,7 @@ function Upload() {
                         Actual Temp
                       </th>
                       <th className="text-left px-4 py-2 min-w-[120px] max-w-[160px]">
-                        Total Variance
+                        Actual Total
                       </th>
                       <th className="text-left px-4 py-2 min-w-[300px] max-w-[300px]">
                         Notes
@@ -178,20 +220,24 @@ function Upload() {
                       return (
                         <tr
                           key={idx}
-                          className="border-b border-gray-200 border-x border-gray-200"
+                          className="border-b border-base-300 border-x border-base-300"
                         >
-                          <td className="px-4 py-2 text-nowrap border-x border-gray-200">
+                          <td className="px-4 py-2 text-nowrap border-x border-base-300">
                             Wk {row.week}
                           </td>
-                          <td className="px-4 py-2 text-sm text-gray-500 text-nowrap border-x border-gray-200">
+                          <td className="px-4 py-2 text-sm text-gray-500 text-nowrap border-x border-base-300">
                             {row.range}
                           </td>
-                          <td className="px-4 py-2 border-x border-gray-200">
+                          <td
+                            className={`px-4 py-2 border-x border-base-300 ${
+                              !isEditable ? "bg-base-300" : ""
+                            }`}
+                          >
                             <input
                               type="number"
                               className={`bg-transparent focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-40 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed text-base-300"
                                   : ""
                               }`}
                               placeholder="$"
@@ -203,12 +249,17 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
-                          <td className="px-4 py-2 border-x border-gray-200 border-r-5">
+
+                          <td
+                            className={`px-4 py-2 border-x border-base-300 border-r-5 ${
+                              !isEditable ? "bg-base-300" : ""
+                            }`}
+                          >
                             <input
                               type="number"
-                              className={`bg-transparent focus:outline-none ${
+                              className={`focus:outline-none ${
                                 !isEditable
-                                  ? "opacity-40 cursor-not-allowed"
+                                  ? "opacity-40 cursor-not-allowed text-base-300"
                                   : ""
                               }`}
                               placeholder="$"
@@ -224,8 +275,9 @@ function Upload() {
                               disabled={!isEditable}
                             />
                           </td>
+
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
@@ -236,7 +288,7 @@ function Upload() {
                               : "-"}
                           </td>
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
@@ -247,7 +299,7 @@ function Upload() {
                               : "-"}
                           </td>
                           <td
-                            className={`px-4 py-2 whitespace-nowrap border-x border-gray-200 ${
+                            className={`px-4 py-2 whitespace-nowrap border-x border-base-300 ${
                               !isEditable ? "opacity-40 cursor-not-allowed" : ""
                             }`}
                           >
@@ -257,26 +309,21 @@ function Upload() {
                                     actualsByWeek["Perm"][row.week] || 0;
                                   const actualTemp =
                                     actualsByWeek["Temp"][row.week] || 0;
-                                  const forecastPerm = Number(row.revenue || 0);
-                                  const forecastTemp = Number(
-                                    row.tempRevenue || 0
-                                  );
-                                  const variance = Math.round(
-                                    actualPerm +
-                                      actualTemp -
-                                      (forecastPerm + forecastTemp),
-                                    0
+                                  const TotalRev = Math.round(
+                                    actualPerm + actualTemp
                                   );
 
-                                  const absVal =
-                                    Math.abs(variance).toLocaleString();
+                                  const absTotal =
+                                    Math.abs(TotalRev).toLocaleString();
                                   const formatted =
-                                    variance < 0 ? `(${absVal})` : `${absVal}`;
+                                    TotalRev < 0
+                                      ? `(${absTotal})`
+                                      : `${absTotal}`;
 
                                   return (
                                     <span
                                       className={
-                                        variance < 0
+                                        TotalRev < 0
                                           ? "text-secondary"
                                           : "text-gray-600"
                                       }
@@ -334,16 +381,92 @@ function Upload() {
                 Upload Forecast
               </button>
 
+              <div className="mt-6 text-sm text-gray-500">
+                <p>
+                  <span className="font-semibold">
+                    {recruiterName.split(" ")[0]}'s {currentMonth} Forecast:
+                  </span>
+                  <span className="text-sm space-x-4">
+                    <span></span>
+                    <span>
+                      <strong>
+                        {Math.round(sumActualsPast("Perm")).toLocaleString()}
+                      </strong>
+                      {""}
+                      <span className="text-gray-500"> (Perm Actual) + </span>
+                      <strong>
+                        {Math.round(sumActualsPast("Temp")).toLocaleString()}
+                      </strong>{" "}
+                      <span className="text-gray-500"> (Temp Actual) + </span>
+                      <strong>
+                        {Math.round(
+                          rows
+                            .filter((row) => row.week >= currentWeekIndex)
+                            .reduce(
+                              (sum, row) =>
+                                sum +
+                                (Number(row.revenue) || 0) +
+                                (Number(row.tempRevenue) || 0),
+                              0
+                            )
+                        ).toLocaleString()}
+                      </strong>{" "}
+                      <span className="text-gray-500"> (Forecast) = </span>
+                      <span className="text-primary text-lg">
+                        <strong>
+                          $
+                          {Math.round(
+                            sumActualsPast("Perm") +
+                              sumActualsPast("Temp") +
+                              rows
+                                .filter((row) => row.week >= currentWeekIndex)
+                                .reduce(
+                                  (sum, row) =>
+                                    sum +
+                                    (Number(row.revenue) || 0) +
+                                    (Number(row.tempRevenue) || 0),
+                                  0
+                                )
+                          ).toLocaleString()}
+                        </strong>
+                      </span>
+                    </span>
+                  </span>
+                </p>
+              </div>
               <div className="mt-12 space-y-8 text-sm">
                 {/* PERM SECTION */}
                 <div>
+                  <div className="mb-2 flex gap-4 items-center">
+                    <button
+                      className="btn btn-sm btn-soft"
+                      onClick={() =>
+                        setShowingPreviousMonth(!showingPreviousMonth)
+                      }
+                    >
+                      {showingPreviousMonth
+                        ? `Show Current Month's Invoices`
+                        : `Show Previous Month's Invoices`}
+                    </button>
+                  </div>
+
                   <h3 className="text-base font-semibold text-primary">
                     Actual Perm Invoiced Revenue for{" "}
-                    <span className="text-secondary">{currentMonth}</span>
+                    <span className="text-secondary">
+                      {showingPreviousMonth ? previousMonth : currentMonth}
+                    </span>
+                    <span className="text-secondary">
+                      {" ("}
+                      {showingPreviousMonth ? previousMonthFY : currentFY}
+                      {")"}
+                    </span>
                   </h3>
-                  {permInvoices.length === 0 ? (
+
+                  {(showingPreviousMonth ? permInvoicesPrev : permInvoices)
+                    .length === 0 ? (
                     <p className="text-sm text-gray-500 mt-2">
-                      No perm invoices for {currentMonth}.
+                      No perm invoices for{" "}
+                      {showingPreviousMonth ? previousMonth : currentMonth}.
                     </p>
                   ) : (
                     <table className="table w-auto mt-2">
@@ -356,7 +479,10 @@ function Upload() {
                         </tr>
                       </thead>
                       <tbody>
-                        {permInvoices.map((inv, idx) => (
+                        {(showingPreviousMonth
+                          ? permInvoicesPrev
+                          : permInvoices
+                        ).map((inv, idx) => (
                           <tr key={idx}>
                             <td>Wk {inv.Week}</td>
                             <td>{inv.InvoiceNumber}</td>
@@ -367,6 +493,25 @@ function Upload() {
                           </tr>
                         ))}
                       </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan="3" className="text-right font-semibold">
+                            Total Margin:
+                          </td>
+                          <td className="font-semibold">
+                            $
+                            {Math.round(
+                              (showingPreviousMonth
+                                ? permInvoicesPrev
+                                : permInvoices
+                              ).reduce(
+                                (sum, inv) => sum + (Number(inv.Margin) || 0),
+                                0
+                              )
+                            ).toLocaleString()}
+                          </td>
+                        </tr>
+                      </tfoot>
                     </table>
                   )}
                 </div>

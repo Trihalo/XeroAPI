@@ -19,7 +19,14 @@ from helpers.databaseHelpers import parse_xero_date, get_company_month, get_fina
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
-FULL_RESET = False 
+FULL_RESET = True 
+
+quarters = {
+    "Jan": "Q3", "Feb": "Q3", "Mar": "Q3",
+    "Apr": "Q4", "May": "Q4", "Jun": "Q4",
+    "Jul": "Q1", "Aug": "Q1", "Sep": "Q1",
+    "Oct": "Q2", "Nov": "Q2", "Dec": "Q2"
+}
 
 # --- BigQuery Functions ---
 def export_to_bigquery(rows):
@@ -203,6 +210,7 @@ def extract_invoice_lines(invoice, journal_totals):
     invoice_month = parsed_date.strftime("%B")
     invoice_week = week_of_company_month(parsed_date)
     company_month = get_company_month(parsed_date)
+    company_quarter = quarters[company_month]
     currency_rate = invoice.get("CurrencyRate", 1)
     currency_code = invoice.get("CurrencyCode", "")
     updated_date = parse_xero_date(invoice.get("UpdatedDateUTC", ""))
@@ -284,6 +292,7 @@ def extract_invoice_lines(invoice, journal_totals):
                     "Currency Rate": currency_rate,
                     "Updated Date": updated_date_str,
                     "InvoiceID": invoice.get("InvoiceID", ""),
+                    "Quarter": company_quarter,
                 })
     else:
         valid_lines = [line for line in line_items if is_valid_line(line)]
@@ -291,7 +300,9 @@ def extract_invoice_lines(invoice, journal_totals):
             return rows
 
         account_code = str(valid_lines[0].get("AccountCode", ""))
-        placement_total = 1 / 3 if account_code in ["225", "226", "227"] else 1
+        if account_code in ["225", "226","227"]: placement_total = 1/3
+        elif account_code == "240": placement_total = 0
+        else: placement_total = 1
         total_exgst = sum(line.get("LineAmount", 0) for line in valid_lines)
 
         for line in valid_lines:
@@ -322,7 +333,6 @@ def extract_invoice_lines(invoice, journal_totals):
                 subtotal /= currency_rate
                 total /= currency_rate
                 margin /= currency_rate
-                placement /= currency_rate  # optional: if you want to show placement in base currency terms
 
             if account_code not in account_code_mapping:
                 print(f"⚠️ Unknown account code: {account_code} in invoice {invoice_number}")
@@ -355,6 +365,7 @@ def extract_invoice_lines(invoice, journal_totals):
                 "Currency Rate": currency_rate,
                 "Updated Date": updated_date_str,
                 "InvoiceID": invoice.get("InvoiceID", ""),
+                "Quarter": company_quarter,
             })
     return rows
 
@@ -429,6 +440,7 @@ def extract_credit_note_lines(cn):
             "Currency Rate": currency_rate,
             "Updated Date": parse_xero_date(cn.get("UpdatedDateUTC", "")).strftime("%-d/%-m/%Y") if cn.get("UpdatedDateUTC") else "",
             "InvoiceID": cn.get("CreditNoteID", ""),
+            "Quarter": quarters.get(get_company_month(parsed_date), ""),
         })
 
     return rows
@@ -535,7 +547,9 @@ def main():
             "# Placement": "",
             "Currency Code": "AUD",
             "Currency Rate": currency_rate,
-            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else ""
+            "Updated Date": pd.to_datetime(row["Updated Date"]).strftime("%-d/%-m/%Y") if pd.notna(row["Updated Date"]) else "",
+            "InvoiceID": row.get("InvoiceID", ""),
+            "Quarter": quarters.get(get_company_month(date), ""),
         })
 
     # You can keep or remove the CSV export

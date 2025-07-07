@@ -111,10 +111,10 @@ function ChangePassword() {
         )}
       </div>
 
-      <div className="absolute bottom-4 right-4 text-xs text-base-100">
+      <div className="absolute bottom-4 right-4 text-xs text-base-content">
         For any issues, please contact{" "}
-        <a href="mailto:Leo@trihalo.com.au" className="underline">
-          Leo@trihalo.com.au
+        <a href="mailto:leoshi@future-you.com.au" className="underline">
+          leoshi@future-you.com.au
         </a>
       </div>
     </div>
