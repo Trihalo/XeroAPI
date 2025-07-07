@@ -18,7 +18,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from xeroAuth import XeroTenants
 from xeroAuthHelper import getXeroAccessToken
 
-FULL_RESET = True
+FULL_RESET = False
 
 # --- Helpers ---
 
