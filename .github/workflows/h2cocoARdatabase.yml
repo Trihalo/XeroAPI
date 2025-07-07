@@ -1,0 +1,39 @@
+name: H2coco AR Database Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  h2coco-ar-database:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r H2coco/requirements.txt
+
+      - name: Set up Google Cloud credentials
+        run: |
+          echo '${{ secrets.H2COCO_BQACCESS }}' > /tmp/key.json
+          echo "H2COCO_BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Run H2coco AR Database upload
+        working-directory: H2coco
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          H2COCO_CLIENT_ID: ${{ secrets.H2COCO_CLIENT_ID }}
+          H2COCO_CLIENT_SECRET: ${{ secrets.H2COCO_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
+        run: |
+          python databaseInvoiceRequest.py
