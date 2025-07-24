@@ -69,11 +69,11 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
     billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     if billResponse:
-        print(f"Bill {bill["InvoiceNumber"]} updated successfully.")
+        print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
     else: print("No response received or update failed.")
     
     if invoiceResponse:
-        print(f"Invoice {inv["InvoiceNumber"]} updated successfully.")
+        print(f"Invoice {inv['InvoiceNumber']} updated successfully.")
     else: print("No response received or update failed.")
     print("--------------------------------------------------")
 
