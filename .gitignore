@@ -25,3 +25,4 @@ dashboardWebsite/backend/uploads/*.xlsx
 .DS_Store
 MacMerch/*.csv
 MacMerch/*.json
+H2coco/*.txt
