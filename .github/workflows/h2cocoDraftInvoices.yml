@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r H2coco/requirements.txt
+          pip install -r H2coco/draftInvoiceReq.txt
 
       - name: Run H2coco Draft Invoice Approver
         working-directory: H2coco
