@@ -98,6 +98,10 @@ def main():
     ]
     
     for invoice in draftInvoices:
+        # if Costco Australia, skip the invoice
+        if "Costco Wholesale Australia" in invoice.get("Contact", "")["Name"]:
+            continue
+        
         # get the matching billID for each draft invoice
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
         if not invNumber.startswith("SI-"):
