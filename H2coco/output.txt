@@ -1,0 +1,146 @@
+leo@Leos-MacBook-Air H2coco % python3 draftInvoiceApprover.py
+🔄 Refreshing token for H2COCO...
+✅ GitHub variable XERO_REFRESH_TOKEN_H2COCO updated successfully!
+Approving Invoice: SI-00018760 and Bill: Journal-SO-00018760[SS-00018760] - Grocery Holdings Pty Ltd
+Bill Journal-SO-00018760[SS-00018760] - Grocery Holdings Pty Ltd updated successfully.
+Invoice SI-00018760 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018759 and Bill: Journal-SO-00018759[SS-00018759] - Grocery Holdings Pty Ltd
+Bill Journal-SO-00018759[SS-00018759] - Grocery Holdings Pty Ltd updated successfully.
+Invoice SI-00018759 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018880 and Bill: Journal-SO-00018880[SS-00018880] - Metcash - CDS
+Bill Journal-SO-00018880[SS-00018880] - Metcash - CDS updated successfully.
+Invoice SI-00018880 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018877 and Bill: Journal-SO-00018877[SS-00018877] - Ezymart Distribution Pty Ltd
+Bill Journal-SO-00018877[SS-00018877] - Ezymart Distribution Pty Ltd updated successfully.
+Invoice SI-00018877 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018858 and Bill: Journal-SO-00018858[SS-00018858] - Woolworths Limited
+Bill Journal-SO-00018858[SS-00018858] - Woolworths Limited updated successfully.
+Invoice SI-00018858 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018857 and Bill: Journal-SO-00018857[SS-00018857] - Grocery Holdings Pty Ltd
+Bill Journal-SO-00018857[SS-00018857] - Grocery Holdings Pty Ltd updated successfully.
+Invoice SI-00018857 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018852 and Bill: Journal-SO-00018852[SS-00018852] - Woolworths Limited
+Bill Journal-SO-00018852[SS-00018852] - Woolworths Limited updated successfully.
+Invoice SI-00018852 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018848 and Bill: Journal-SO-00018848[SS-00018848] - Woolworths Limited
+Bill Journal-SO-00018848[SS-00018848] - Woolworths Limited updated successfully.
+Invoice SI-00018848 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018836 and Bill: Journal-SO-00018836[SS-00018836] - Costco Wholesale Australia Pty Ltd
+Failed to update invoice: 400 {
+  "ErrorNumber": 10,
+  "Type": "ValidationException",
+  "Message": "A validation exception occurred",
+  "Elements": [
+    {
+      "Type": "ACCREC",
+      "InvoiceID": "7a0f4808-fef7-4f70-9158-05641841cfde",
+      "Payments": [],
+      "CreditNotes": [],
+      "Prepayments": [],
+      "Overpayments": [],
+      "TotalDiscount": 0.00,
+      "IsDiscounted": true,
+      "InvoiceAddresses": [],
+      "HasErrors": true,
+      "InvoicePaymentServices": [],
+      "Contact": {
+        "ContactID": "01b5d80e-a0c1-4baf-aadf-8655fa358a74",
+        "Addresses": [],
+        "Phones": [],
+        "ContactGroups": [],
+        "ContactPersons": [],
+        "HasValidationErrors": false
+      },
+      "DateString": "2025-07-17T00:00:00",
+      "Date": "\/Date(1752710400000+0000)\/",
+      "DueDateString": "2025-08-16T00:00:00",
+      "DueDate": "\/Date(1755302400000+0000)\/",
+      "Status": "AUTHORISED",
+      "LineAmountTypes": "Exclusive",
+      "LineItems": [
+        {
+          "Description": "CJC001 - Cane Juice Co. Sugarcane Juice 330ml x 12",
+          "UnitAmount": 15.26,
+          "TaxType": "EXEMPTOUTPUT",
+          "TaxAmount": 0.00,
+          "LineAmount": 5861.38,
+          "AccountCode": "4000",
+          "Tracking": [],
+          "Quantity": 384.0000,
+          "DiscountRate": 0.00,
+          "LineItemID": "b5b07a78-f510-4792-a57b-3dc1debf6789",
+          "AccountID": "2f34a939-a589-4b3a-951a-77774d8fbfc1",
+          "ValidationErrors": []
+        }
+      ],
+      "SubTotal": 5861.38,
+      "TotalTax": 0.00,
+      "Total": 5861.38,
+      "CurrencyCode": "AUD",
+      "ValidationErrors": [
+        {
+          "Message": "The line total 5861.38 does not match the expected line total 5859.84"
+        }
+      ]
+    }
+  ]
+}
+Bill Journal-SO-00018836[SS-00018836] - Costco Wholesale Australia Pty Ltd updated successfully.
+No response received or update failed.
+--------------------------------------------------
+Approving Invoice: SI-00018800 and Bill: Journal-SO-00018800[SS-00018800] - Woolworths Limited
+Bill Journal-SO-00018800[SS-00018800] - Woolworths Limited updated successfully.
+Invoice SI-00018800 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018799 and Bill: Journal-SO-00018799[SS-00018799] - Woolworths Limited
+Bill Journal-SO-00018799[SS-00018799] - Woolworths Limited updated successfully.
+Invoice SI-00018799 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018798 and Bill: Journal-SO-00018798[SS-00018798] - Woolworths Limited
+Bill Journal-SO-00018798[SS-00018798] - Woolworths Limited updated successfully.
+Invoice SI-00018798 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018738 and Bill: Journal-SO-00018738[SS-00018738] - Woolworths Limited
+Bill Journal-SO-00018738[SS-00018738] - Woolworths Limited updated successfully.
+Invoice SI-00018738 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018758 and Bill: Journal-SO-00018758[SS-00018758] - JB Metropolitan Distributors Pty Ltd - Moorebank
+Bill Journal-SO-00018758[SS-00018758] - JB Metropolitan Distributors Pty Ltd - Moorebank updated successfully.
+Invoice SI-00018758 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018739 and Bill: Journal-SO-00018739[SS-00018739] - Woolworths Limited
+Bill Journal-SO-00018739[SS-00018739] - Woolworths Limited updated successfully.
+Invoice SI-00018739 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018884 and Bill: Journal-SO-00018884[SS-00018884] - Top Fruit and Vegetables Pty Ltd
+Bill Journal-SO-00018884[SS-00018884] - Top Fruit and Vegetables Pty Ltd updated successfully.
+Invoice SI-00018884 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018876 and Bill: Journal-SO-00018876[SS-00018876] - Grocery Holdings Pty Ltd
+Bill Journal-SO-00018876[SS-00018876] - Grocery Holdings Pty Ltd updated successfully.
+Invoice SI-00018876 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018872 and Bill: Journal-SO-00018872[SS-00018872] - Grocery Holdings Pty Ltd
+Bill Journal-SO-00018872[SS-00018872] - Grocery Holdings Pty Ltd updated successfully.
+Invoice SI-00018872 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018780 and Bill: Journal-SO-00018780[SS-00018780] - SUPA IGA BYRON BAY
+Bill Journal-SO-00018780[SS-00018780] - SUPA IGA BYRON BAY updated successfully.
+Invoice SI-00018780 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018769 and Bill: Journal-SO-00018769[SS-00018769] - CW MANAGEMENT PTY LTD - CDS
+Bill Journal-SO-00018769[SS-00018769] - CW MANAGEMENT PTY LTD - CDS updated successfully.
+Invoice SI-00018769 updated successfully.
+--------------------------------------------------
+Approving Invoice: SI-00018767 and Bill: Journal-SO-00018767[SS-00018767] - CW MANAGEMENT PTY LTD - CDS
+Bill Journal-SO-00018767[SS-00018767] - CW MANAGEMENT PTY LTD - CDS updated successfully.
+Invoice SI-00018767 updated successfully.
+--------------------------------------------------
