@@ -2,7 +2,6 @@ import sys
 import logging
 import os
 import requests
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
@@ -37,9 +36,6 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
     marketing = False
     if "New Zealand" in bill.get("InvoiceNumber", ""): newZealand = True
     if "Marketing" in bill.get("InvoiceNumber", ""): marketing = True
-    
-    # print(f"New Zealand: {newZealand}")
-    # print(f"Marketing: {marketing}")
         
     # change the status of the invoice and bill to AUTHORISED
     inv["Status"] = "AUTHORISED"
@@ -66,15 +62,17 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
     
     # update the invoice and bill using Xero API
     print(f"Approving Invoice: {inv['InvoiceNumber']} and Bill: {bill['InvoiceNumber']}")
-    billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
-    if billResponse:
-        print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
-    else: print("No response received or update failed.")
     
+    # only approve the bill if the invoice update was successful
     if invoiceResponse:
         print(f"Invoice {inv['InvoiceNumber']} updated successfully.")
-    else: print("No response received or update failed.")
+        billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+        if billResponse:
+            print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
+        else: print("Bill update failed.")
+    else: print(f"Invoice: {inv.get("InvoiceNumber", "")} approval failed, bill not updated.")
+    
     print("--------------------------------------------------")
 
 def main():
@@ -100,6 +98,7 @@ def main():
     for invoice in draftInvoices:
         # if Costco Australia, skip the invoice
         if "Costco Wholesale Australia" in invoice.get("Contact", "")["Name"]:
+            print(f"Skipping invoice for Costco Australia: {invoice.get('InvoiceNumber', 'No Invoice Number')}")
             continue
         
         # get the matching billID for each draft invoice
