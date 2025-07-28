@@ -3,53 +3,24 @@ import os
 import json
 import pandas as pd
 import requests
-import logging
 from datetime import datetime
-from openpyxl import Workbook  # Add this import
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
-from helpers.emailAttachment import sendEmailWithAttachment
 
 if not os.path.exists('logs'): os.makedirs('logs')
 log_filename = datetime.now().strftime('logs/payment_%Y%m%d_%H%M%S.log')
 
-# Configure logging without timestamp
-logging.basicConfig(filename=log_filename, level=logging.INFO, 
-                    format='%(levelname)s - %(message)s')
-
-def create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs):
-    wb = Workbook()
-    ws_paid = wb.create_sheet("Paid POs")
-    ws_unpaid = wb.create_sheet("Unpaid POs")
-
-    ws_paid.append(["PO Number", "Supplier Invoice Number"])
-    ws_unpaid.append(["PO Number"])
-
-    for poNumber in paidPOs:
-        invoiceData = poInvoiceDict[poNumber]
-        ws_paid.append([poNumber, invoiceData["supplierInvNumber"]])
-
-    for poNumber in unpaidPOs: ws_unpaid.append([poNumber])
-
-    folder_name = "PO_Payment_Status"
-    os.makedirs(folder_name, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{folder_name}/PO_Payment_Status_{timestamp}.xlsx"
-
-    wb.save(file_name)
-    logging.info(f"Payment status Excel file has been saved to {file_name}")
-    return file_name
-
-
-def main():
-    if len(sys.argv) < 3:
-        print("Usage: python3 tradeFinancePaymentsRequest.py <Recipient Name> <Recipient Email>")
-        sys.exit(1)
-    recipient_name = sys.argv[1]
-    recipient_email = sys.argv[2] 
+def export_to_bigquery():
+    key_path = os.getenv("H2COCO_BQACCESS")
+    project_id = "h2coco"
+    dataset_id = "FinancialData"
+    table_id = "SupplierPrepaymentPayments"
+    table_ref = f"{project_id}.{dataset_id}.{table_id}"
     
+
+def main():    
     client = "H2COCO"
     invoiceStatus = "AUTHORISED"
 
@@ -58,18 +29,14 @@ def main():
 
     try:
         invoices, accessToken, xeroTenantId = fetchInvoicesForClient(client, invoiceStatus)
-        
         if not isinstance(invoices, list):
             raise Exception(f"Expected a list of invoices but got {type(invoices)} for {client}")
-        
         allInvoices.extend(invoices)
-        
         clientTokens[client] = {
             "accessToken": accessToken,
             "xeroTenantId": xeroTenantId
         }
     except Exception as e:
-        logging.error(f"Error fetching invoices: {e}")
         return
 
     accpayInvoices = [
@@ -78,7 +45,7 @@ def main():
     ]
 
     # Ask for the file path
-    filePath = '../dashboardWebsite/backend/uploads/PO.xlsx'
+    filePath = '../H2coco/PO.xlsx'
 
     # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
     df = pd.read_excel(filePath)
@@ -146,36 +113,27 @@ def main():
 
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
-                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
+                print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
                 paidPOs.append(poNumber)
             else:
-                logging.error(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
+                print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
                 unpaidPOs.append(poNumber)
 
-            logging.info("")
-            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
+            print(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif invoiceData and not invoiceData["supplierInvNumber"]:
-            logging.error(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
+            print(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
             unpaidPOs.append(poNumber)
         elif invoiceData["AmountPaid"] > 0:
-            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
+            print(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif not invoiceData:
-            logging.error(f"PO {poNumber} not found in bills")
+            print(f"PO {poNumber} not found in bills")
             unpaidPOs.append(poNumber)
 
     # Output the dictionary to a JSON file
     with open("poInvoiceMapping.json", "w") as outfile:
         json.dump(poInvoiceDict, outfile, indent=4)
 
-    logging.info("PO to Invoice ID mapping has been saved to poInvoiceMapping.json")
-
-    # Create the Excel file with payment status
-    file_path = create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs)
-    
-    subject = f"Trade Finance Supplier Payment Allocator"
-    body = f"Hi {recipient_name},\n\nPlease find the attached output files.\n\nThanks"
-    
-    sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", file_path)
+    print("PO to Invoice ID mapping has been saved to poInvoiceMapping.json")
 
 if __name__ == "__main__":
     main()
