@@ -45,6 +45,9 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
     for line in inv.get("LineItems", []):
         if "AccountCode" not in line or not line["AccountCode"]:
             line["AccountCode"] = "5000" if not newZealand else "5001"
+        # remove line item if the Description starts with "Invoice Comments:"
+        if line.get("Description", "").startswith("Invoice Comments:"):
+            inv["LineItems"].remove(line)   
     
     # change the Tax account to "BAS Excluded" for bill for both line items
     for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
@@ -99,7 +102,7 @@ def main():
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCPAY"
     ]
-    
+    print("--------------------------------------------------")
     for invoice in draftInvoices:
         # if Costco Australia, skip the invoice
         if "Costco Wholesale Australia" in invoice.get("Contact", "")["Name"]:
