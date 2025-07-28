@@ -41,6 +41,11 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
     inv["Status"] = "AUTHORISED"
     bill["Status"] = "AUTHORISED"
     
+    # Make sure that the invoice has account codes on each line item
+    for line in inv.get("LineItems", []):
+        if "AccountCode" not in line or not line["AccountCode"]:
+            line["AccountCode"] = "5000" if not newZealand else "5001"
+    
     # change the Tax account to "BAS Excluded" for bill for both line items
     for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
         
