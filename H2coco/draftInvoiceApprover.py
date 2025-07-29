@@ -79,7 +79,7 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
         if billResponse:
             print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
         else: print("Bill update failed.")
-    else: print(f"Invoice: {inv.get("InvoiceNumber", "")} approval failed, bill not updated.")
+    else: print(f"Invoice: {inv.get('InvoiceNumber', "")} approval failed, bill not updated.")
     
     print("--------------------------------------------------")
 
