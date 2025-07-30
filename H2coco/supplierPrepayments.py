@@ -88,7 +88,7 @@ def main():
     ]
 
     # Ask for the file path
-    filePath = '../H2coco/PO.xlsx'
+    filePath = './PO.xlsx'
 
     # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
     df = pd.read_excel(filePath)
@@ -174,8 +174,6 @@ def main():
                 })
             else:
                 print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
-
-            print(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif invoiceData and not invoiceData["supplierInvNumber"]:
             print(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
         elif invoiceData["AmountPaid"] > 0:
