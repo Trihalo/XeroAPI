@@ -4,6 +4,13 @@ import json
 import pandas as pd
 import requests
 from datetime import datetime
+from google.cloud import bigquery
+from google.oauth2 import service_account
+import pandas_gbq
+from dotenv import load_dotenv
+import pytz
+
+load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -12,14 +19,49 @@ from helpers.fetchInvoicesForClient import fetchInvoicesForClient
 if not os.path.exists('logs'): os.makedirs('logs')
 log_filename = datetime.now().strftime('logs/payment_%Y%m%d_%H%M%S.log')
 
-def export_to_bigquery():
+def export_to_bigquery(paid_po_records):
     key_path = os.getenv("H2COCO_BQACCESS")
     project_id = "h2coco"
     dataset_id = "FinancialData"
     table_id = "SupplierPrepaymentPayments"
     table_ref = f"{project_id}.{dataset_id}.{table_id}"
-    
 
+    # Build DataFrame from list of dicts
+    df = pd.DataFrame(paid_po_records)
+
+    # Create BigQuery client
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+    client = bigquery.Client(credentials=credentials, project=project_id)
+
+    # Load data to BigQuery (APPEND mode)
+    job = client.load_table_from_dataframe(
+        dataframe=df,
+        destination=table_ref,
+        job_config=bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND"
+        )
+    )
+    job.result()
+    print(f"Uploaded {len(df)} paid PO records to BigQuery.")
+
+
+def fetch_paid_po_records():
+    key_path = os.getenv("H2COCO_BQACCESS")
+    project_id = "h2coco"
+    dataset_id = "FinancialData"
+    table_id = "SupplierPrepaymentPayments"
+
+    client = bigquery.Client.from_service_account_json(key_path)
+    query = f"""
+        SELECT poNumber
+        FROM `{project_id}.{dataset_id}.{table_id}`
+        ORDER BY date DESC
+    """
+    
+    df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=client._credentials)
+    return df["poNumber"].astype(int).tolist()
+
+    
 def main():    
     client = "H2COCO"
     invoiceStatus = "AUTHORISED"
@@ -62,7 +104,11 @@ def main():
         for invoice in accpayInvoices:
             if poReference in invoice.get("InvoiceNumber", ""):
                 invoiceId = invoice.get("InvoiceID")
-                supplierInvNumber = invoice.get("InvoiceNumber", "").split(' ', 1)[1] if ' ' in invoice.get("InvoiceNumber", "") else ""
+                raw_invoice_number = invoice.get("InvoiceNumber", "")
+                supplierInvNumber = ""
+                if ' ' in raw_invoice_number:
+                    supplierInvNumber = raw_invoice_number.split(' ', 1)[1].strip().rstrip(';')
+
                 break
         poInvoiceDict[poNumber] = {
             "InvoiceID": invoiceId,
@@ -75,6 +121,10 @@ def main():
     paidPOs = []
     unpaidPOs = []
 
+    # Fetch previously paid PO records from BigQuery
+    paid_po_records = fetch_paid_po_records()
+    print(f"Previously paid PO records fetched: {paid_po_records}")
+    
     # Create and send individual payment requests
     for poNumber, date, currencyRate, amount in zip(poNumbers, dates, currencyRates, amounts):
 
@@ -85,7 +135,10 @@ def main():
         dateObj = datetime.strptime(date, "%Y-%m-%d")
         paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
         
-        if invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
+        if poNumber in paid_po_records:
+            # Skip if the PO number has already been processed
+            continue
+        elif invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
             payment = {
                 "Invoice": {
                     "InvoiceID": invoiceData["InvoiceID"]
@@ -114,7 +167,12 @@ def main():
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
                 print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
-                paidPOs.append(poNumber)
+                paidPOs.append({
+                    "poNumber": poNumber,
+                    "xeroInvNumber": invoiceData["supplierInvNumber"],
+                    "date": paymentDate.strftime("%Y-%m-%d"),
+                    "usdAmount": amount,
+                })
             else:
                 print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
                 unpaidPOs.append(poNumber)
@@ -132,8 +190,9 @@ def main():
     # Output the dictionary to a JSON file
     with open("poInvoiceMapping.json", "w") as outfile:
         json.dump(poInvoiceDict, outfile, indent=4)
-
-    print("PO to Invoice ID mapping has been saved to poInvoiceMapping.json")
+    
+    if paidPOs:
+        export_to_bigquery(paidPOs)
 
 if __name__ == "__main__":
     main()
