@@ -28,6 +28,7 @@ def export_to_bigquery(paid_po_records):
 
     # Build DataFrame from list of dicts
     df = pd.DataFrame(paid_po_records)
+    df["date"] = pd.to_datetime(df["date"]) 
 
     # Create BigQuery client
     credentials = service_account.Credentials.from_service_account_file(key_path)
