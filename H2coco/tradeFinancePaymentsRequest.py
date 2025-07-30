@@ -78,7 +78,7 @@ def main():
     ]
 
     # Ask for the file path
-    filePath = '../dashboardWebsite/backend/uploads/PO.xlsx'
+    filePath = '../H2/TradeFinance.xlsx'
 
     # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
     df = pd.read_excel(filePath)
