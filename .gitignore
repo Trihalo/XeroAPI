@@ -8,7 +8,6 @@ FutureYou/Overdue
 FutureYou/*.csv
 FutureYou/*.json
 .DS_Store/
-H2coco/*.xlsx
 H2coco/*.json
 H2coco/*.csv
 H2coco/logs
