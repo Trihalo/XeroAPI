@@ -53,8 +53,10 @@ export const triggerFutureYouReports = (userData) =>
   triggerWorkflow("futureyou-reports", userData);
 export const triggerUpdateFYATBDatabase = (userData) =>
   triggerWorkflow("futureyou-atb-database", userData);
-export const triggerH2cocoTradeFinance = (userData) =>
-  triggerWorkflow("h2coco-trade-finance", userData);
+export const triggerH2cocoSupplierPayment = (userData) =>
+  triggerWorkflow("h2coco-supplier-payment", userData);
+export const triggerH2cocoInvoiceApprover = (userData) =>
+  triggerWorkflow("h2coco-invoice-approver", userData);
 export const triggerCosmoBillsApprover = (userData) =>
   triggerWorkflow("cosmo-bills-approver", userData);
 export const triggerUpdateRevenueDatabase = (userData) =>
