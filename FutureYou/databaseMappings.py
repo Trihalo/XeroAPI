@@ -19,6 +19,7 @@ consultant_area_mapping = {
     "SMB007 Samaira Bohjani": "Accounting & Finance",
     "PEK002 Tapiwa Utete": "Technology",
     "SMC010 Chloe Crewdson": "Accounting & Finance",
+    "SMC011 Cody Johnson": "Accounting & Finance",
     "SMC004 Melise Hasip": "Accounting & Finance",
     "SMC004 Mel Hasip": "Accounting & Finance",
     "SMA001 Chris Martin": "Accounting & Finance",
