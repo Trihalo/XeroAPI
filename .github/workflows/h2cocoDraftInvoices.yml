@@ -1,0 +1,34 @@
+name: H2coco Draft Invoice and Bill Approver
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  H2-draft-invoice-bill-approver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r H2coco/draftInvoiceReq.txt
+
+      - name: Run H2coco Draft Invoice Approver
+        working-directory: H2coco
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          H2COCO_CLIENT_ID: ${{ secrets.H2COCO_CLIENT_ID }}
+          H2COCO_CLIENT_SECRET: ${{ secrets.H2COCO_CLIENT_SECRET }}
+
+          XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
+        run: |
+          python draftInvoiceApprover.py

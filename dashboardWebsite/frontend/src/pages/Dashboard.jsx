@@ -5,9 +5,9 @@ import {
   testApiCall,
   triggerTestEmail,
   triggerFutureYouReports,
-  triggerH2cocoTradeFinance,
+  triggerH2cocoSupplierPayment,
+  triggerH2cocoInvoiceApprover,
   triggerUpdateFYATBDatabase,
-  triggerCosmoBillsApprover,
   triggerUpdateRevenueDatabase,
   uploadFile,
   authenticateUser,
@@ -30,25 +30,6 @@ export default function Dashboard() {
 
   // 🔹 Clients and their scripts (dynamic data)
   const clients = [
-    {
-      clientName: "Test",
-      scripts: [
-        {
-          name: "Test Email Script",
-          description: "Sends a test email to verify SMTP settings.",
-          action: triggerTestEmail,
-          estimatedTime: 3,
-          requiresFileUpload: false,
-        },
-        {
-          name: "Test API Script",
-          description: "Tests the API connection with a sample request.",
-          action: testApiCall,
-          estimatedTime: 2,
-          requiresFileUpload: false,
-        },
-      ],
-    },
     {
       clientName: "FutureYou",
       scripts: [
@@ -82,37 +63,39 @@ export default function Dashboard() {
       clientName: "H2coco",
       scripts: [
         {
-          name: "Trade Finance Supplier Bill Payment Allocator",
+          name: "Supplier Payment Allocator",
           description:
-            "Allocates payment of declared amount on certain date with specific exchange rate (if specified) to the POs. Returns a Excel file with the successfully allocated POs.\n\nExcel file needs the following headers: PO, Date, CurrencyRate, Amount",
-          action: triggerH2cocoTradeFinance,
+            "Allocates supplier DPs to any approved bills in Xero. DP list is up to date as of the first day of the month.",
+          action: triggerH2cocoSupplierPayment,
+          estimatedTime: 30,
+          requiresFileUpload: false,
+        },
+        {
+          name: "Draft Invoice Approver",
+          description:
+            "Approves draft invoices and stock journals in Xero for H2coco. Doesn't approve Costco Australia invoices.",
+          action: triggerH2cocoInvoiceApprover,
           estimatedTime: 30,
           requiresFileUpload: false,
         },
       ],
     },
     {
-      clientName: "Cosmopolitan Corporation",
+      clientName: "Test",
       scripts: [
         {
-          name: "Bills Approver",
-          description:
-            "Approves all draft bills within the Cosmopolitan Corporation Xero account if they meet the criteria. Updates any incorrect Invoice IDs.",
-          action: triggerCosmoBillsApprover,
-          estimatedTime: 20,
+          name: "Test Email Script",
+          description: "Sends a test email to verify SMTP settings.",
+          action: triggerTestEmail,
+          estimatedTime: 3,
           requiresFileUpload: false,
         },
-      ],
-    },
-    {
-      clientName: "Helpers",
-      scripts: [
         {
-          name: "Upload File",
-          description: "Upload a document to use for other functions",
-          action: null,
-          estimatedTime: 5,
-          requiresFileUpload: true,
+          name: "Test API Script",
+          description: "Tests the API connection with a sample request.",
+          action: testApiCall,
+          estimatedTime: 2,
+          requiresFileUpload: false,
         },
       ],
     },

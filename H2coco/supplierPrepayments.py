@@ -3,53 +3,67 @@ import os
 import json
 import pandas as pd
 import requests
-import logging
 from datetime import datetime
-from openpyxl import Workbook  # Add this import
+from google.cloud import bigquery
+from google.oauth2 import service_account
+import pandas_gbq
+from dotenv import load_dotenv
+import pytz
+
+load_dotenv()
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
-from helpers.emailAttachment import sendEmailWithAttachment
 
 if not os.path.exists('logs'): os.makedirs('logs')
 log_filename = datetime.now().strftime('logs/payment_%Y%m%d_%H%M%S.log')
 
-# Configure logging without timestamp
-logging.basicConfig(filename=log_filename, level=logging.INFO, 
-                    format='%(levelname)s - %(message)s')
+def export_to_bigquery(paid_po_records):
+    key_path = os.getenv("H2COCO_BQACCESS")
+    project_id = "h2coco"
+    dataset_id = "FinancialData"
+    table_id = "SupplierPrepaymentPayments"
+    table_ref = f"{project_id}.{dataset_id}.{table_id}"
 
-def create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs):
-    wb = Workbook()
-    ws_paid = wb.create_sheet("Paid POs")
-    ws_unpaid = wb.create_sheet("Unpaid POs")
+    # Build DataFrame from list of dicts
+    df = pd.DataFrame(paid_po_records)
+    df["date"] = pd.to_datetime(df["date"]) 
 
-    ws_paid.append(["PO Number", "Supplier Invoice Number"])
-    ws_unpaid.append(["PO Number"])
+    # Create BigQuery client
+    credentials = service_account.Credentials.from_service_account_file(key_path)
+    client = bigquery.Client(credentials=credentials, project=project_id)
 
-    for poNumber in paidPOs:
-        invoiceData = poInvoiceDict[poNumber]
-        ws_paid.append([poNumber, invoiceData["supplierInvNumber"]])
-
-    for poNumber in unpaidPOs: ws_unpaid.append([poNumber])
-
-    folder_name = "PO_Payment_Status"
-    os.makedirs(folder_name, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"{folder_name}/PO_Payment_Status_{timestamp}.xlsx"
-
-    wb.save(file_name)
-    logging.info(f"Payment status Excel file has been saved to {file_name}")
-    return file_name
+    # Load data to BigQuery (APPEND mode)
+    job = client.load_table_from_dataframe(
+        dataframe=df,
+        destination=table_ref,
+        job_config=bigquery.LoadJobConfig(
+            write_disposition="WRITE_APPEND"
+        )
+    )
+    job.result()
+    print(f"Uploaded {len(df)} paid PO records to BigQuery.")
 
 
-def main():
-    if len(sys.argv) < 3:
-        print("Usage: python3 tradeFinancePaymentsRequest.py <Recipient Name> <Recipient Email>")
-        sys.exit(1)
-    recipient_name = sys.argv[1]
-    recipient_email = sys.argv[2] 
+def fetch_paid_po_records():
+    key_path = os.getenv("H2COCO_BQACCESS")
+    project_id = "h2coco"
+    dataset_id = "FinancialData"
+    table_id = "SupplierPrepaymentPayments"
+
+    client = bigquery.Client.from_service_account_json(key_path)
+    query = f"""
+        SELECT poNumber
+        FROM `{project_id}.{dataset_id}.{table_id}`
+        ORDER BY date DESC
+    """
     
+    df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=client._credentials)
+    return df["poNumber"].astype(int).tolist()
+
+    
+def main():    
     client = "H2COCO"
     invoiceStatus = "AUTHORISED"
 
@@ -58,18 +72,14 @@ def main():
 
     try:
         invoices, accessToken, xeroTenantId = fetchInvoicesForClient(client, invoiceStatus)
-        
         if not isinstance(invoices, list):
             raise Exception(f"Expected a list of invoices but got {type(invoices)} for {client}")
-        
         allInvoices.extend(invoices)
-        
         clientTokens[client] = {
             "accessToken": accessToken,
             "xeroTenantId": xeroTenantId
         }
     except Exception as e:
-        logging.error(f"Error fetching invoices: {e}")
         return
 
     accpayInvoices = [
@@ -78,7 +88,7 @@ def main():
     ]
 
     # Ask for the file path
-    filePath = './TradeFinance.xlsx'
+    filePath = './PO.xlsx'
 
     # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
     df = pd.read_excel(filePath)
@@ -95,7 +105,11 @@ def main():
         for invoice in accpayInvoices:
             if poReference in invoice.get("InvoiceNumber", ""):
                 invoiceId = invoice.get("InvoiceID")
-                supplierInvNumber = invoice.get("InvoiceNumber", "").split(' ', 1)[1] if ' ' in invoice.get("InvoiceNumber", "") else ""
+                raw_invoice_number = invoice.get("InvoiceNumber", "")
+                supplierInvNumber = ""
+                if ' ' in raw_invoice_number:
+                    supplierInvNumber = raw_invoice_number.split(' ', 1)[1].strip().rstrip(';')
+
                 break
         poInvoiceDict[poNumber] = {
             "InvoiceID": invoiceId,
@@ -106,8 +120,10 @@ def main():
         }
 
     paidPOs = []
-    unpaidPOs = []
 
+    # Fetch previously paid PO records from BigQuery
+    paid_po_records = fetch_paid_po_records()
+    
     # Create and send individual payment requests
     for poNumber, date, currencyRate, amount in zip(poNumbers, dates, currencyRates, amounts):
 
@@ -118,7 +134,10 @@ def main():
         dateObj = datetime.strptime(date, "%Y-%m-%d")
         paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
         
-        if invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
+        if poNumber in paid_po_records:
+            # Skip if the PO number has already been processed
+            continue
+        elif invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
             payment = {
                 "Invoice": {
                     "InvoiceID": invoiceData["InvoiceID"]
@@ -146,36 +165,28 @@ def main():
 
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
-                logging.info(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
-                paidPOs.append(poNumber)
+                print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
+                paidPOs.append({
+                    "poNumber": str(poNumber),
+                    "xeroInvNumber": invoiceData["supplierInvNumber"],
+                    "date": paymentDate.strftime("%Y-%m-%d"),
+                    "usdAmount": amount,
+                })
             else:
-                logging.error(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
-                unpaidPOs.append(poNumber)
-
-            logging.info("")
-            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
+                print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
         elif invoiceData and not invoiceData["supplierInvNumber"]:
-            logging.error(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
-            unpaidPOs.append(poNumber)
+            print(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
         elif invoiceData["AmountPaid"] > 0:
-            logging.error(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
+            print(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
         elif not invoiceData:
-            logging.error(f"PO {poNumber} not found in bills")
-            unpaidPOs.append(poNumber)
+            print(f"PO {poNumber} not found in bills")
 
     # Output the dictionary to a JSON file
     with open("poInvoiceMapping.json", "w") as outfile:
         json.dump(poInvoiceDict, outfile, indent=4)
-
-    logging.info("PO to Invoice ID mapping has been saved to poInvoiceMapping.json")
-
-    # Create the Excel file with payment status
-    file_path = create_payment_status_excel(poInvoiceDict, paidPOs, unpaidPOs)
     
-    subject = f"Trade Finance Supplier Payment Allocator"
-    body = f"Hi {recipient_name},\n\nPlease find the attached output files.\n\nThanks"
-    
-    sendEmailWithAttachment([recipient_email], subject, body, "GMAIL", file_path)
+    if paidPOs:
+        export_to_bigquery(paidPOs)
 
 if __name__ == "__main__":
     main()

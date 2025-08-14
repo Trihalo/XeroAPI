@@ -8,7 +8,6 @@ FutureYou/Overdue
 FutureYou/*.csv
 FutureYou/*.json
 .DS_Store/
-H2coco/*.xlsx
 H2coco/*.json
 H2coco/*.csv
 H2coco/logs
@@ -23,6 +22,12 @@ dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
 dashboardWebsite/backend/uploads/*.xlsx
 .DS_Store
+<<<<<<< HEAD
 MacMerch/*.json
 MacMerch/*.csv
 dashboardWebsite/backend/uploads/PO.xlsx
+=======
+MacMerch/*.csv
+MacMerch/*.json
+H2coco/output.txt
+>>>>>>> main

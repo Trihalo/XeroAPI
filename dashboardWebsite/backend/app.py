@@ -28,7 +28,8 @@ UPLOAD_FOLDER = "uploads"
 WORKFLOWS = {
     "test-email": "sendEmail.yml",
     "futureyou-reports": "futureYouReports.yml",
-    "h2coco-trade-finance": "tradeFinance.yml",
+    "h2coco-supplier-payment":"h2cocoSupplierPayment.yml",
+    "h2coco-invoice-approver":"h2cocoDraftInvoices.yml",
     "cosmo-bills-approver": "cosmoBillsApprover.yml",
     "futureyou-revenue-database": "futureYouInvoiceRevenue.yml",
     "futureyou-atb-database": "futureYouATB.yml",
