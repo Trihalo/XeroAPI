@@ -1,0 +1,39 @@
+name: MM & BD AR Database Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  run-MM-BD-AR-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r MacMerch/requirements.txt
+
+      - name: Set up Google Cloud credentials
+        shell: bash
+        run: |
+          echo '${{ secrets.MAC_MERCHANDISING_BQACCESS }}' > /tmp/key.json
+          echo "MAC_MERCHANDISING_BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+
+      - name: Run MM BD AR Database Script
+        working-directory: MacMerch
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.MAC_MERCHANDISING_CLIENT_ID }}
+          MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.MAC_MERCHANDISING_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_MAC_MERCHANDISING }}
+        run: |
+          python MMDatabaseInvoiceRequest.py BD
+          python MMDatabaseInvoiceRequest.py MM
