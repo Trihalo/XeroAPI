@@ -22,6 +22,12 @@ dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
 dashboardWebsite/backend/uploads/*.xlsx
 .DS_Store
+<<<<<<< HEAD
+MacMerch/*.json
+MacMerch/*.csv
+dashboardWebsite/backend/uploads/PO.xlsx
+=======
 MacMerch/*.csv
 MacMerch/*.json
 H2coco/output.txt
+>>>>>>> main
