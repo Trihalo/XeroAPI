@@ -34,6 +34,10 @@ jobs:
           MAC_MERCHANDISING_CLIENT_ID: ${{ secrets.MAC_MERCHANDISING_CLIENT_ID }}
           MAC_MERCHANDISING_CLIENT_SECRET: ${{ secrets.MAC_MERCHANDISING_CLIENT_SECRET }}
           XERO_REFRESH_TOKEN_MAC_MERCHANDISING: ${{ vars.XERO_REFRESH_TOKEN_MAC_MERCHANDISING }}
+
+          BONDI_DAIRY_CLIENT_ID: ${{ secrets.BONDI_DAIRY_CLIENT_ID }}
+          BONDI_DAIRY_CLIENT_SECRET: ${{ secrets.BONDI_DAIRY_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_BONDI_DAIRY: ${{ vars.XERO_REFRESH_TOKEN_BONDI_DAIRY }}
         run: |
           python MMDatabaseInvoiceRequest.py BD
           python MMDatabaseInvoiceRequest.py MM
