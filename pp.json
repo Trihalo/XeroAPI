@@ -1,0 +1,17 @@
+{
+  "atsUrl": "https://cls60.bullhornstaffing.com",
+  "billingSyncUrl": "https://wfr-apac.bullhornstaffing.com/billing-sync-services",
+  "coreUrl": "https://cls60.bullhornstaffing.com/core",
+  "documentEditorUrl": "https://docs-apac.bullhornstaffing.com/document/",
+  "mobileUrl": "https://m-apac.bullhorn.com",
+  "oauthUrl": "https://auth-apac.bullhornstaffing.com/oauth",
+  "restUrl": "https://rest-apac.bullhornstaffing.com/rest-services",
+  "samlUrl": "http://cls60.bullhornstaffing.com/BullhornStaffing/SAML/Login.cfm",
+  "novoUrl": "https://app.bullhornstaffing.com",
+  "pulseInboxUrl": "https://pulse-inbox.bullhornstaffing.com",
+  "canvasUrl": "https://sngabigateway.bullhorn.com/canvas/cgi-bin/cognosisapi.dll",
+  "npsSurveyUrl": "https://surveys-apac.bullhorn.com{{path}}?sl=60&{{params}}",
+  "ulUrl": "https://universal-apac.bullhornstaffing.com/universal-login",
+  "dataCenterId": 6,
+  "superClusterId": 60
+}
