@@ -3,7 +3,7 @@ name: MM & BD AR Database Update
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 19 * * *"
+    - cron: "0 0 * * *"
 
 jobs:
   run-MM-BD-AR-update:
