@@ -538,7 +538,7 @@ def get_consultant_margins():
     if not fy:
         return jsonify({"error": "Missing 'fy'"}), 400
 
-    # Query 1: Consultant totals
+    # Query 1: Consultant totals (unchanged – keep if you still use it elsewhere)
     query1 = """
     SELECT 
       Consultant,
@@ -551,18 +551,28 @@ def get_consultant_margins():
     ORDER BY TotalMargin DESC
     """
 
-    # Query 2: Consultant + Type totals
+    # Query 2: Consultant + Type totals WITH Quarter + Month
+    # - MonthName: the original FutureYouMonth (e.g., 'Aug')
+    # - Month: numeric calendar month 1..12 (helps sorting if needed)
     query2 = """
-    SELECT 
+    SELECT
       Consultant,
       Area,
       Type,
       SUM(Margin) AS TotalMargin,
-      Quarter
+      Quarter,
+      FutureYouMonth AS MonthName,
+      CASE FutureYouMonth
+        WHEN 'Jan' THEN 1 WHEN 'Feb' THEN 2 WHEN 'Mar' THEN 3
+        WHEN 'Apr' THEN 4 WHEN 'May' THEN 5 WHEN 'Jun' THEN 6
+        WHEN 'Jul' THEN 7 WHEN 'Aug' THEN 8 WHEN 'Sep' THEN 9
+        WHEN 'Oct' THEN 10 WHEN 'Nov' THEN 11 WHEN 'Dec' THEN 12
+        ELSE NULL
+      END AS Month
     FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
     WHERE FinancialYear = @fy
-    GROUP BY Consultant, Type, Quarter, Area
-    ORDER BY Consultant, Type, Quarter, Area
+    GROUP BY Consultant, Area, Type, Quarter, MonthName, Month
+    ORDER BY Consultant, Type, Quarter, Month
     """
 
     job_config = bigquery.QueryJobConfig(
@@ -570,21 +580,19 @@ def get_consultant_margins():
     )
 
     try:
-        # Run both queries
         results1 = client.query(query1, job_config=job_config).result()
         results2 = client.query(query2, job_config=job_config).result()
 
-        # Build the response
         response = {
             "consultantTotals": [dict(row) for row in results1],
-            "consultantTypeTotals": [dict(row) for row in results2],
+            "consultantTypeTotals": [dict(row) for row in results2],  # now includes MonthName + Month
         }
-
         return jsonify(response)
 
     except Exception as e:
         print("❌ BigQuery error:", e)
         return jsonify({"error": str(e)}), 500
+
 
     
 # ============ FIRESTORE FUNCTIONS ==================
