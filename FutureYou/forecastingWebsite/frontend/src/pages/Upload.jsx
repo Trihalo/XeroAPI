@@ -70,6 +70,29 @@ function Upload() {
     .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Perm")
     .sort((a, b) => Number(a.Week) - Number(b.Week));
 
+  const tempInvoices = invoiceData
+    .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Temp")
+    .sort((a, b) => Number(a.Week) - Number(b.Week));
+
+  const tempInvoicesPrev = prevInvoiceData
+    .filter((inv) => inv.Consultant === recruiterName && inv.Type === "Temp")
+    .sort((a, b) => Number(a.Week) - Number(b.Week));
+
+  const monthLabel = showingPreviousMonth ? previousMonth : currentMonth;
+
+  const permList = showingPreviousMonth ? permInvoicesPrev : permInvoices;
+  const tempList = showingPreviousMonth
+    ? tempInvoicesPrev ?? []
+    : tempInvoices ?? [];
+
+  const tempTotal = Math.round(
+    tempList.reduce((sum, inv) => sum + (Number(inv.Margin) || 0), 0)
+  );
+
+  const permTotal = Math.round(
+    permList.reduce((sum, inv) => sum + (Number(inv.Margin) || 0), 0)
+  );
+
   useEffect(() => {
     const fetchData = async () => {
       setFetching(true);
@@ -451,7 +474,7 @@ function Upload() {
                   </div>
 
                   <h3 className="text-base font-semibold text-primary">
-                    Actual Perm Invoiced Revenue for{" "}
+                    Actual Invoiced Revenue for{" "}
                     <span className="text-secondary">
                       {showingPreviousMonth ? previousMonth : currentMonth}
                     </span>
@@ -465,7 +488,7 @@ function Upload() {
                   {(showingPreviousMonth ? permInvoicesPrev : permInvoices)
                     .length === 0 ? (
                     <p className="text-sm text-gray-500 mt-2">
-                      No perm invoices for{" "}
+                      No invoice revenue for{" "}
                       {showingPreviousMonth ? previousMonth : currentMonth}.
                     </p>
                   ) : (
@@ -494,21 +517,23 @@ function Upload() {
                         ))}
                       </tbody>
                       <tfoot>
+                        {/* New line: month’s total TEMP margin */}
+                        <tr className="text-gray-500">
+                          <td colSpan={3} className="text-right italic">
+                            {monthLabel}'s Total Temp Margin:
+                          </td>
+                          <td className="font-medium">
+                            ${tempTotal.toLocaleString()}
+                          </td>
+                        </tr>
+
+                        {/* Existing total PERM margin */}
                         <tr>
-                          <td colSpan="3" className="text-right font-semibold">
+                          <td colSpan={3} className="text-right font-semibold">
                             Total Margin:
                           </td>
                           <td className="font-semibold">
-                            $
-                            {Math.round(
-                              (showingPreviousMonth
-                                ? permInvoicesPrev
-                                : permInvoices
-                              ).reduce(
-                                (sum, inv) => sum + (Number(inv.Margin) || 0),
-                                0
-                              )
-                            ).toLocaleString()}
+                            ${(permTotal + tempTotal).toLocaleString()}
                           </td>
                         </tr>
                       </tfoot>
