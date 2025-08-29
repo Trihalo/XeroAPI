@@ -486,6 +486,8 @@ function Upload() {
                   </h3>
 
                   {(showingPreviousMonth ? permInvoicesPrev : permInvoices)
+                    .length === 0 &&
+                  (showingPreviousMonth ? tempInvoicesPrev : tempInvoices)
                     .length === 0 ? (
                     <p className="text-sm text-gray-500 mt-2">
                       No invoice revenue for{" "}
