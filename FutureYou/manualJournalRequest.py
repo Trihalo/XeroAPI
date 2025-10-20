@@ -51,8 +51,11 @@ def parse_manual_journal_lines(journals, client_name):
             if client_name == "FUTUREYOU_RECRUITMENT" and str(line.get("AccountCode")) not in journal_account_code_mapping: continue
             description = line.get("Description", "")
             contractor = ""
+            units_worked = 0.0
             if narration.startswith("Temp") and ":" in description:
-                contractor = description.split(":", 1)[1].strip()
+                parts = description.split(":")
+                contractor = parts[1].strip() if len(parts) > 1 else None
+                units_worked = parts[2].strip() if len(parts) > 2 else None
 
             tracking_data = line.get("Tracking", [])
             category = ""
@@ -68,6 +71,7 @@ def parse_manual_journal_lines(journals, client_name):
                 "Month": invoice_month,
                 "Week": invoice_week,
                 "Key": f"{date.year}:{invoice_month}:{invoice_week}:{contractor}",
+                "Units Worked": units_worked,
                 "Narration": narration,
                 "Status": status,
                 "Updated Date": updated_date,
@@ -93,3 +97,14 @@ def get_manual_journal_data():
         all_journal_data[client] = parsed_rows
         print(f"Processed {client}'s manual journals: {len(parsed_rows)} entries")
     return all_journal_data
+
+if __name__ == "__main__":
+    journal_data = get_manual_journal_data()
+    for client, rows in journal_data.items():
+        with open(f"{client}_manual_journals.csv", "w", newline='') as csvfile:
+            fieldnames = rows[0].keys() if rows else []
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow(row)
+        print(f"Saved {client} manual journals to CSV.")

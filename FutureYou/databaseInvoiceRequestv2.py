@@ -3,6 +3,7 @@ import os
 import requests
 import csv
 import pandas as pd
+import re
 import numpy as np
 from datetime import datetime, timedelta, timezone
 from google.cloud import bigquery
@@ -173,6 +174,13 @@ def extract_contractor(invoice_type, line_description):
         return extract_between(line_description, " of ", " on ")
     return extract_between(line_description, "contracting services of ", " for the week")
 
+def extract_units_worked(line_description):
+    match = re.search(r"-\s*(\d+(?:\.\d+)?)\s*(?:day|hour)\(s\)", line_description, re.IGNORECASE)
+    
+    if match: return float(match.group(1))
+    else: return None
+    
+
 def get_consultant_info_from_reference(reference):
     if not reference or "-" not in reference:
         return "", "", ""
@@ -190,7 +198,7 @@ def get_office_from_consultant_code(code):
     return "Sydney" if code.startswith("S") else "Perth" if code.startswith("P") else "Unknown"
 
 # --- Extractors ---
-def extract_invoice_lines(invoice, journal_totals):
+def extract_invoice_lines(invoice, journal_amounts, journal_units):
     rows = []
     if invoice.get("Status") in ["DELETED", "VOIDED"]:
         return [{
@@ -222,7 +230,8 @@ def extract_invoice_lines(invoice, journal_totals):
         # Group lines by Key (contractor + week)
         grouped_lines = {}
         for line in line_items:
-            if not is_valid_line(line): continue
+            if not is_valid_line(line):
+                continue
             description = line.get("Description", "")
             contractor = (extract_contractor(invoice_type, description) or "").lower()
             key = build_key(parsed_date.year, company_month, invoice_week, contractor)
@@ -230,35 +239,57 @@ def extract_invoice_lines(invoice, journal_totals):
 
         for key, lines in grouped_lines.items():
             total_exgst = sum(line.get("LineAmount", 0) for line in lines)
-            journal_deduction = journal_totals.get(key, 0)
+            journal_deduction = float(journal_amounts.get(key, 0) or 0)
+
+            # Sum units on THIS invoice for this key (base wage lines usually carry units)
+            invoice_units_for_key = 0.0
+            for line in lines:
+                u = extract_units_worked(line.get("Description", "")) or 0
+                invoice_units_for_key += float(u)
+
+            # Total units for this key across all manual journals
+            total_units_for_key = float(journal_units.get(key, 0) or 0)
+
+            # Cost allocated to THIS invoice for this key (avoid double-deducting)
+            if journal_deduction != 0 and total_units_for_key > 0 and invoice_units_for_key > 0:
+                invoice_cost_share = journal_deduction * (invoice_units_for_key / total_units_for_key)
+            else:
+                invoice_cost_share = journal_deduction if total_units_for_key == 0 else 0.0
+
+            # --- Existing per-line loop (with tweaked margin logic) ---
             for line in lines:
                 tracking = line.get("Tracking", [])
                 office = consultant_code = consultant = area = ""
                 for t in tracking:
-                    if t.get("Name") == "Category": office = t.get("Option")
+                    if t.get("Name") == "Category":
+                        office = t.get("Option")
                     elif t.get("Name") == "Consultant":
                         consultant_code = t.get("Option")
-                        if consultant_code and " " in consultant_code: consultant = consultant_code.split(" ", 1)[1]
+                        if consultant_code and " " in consultant_code:
+                            consultant = consultant_code.split(" ", 1)[1]
 
                 area = consultant_area_mapping.get(consultant_code, "")
-                subtotal = line.get("LineAmount", 0)
+                subtotal = float(line.get("LineAmount", 0) or 0)
                 description = line.get("Description", "")
-                tax = line.get("TaxAmount", 0)
+                tax = float(line.get("TaxAmount", 0) or 0)
                 total = subtotal + tax
                 contractor = (extract_contractor(invoice_type, description) or "").lower()
 
-                proportion = subtotal / total_exgst if total_exgst != 0 else 0
+                proportion = (subtotal / total_exgst) if total_exgst else 0.0
+
                 if "program fee" in description.lower():
                     margin = subtotal
-                elif journal_deduction != 0:
-                    margin = subtotal + (proportion * journal_deduction)
+                elif invoice_cost_share != 0:
+                    margin = subtotal + (proportion * invoice_cost_share)
                 else:
                     margin = ""
 
+                # Currency conversion AFTER margin is set
                 if currency_rate and currency_rate != 1:
                     subtotal /= currency_rate
                     total /= currency_rate
-                    margin /= currency_rate
+                    if isinstance(margin, (int, float)):
+                        margin /= currency_rate
 
                 account_code = str(line.get("AccountCode", ""))
                 if account_code not in account_code_mapping:
@@ -468,11 +499,22 @@ def main():
     all_rows = []
     manual_data = get_manual_journal_data()
     # FUTUREYOU_CONTRACTING -> journal_totals dict by key
-    journal_totals = {}
+    journal_amounts = {}
+    journal_units = {}
+
     for row in manual_data["FUTUREYOU_CONTRACTING"]:
         key = build_key(row["Year"], row["Month"], row["Week"], row.get("Contractor", ""))
         amt = float(row.get("Line Amount", 0) or 0)
-        journal_totals[key] = journal_totals.get(key, 0) + amt
+        units_worked = float(row.get("Units Worked", 0) or 0)
+        account = int(row.get("Account Code", 0) or 0)
+        contractor = row.get("Contractor", "")
+        
+        if account == 826 and contractor != "":
+            # do not add super on
+            journal_amounts[key] = journal_amounts.get(key, 0)
+        else: journal_amounts[key] = journal_amounts.get(key, 0) + amt
+        journal_units[key] = journal_units.get(key, 0) + units_worked
+
 
     # FUTUREYOU_RECRUITMENT -> add_on_lines as list of dicts
     add_on_lines = manual_data["FUTUREYOU_RECRUITMENT"]
@@ -507,7 +549,7 @@ def main():
         invoices = fetch_all("Invoices", access_token, tenant_id, invoice_params)
         credit_notes = fetch_all("CreditNotes", access_token, tenant_id, credit_params)
 
-        for inv in invoices: all_rows.extend(extract_invoice_lines(inv, journal_totals))
+        for inv in invoices: all_rows.extend(extract_invoice_lines(inv, journal_amounts, journal_units))
         for cn in credit_notes: all_rows.extend(extract_credit_note_lines(cn))
             
     for row in add_on_lines:
