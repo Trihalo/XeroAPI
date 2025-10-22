@@ -160,11 +160,11 @@ def extract_contractor(invoice_type, line_description):
 
     if invoice_type != "Temp": return None
     patterns = [("Public Holiday of ", " for the week"), ("personal leave of ", " for the week"),
-                ("sick leave of ", " for the week"), ("contracting services of ", " for the week"),
+                ("sick leave of ", " for the week"), ("contracting services of ", " for the week"), ("payment in lieu of notice of ", " for the week"),
                 (" of ", " for the week"), (" of ", " on ")]
     
     if line_description.startswith("Base Wage -"):
-        for start_kw, end_kw in patterns[:4]:
+        for start_kw, end_kw in patterns[:5]:
             if start_kw in line_description:
                 return extract_between(line_description, start_kw, end_kw)
 
