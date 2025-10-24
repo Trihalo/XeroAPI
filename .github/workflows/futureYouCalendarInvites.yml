@@ -26,9 +26,8 @@ jobs:
         working-directory: FutureYou/bullhorn/placementsApprovalEventSubscription
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
-          CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
-          PASSWORD: ${{ secrets.FUTUREYOU_BULLHORN_PASSWORD }}
-          BULLHORN_REFRESH_TOKEN_FUTUREYOU: ${{ vars.BULLHORN_REFRESH_TOKEN_FUTUREYOU }}
+          FUTUREYOU_BULLHORN_CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
+          FUTUREYOU_BULLHORN_CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
+          FUTUREYOU_BULLHORN_PASSWORD: ${{ secrets.FUTUREYOU_BULLHORN_PASSWORD }}
         run: |
           python eventSubscriptionAuth.py

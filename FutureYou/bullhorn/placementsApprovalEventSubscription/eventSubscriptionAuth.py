@@ -16,7 +16,6 @@ CLIENT_SECRET = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_SECRET")
 USERNAME   = "futureyou.restapi"
 PASSWORD   = os.environ.get("FUTUREYOU_BULLHORN_PASSWORD")
 REDIRECT_URI = "https://welcome.bullhornstaffing.com"
-SEED_REFRESH_TOKEN = os.environ.get("FUTUREYOU_BULLHORN_REFRESH_TOKEN")  # REQUIRED
 
 ZAPIER_HOOK_URL = "https://hooks.zapier.com/hooks/catch/2393707/urpxb6h/"
 
