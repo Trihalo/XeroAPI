@@ -17,7 +17,7 @@ USERNAME   = "futureyou.restapi"
 PASSWORD   = os.environ.get("FUTUREYOU_BULLHORN_PASSWORD")
 REDIRECT_URI = "https://welcome.bullhornstaffing.com"
 
-ZAPIER_HOOK_URL = "https://hooks.zapier.com/hooks/catch/2393707/urpxb6h/"
+ZAPIER_HOOK_URL = os.environ.get("FUTUREYOU_CALENDAR_ZAPIER_HOOK_URL")
 
 session = requests.Session()
 session.headers["User-Agent"] = "futureyou-bh-oauth/2.0"
