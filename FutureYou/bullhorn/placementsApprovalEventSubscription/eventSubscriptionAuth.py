@@ -12,9 +12,10 @@ load_dotenv()
 
 CLIENT_ID = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_SECRET")
-USERNAME = os.environ.get("FUTUREYOU_BULLHORN_USERNAME", "futureyou.restapi")
-PASSWORD = os.environ.get("FUTUREYOU_BULLHORN_PASSWORD")
-REDIRECT_URI = os.environ.get("FUTUREYOU_BULLHORN_REDIRECT_URI")
+USERNAME = "futureyou.restapi"
+PASSWORD = "FutureYou2025!"
+REDIRECT_URI = "https://welcome.bullhornstaffing.com"
+
 
 TOKEN_CACHE_PATH = os.environ.get("FUTUREYOU_BULLHORN_TOKEN_CACHE", "./tokens.json")
 
@@ -28,10 +29,11 @@ ZAPIER_HOOK_URL = "https://hooks.zapier.com/hooks/catch/2393707/urpxb6h/"
 def notify_zapier(payload):
     try:
         r = session.post(ZAPIER_HOOK_URL, json=payload, timeout=15)
-        print(f"Posted to Zapier: {r.status_code}")
+        print(f"Posted to Zapier: {payload['placementId']}, {r.status_code}")
     except Exception as e:
         print("Zapier post failed:", e)
-
+        
+        
 def pretty(obj):
     print(json.dumps(obj, indent=2, sort_keys=True))
 
@@ -149,15 +151,6 @@ def rest_login(rest_base: str, access_token: str):
     return j  # { BhRestToken, restUrl }
 
 def get_session_creds():
-    """
-    Returns a dict with:
-      - access_token
-      - refresh_token
-      - rest_base
-      - restUrl
-      - BhRestToken
-    (Refreshing/re-authorizing as needed.)
-    """
     cache = _load_cache()
 
     oauth_base = cache.get("oauth_base")

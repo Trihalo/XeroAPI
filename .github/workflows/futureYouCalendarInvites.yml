@@ -1,0 +1,32 @@
+name: FutureYou Auto Calendar Invite Creation Hook
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  future-you-calendar-hook:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r FutureYou/requirements.txt
+
+      - name: Run FutureYou Auto Calendar Invite Hook
+        working-directory: FutureYou/bullhorn/placementsApprovalEventSubscription
+        env:
+          CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
+          BULLHORN_REFRESH_TOKEN_FUTUREYOU: ${{ vars.BULLHORN_REFRESH_TOKEN_FUTUREYOU }}
+        run: |
+          python eventSubscriptionAuth.py
