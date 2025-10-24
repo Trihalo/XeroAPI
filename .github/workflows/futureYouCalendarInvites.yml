@@ -27,6 +27,7 @@ jobs:
         env:
           CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
+          PASSWORD: ${{ secrets.FUTUREYOU_BULLHORN_PASSWORD }}
           BULLHORN_REFRESH_TOKEN_FUTUREYOU: ${{ vars.BULLHORN_REFRESH_TOKEN_FUTUREYOU }}
         run: |
           python eventSubscriptionAuth.py
