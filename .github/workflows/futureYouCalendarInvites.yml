@@ -20,11 +20,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r FutureYou/requirements.txt
+          pip install -r FutureYou/bullhorn/placementsApprovalEventSubscription/requirements.txt
 
       - name: Run FutureYou Auto Calendar Invite Hook
         working-directory: FutureYou/bullhorn/placementsApprovalEventSubscription
         env:
+          GH_PAT: ${{ secrets.GH_PAT }}
           CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
           PASSWORD: ${{ secrets.FUTUREYOU_BULLHORN_PASSWORD }}
