@@ -2,7 +2,12 @@
 import re
 from typing import Callable, Dict, List, Optional
 import pandas as pd
-from auth import session, TIMEOUT  # re-use your existing session + TIMEOUT
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from auth import session, TIMEOUT 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Normalisers (shared)

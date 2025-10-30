@@ -16,7 +16,6 @@ CLIENT_SECRET = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_SECRET")
 USERNAME   = "futureyou.restapi"
 PASSWORD   = os.environ.get("FUTUREYOU_BULLHORN_PASSWORD")
 REDIRECT_URI = "https://welcome.bullhornstaffing.com"
-
 ZAPIER_HOOK_URL = os.environ.get("FUTUREYOU_CALENDAR_ZAPIER_HOOK_URL")
 
 session = requests.Session()

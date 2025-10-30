@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from auth import authenticate
+
 from duplicatesHelpers import (
     fetch_entity,
     candidate_spec, contact_spec, company_spec,

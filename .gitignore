@@ -26,4 +26,4 @@ MacMerch/*.json
 MacMerch/*.csv
 dashboardWebsite/backend/uploads/PO.xlsx
 H2coco/output.txt
-FutureYou/bullhorn/*.xlsx
+FutureYou/bullhorn/duplicatesReporting/*.xlsx
