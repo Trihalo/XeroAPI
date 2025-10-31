@@ -1,4 +1,4 @@
-name: FutureYou Auto Calendar Invite Creation Hook
+name: FutureYou Auto Calendar Creation
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     - cron: "0 19 * * *"
 
 jobs:
-  future-you-calendar-hook:
+  future-you-calendar-invites:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,9 @@ jobs:
           FUTUREYOU_BULLHORN_CLIENT_ID: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_ID }}
           FUTUREYOU_BULLHORN_CLIENT_SECRET: ${{ secrets.FUTUREYOU_BULLHORN_CLIENT_SECRET }}
           FUTUREYOU_BULLHORN_PASSWORD: ${{ secrets.FUTUREYOU_BULLHORN_PASSWORD }}
-          FUTUREYOU_CALENDAR_ZAPIER_HOOK_URL: ${{ secrets.FUTUREYOU_CALENDAR_ZAPIER_HOOK_URL }}
+
+          FUTUREYOU_CALENDAR_OAUTH_ACCESS: ${{ secrets.FUTUREYOU_CALENDAR_OAUTH_ACCESS }}
+
+          FUTUREYOU_GOOGLE_CALENDAR_ID: ${{ secrets.FUTUREYOU_GOOGLE_CALENDAR_ID }}
         run: |
           python eventSubscriptionAuth.py

@@ -5,30 +5,22 @@ import sys
 import time
 from urllib.parse import urlsplit
 import requests
+from googleCalendarCreation import upsert_followup_event
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 from xeroAuthHelper import get_github_variable, update_github_variable 
 
-# ---------------- Env config (no cache, no interactive auth) ----------------
 CLIENT_ID  = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_ID")
 CLIENT_SECRET = os.environ.get("FUTUREYOU_BULLHORN_CLIENT_SECRET")
 USERNAME   = "futureyou.restapi"
 PASSWORD   = os.environ.get("FUTUREYOU_BULLHORN_PASSWORD")
 REDIRECT_URI = "https://welcome.bullhornstaffing.com"
-ZAPIER_HOOK_URL = os.environ.get("FUTUREYOU_CALENDAR_ZAPIER_HOOK_URL")
 
 session = requests.Session()
 session.headers["User-Agent"] = "futureyou-bh-oauth/2.0"
 session.headers["Accept"] = "application/json"
 TIMEOUT = 30
-
-def notify_zapier(payload: dict):
-    try:
-        r = session.post(ZAPIER_HOOK_URL, json=payload, timeout=15)
-        print(f"Posted to Zapier: {payload.get('placementId')}, {r.status_code}")
-    except Exception as e:
-        print("Zapier post failed:", e)
 
 def _discover_swimlane(username: str):
     r = session.get(
@@ -66,7 +58,7 @@ def refresh_access_token(oauth_base: str, refresh_token: str):
     if "access_token" not in t:
         raise RuntimeError(f"Refresh returned no access_token: {t}")
     t["_obtained_at"] = int(time.time())
-    return t  # includes possibly-new refresh_token
+    return t
 
 def rest_login(rest_base: str, access_token: str):
     r = session.get(
@@ -78,28 +70,23 @@ def rest_login(rest_base: str, access_token: str):
     j = r.json()
     if "BhRestToken" not in j or "restUrl" not in j:
         raise RuntimeError(f"REST login failed: {j}")
-    return j  # { BhRestToken, restUrl }
+    return j
 
 def get_session_creds():
-    # 1️⃣  Pull refresh token directly from GitHub Variable
     refresh_token = get_github_variable("BULLHORN_REFRESH_TOKEN_FUTUREYOU")
     if not refresh_token:
         raise SystemExit("No refresh token found in GitHub variable 'BULLHORN_REFRESH_TOKEN_FUTUREYOU'.")
 
-    # 2️⃣  Standard Bullhorn token refresh
     oauth_base, rest_base = _discover_swimlane(USERNAME)
     tokens = refresh_access_token(oauth_base, refresh_token)
     access_token = tokens["access_token"]
     latest_refresh = tokens.get("refresh_token") or refresh_token
 
-    # 3️⃣  Login & test
     rl = rest_login(rest_base, access_token)
     BhRestToken = rl["BhRestToken"]
     restUrl = rl["restUrl"]
 
-    # 4️⃣  Write rotated refresh token back to GitHub Variable
-    if latest_refresh != refresh_token:
-        update_github_variable("BULLHORN_REFRESH_TOKEN_FUTUREYOU", latest_refresh)
+    if latest_refresh != refresh_token: update_github_variable("BULLHORN_REFRESH_TOKEN_FUTUREYOU", latest_refresh)
 
     return {
         "access_token": access_token,
@@ -131,7 +118,7 @@ def ensure_event_subscription(rest_url: str, bh_token: str, name: str = "placeme
         r.raise_for_status()
         return r.json()
     r.raise_for_status()
-    return {"subscriptionId": name, "status": "ok"}  # fallback
+    return {"subscriptionId": name, "status": "ok"}
 
 def poll_events(rest_url: str, bh_token: str, name: str = "placementsApprovedFlow", max_events: int = 100):
     url = f"{rest_url}event/subscription/{name}"
@@ -214,7 +201,6 @@ def main():
         try:
             p = get_placement(restUrl, BhRestToken, pid)
         except PermissionError:
-            # BhRestToken expired mid-loop: re-login with current access token
             fresh = rest_login(creds["rest_base"], creds["access_token"])
             BhRestToken = fresh["BhRestToken"]
             restUrl = fresh["restUrl"]
@@ -248,7 +234,26 @@ def main():
             "candidateName": f"{cand.get('firstName')} {cand.get('lastName')}" if (cand := p.get("candidate")) else "",
             "clientName": (p.get("clientCorporation") or {}).get("name"),
         }
-        notify_zapier(payload)
+        
+        try:
+            result = upsert_followup_event(payload)
+            if result.get("ok"):
+                if result.get("skipped") == True:
+                    print("\n🟢 Calendar Update")
+                    print("──────────────────────────────")
+                    print("Status: Skipped (duplicate event detected)")
+                else:
+                    print("\n📅 Calendar Event Created")
+                    print("──────────────────────────────")
+                    print(f"Status: Success ✅")
+                    print(f"Event ID:   {result.get('eventId')}")
+            else:
+                print("\n❌ Calendar Error")
+                print("──────────────────────────────")
+                print(f"Error: {result.get('error', 'Unknown error')}\n")
+
+        except Exception as ex:
+            print("Calendar error:", ex)
 
 if __name__ == "__main__":
     main()
