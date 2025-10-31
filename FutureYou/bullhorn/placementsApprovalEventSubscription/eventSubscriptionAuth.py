@@ -242,15 +242,18 @@ def main():
                     print("\n🟢 Calendar Update")
                     print("──────────────────────────────")
                     print("Status: Skipped (duplicate event detected)")
+                    print("==============================")
                 else:
                     print("\n📅 Calendar Event Created")
                     print("──────────────────────────────")
                     print(f"Status: Success ✅")
                     print(f"Event ID:   {result.get('eventId')}")
+                    print("==============================")
             else:
                 print("\n❌ Calendar Error")
                 print("──────────────────────────────")
                 print(f"Error: {result.get('error', 'Unknown error')}\n")
+                print("==============================")
 
         except Exception as ex:
             print("Calendar error:", ex)
