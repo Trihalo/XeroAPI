@@ -144,8 +144,10 @@ def get_placement(rest_url: str, bh_token: str, placement_id: int):
     fields_primary = ",".join([
         "id",
         "status",
+        "employmentType",
         "dateBegin",
-        "jobOrder(id,owner(id))",
+        "dateEnd",
+        "jobOrder(id,owner(id),title)",
         "candidate(id,firstName,lastName)",
         "clientCorporation(id,name)",
     ])
@@ -210,6 +212,7 @@ def main():
             continue
 
         owner = (p.get("jobOrder") or {}).get("owner") or {}
+        job_title = ((p.get("jobOrder") or {}).get("title")) or ""
         owner_id = owner.get("id")
         owner_email = None
         owner_name = None
@@ -223,17 +226,27 @@ def main():
                 cu = get_corporate_user(restUrl, BhRestToken, owner_id)
             owner_email = (cu or {}).get("email")
             owner_name = f"{(cu or {}).get('firstName','')} {(cu or {}).get('lastName','')}".strip()
-
+            
         print("Placement approved event:", i)
         payload = {
             "placementId": pid,
             "status": p.get("status"),
+            "employmentType": p.get("employmentType"),
             "dateBegin": p.get("dateBegin"),
+            "dateEnd": p.get("dateEnd"),
             "ownerName": owner_name,
             "ownerEmail": owner_email,
             "candidateName": f"{cand.get('firstName')} {cand.get('lastName')}" if (cand := p.get("candidate")) else "",
             "clientName": (p.get("clientCorporation") or {}).get("name"),
+            "jobTitle": job_title,
         }
+
+        # --- Skip if this is an internal “Retainer Commencement” placeholder
+        if payload.get("candidateName", "").strip().lower() == "retainer commencement":
+            print(f"⏭️  Skipping placement {pid} — candidate marked 'Retainer Commencement'")
+            continue
+
+        # print("Payload:", json.dumps(payload, indent=2))
         
         try:
             result = upsert_followup_event(payload)
