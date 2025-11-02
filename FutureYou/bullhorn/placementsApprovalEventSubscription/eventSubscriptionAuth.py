@@ -5,7 +5,7 @@ import sys
 import time
 from urllib.parse import urlsplit
 import requests
-from googleCalendarCreation import upsert_followup_event
+from googleCalendarCreation import upsert_followup_event, upsert_batch_followups
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
@@ -267,6 +267,11 @@ def main():
                 print("──────────────────────────────")
                 print(f"Error: {result.get('error', 'Unknown error')}\n")
                 print("==============================")
+            result2 = upsert_batch_followups(payload)
+            if result2.get("ok"):
+                print(f"Batch follow-up events created/updated: {result2.get('count')}")
+            else:
+                print(f"Batch follow-up error: {result2.get('error', 'Unknown error')}")
 
         except Exception as ex:
             print("Calendar error:", ex)
