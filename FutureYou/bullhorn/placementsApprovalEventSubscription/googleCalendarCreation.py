@@ -82,7 +82,8 @@ def build_event_body(payload: dict, cal_tz: str = "Australia/Sydney") -> dict:
     candidate = payload.get("candidateName", "Candidate")
     client = payload.get("clientName", "")
     owner = payload.get("ownerName", "")
-    owner_email = payload.get("ownerEmail")
+    # owner_email = payload.get("ownerEmail")
+    owner_email = "leoshi@future-you.com.au"  # TEMPORARY OVERRIDE
     job_title = payload.get("jobTitle") or payload.get("job") or ""
 
     date_begin_ms = int(payload["dateBegin"])
@@ -142,7 +143,8 @@ def _all_day_body_from_date(
     candidate = payload.get("candidateName", "Candidate")
     client = payload.get("clientName", "")
     owner = payload.get("ownerName", "")
-    owner_email = payload.get("ownerEmail")
+    # owner_email = payload.get("ownerEmail")
+    owner_email = "leoshi@future-you.com.au"  # TEMPORARY OVERRIDE
     job_title = payload.get("jobTitle") or payload.get("job") or ""
 
     placement_link = (
