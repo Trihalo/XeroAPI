@@ -254,6 +254,14 @@ def upsert_followup_event(payload: dict) -> Dict:
         return {"ok": True, "skipped": True, "reason": "employmentType-not-eligible"}
 
     body = build_event_body(payload, cal_tz=cal_tz)
+
+    # Check if the event is in the past
+    start_str = body.get("start", {}).get("date")
+    if start_str:
+        event_date = date.fromisoformat(start_str)
+        if event_date < _today_local(cal_tz):
+            return {"ok": True, "skipped": True, "reason": "event-in-past"}
+
     existing = _find_existing_event(cal_id, body, cal_tz=cal_tz)
     if existing:
         return {
@@ -316,17 +324,15 @@ def build_followup_bodies(payload: dict, cal_tz: str = "Australia/Sydney") -> Li
     is_contract = _is_contract_like(payload.get("employmentType"))
 
     for months, summary in monthly_points:
-        if months == "11.5":
-            d = _add_months(start_date, 11) + timedelta(days=15)
-        else:
-            d = _add_months(start_date, months)
-        if is_contract and end_date is not None and d > end_date:
-            continue
+        if months == "11.5": d = _add_months(start_date, 11) + timedelta(days=15)
+        else: d = _add_months(start_date, months)
+        if d < today: continue
+        if is_contract and end_date is not None and d > end_date: continue
         add_if_new(d, summary)
 
     if is_contract and end_date is not None:
         one_month_before_end = _add_months(end_date, -1)
-        if one_month_before_end >= start_date and one_month_before_end not in planned_dates:
+        if one_month_before_end >= start_date and one_month_before_end >= today and one_month_before_end not in planned_dates:
             end_date_str = end_date.strftime('%A, %d %B %Y')
             extra_desc = f"Contract scheduled to end on {end_date_str}."
             bodies.append(
@@ -394,7 +400,7 @@ def upsert_batch_followups(payload: dict) -> Dict:
     return {"ok": True, "count": len(results), "results": results}
 
 if __name__ == "__main__":
-    sample_start_ms = int(datetime(2025, 11, 18, tzinfo=timezone.utc).timestamp() * 1000)
+    sample_start_ms = int(datetime(2025, 11, 19, tzinfo=timezone.utc).timestamp() * 1000)
 
     payload = {
         "placementId": 987654,
