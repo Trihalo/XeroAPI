@@ -252,26 +252,47 @@ def main():
             result = upsert_followup_event(payload)
             if result.get("ok"):
                 if result.get("skipped") == True:
+                    reason = result.get("reason")
                     print("\n🟢 Calendar Update")
                     print("──────────────────────────────")
-                    print("Status: Skipped (duplicate event detected)")
+                    print(f"Candidate:  {payload.get('candidateName')}")
+                    print(f"Placement:  {payload.get('placementId')}")
+                    
+                    if reason == "event-in-past":
+                        print("Status:     Skipped (Event date is in the past)")
+                    elif reason == "duplicate-detected":
+                        print("Status:     Skipped (Duplicate event detected)")
+                    elif reason == "retainer-commencement-skip":
+                        print("Status:     Skipped (Retainer Commencement)")
+                    elif reason == "employmentType-not-eligible":
+                        print(f"Status:     Skipped (Employment Type '{payload.get('employmentType')}' not eligible)")
+                    else:
+                        print(f"Status:     Skipped ({reason})")
                     print("==============================")
                 else:
                     print("\n📅 Calendar Event Created")
                     print("──────────────────────────────")
-                    print(f"Status: Success ✅")
+                    print(f"Candidate:  {payload.get('candidateName')}")
+                    print(f"Placement:  {payload.get('placementId')}")
+                    print(f"Status:     Success ✅")
                     print(f"Event ID:   {result.get('eventId')}")
                     print("==============================")
             else:
                 print("\n❌ Calendar Error")
                 print("──────────────────────────────")
-                print(f"Error: {result.get('error', 'Unknown error')}\n")
+                print(f"Candidate:  {payload.get('candidateName')}")
+                print(f"Placement:  {payload.get('placementId')}")
+                print(f"Error:      {result.get('error', 'Unknown error')}\n")
                 print("==============================")
-            result2 = upsert_batch_followups(payload)
-            if result2.get("ok"):
-                print(f"Batch follow-up events created/updated: {result2.get('count')}")
+            
+            if result.get("skipped") and result.get("reason") == "event-in-past":
+                print(f"Batch follow-ups: Skipped (Start date in past)")
             else:
-                print(f"Batch follow-up error: {result2.get('error', 'Unknown error')}")
+                result2 = upsert_batch_followups(payload)
+                if result2.get("ok"):
+                    print(f"Batch follow-ups: {result2.get('count')} processed for {payload.get('candidateName')} (Placement {payload.get('placementId')})")
+                else:
+                    print(f"Batch follow-up error for Placement {payload.get('placementId')}: {result2.get('error', 'Unknown error')}")
 
         except Exception as ex:
             print("Calendar error:", ex)

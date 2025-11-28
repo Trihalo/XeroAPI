@@ -82,8 +82,7 @@ def build_event_body(payload: dict, cal_tz: str = "Australia/Sydney") -> dict:
     candidate = payload.get("candidateName", "Candidate")
     client = payload.get("clientName", "")
     owner = payload.get("ownerName", "")
-    # owner_email = payload.get("ownerEmail")
-    owner_email = "leoshi@future-you.com.au"  # TEMPORARY OVERRIDE
+    owner_email = payload.get("ownerEmail")
     job_title = payload.get("jobTitle") or payload.get("job") or ""
 
     date_begin_ms = int(payload["dateBegin"])
@@ -143,8 +142,8 @@ def _all_day_body_from_date(
     candidate = payload.get("candidateName", "Candidate")
     client = payload.get("clientName", "")
     owner = payload.get("ownerName", "")
-    # owner_email = payload.get("ownerEmail")
-    owner_email = "leoshi@future-you.com.au"  # TEMPORARY OVERRIDE
+    owner_email = payload.get("ownerEmail")
+    # owner_email = "leoshi@future-you.com.au"  # TEMPORARY OVERRIDE
     job_title = payload.get("jobTitle") or payload.get("job") or ""
 
     placement_link = (
@@ -363,6 +362,11 @@ def upsert_batch_followups(payload: dict) -> Dict:
         return {"ok": True, "count": 0, "results": [], "reason": "retainer-commencement-skip"}
     if not _is_allowed_employment_type(payload.get("employmentType")):
         return {"ok": True, "count": 0, "results": [], "reason": "employmentType-not-eligible"}
+
+    if payload.get("dateBegin"):
+        start_date = _ms_to_local_date(int(payload["dateBegin"]), cal_tz)
+        if start_date < _today_local(cal_tz):
+            return {"ok": True, "count": 0, "results": [], "reason": "event-in-past"}
 
     svc = _calendar_service()
     results = []

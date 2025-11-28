@@ -27,3 +27,4 @@ MacMerch/*.csv
 dashboardWebsite/backend/uploads/PO.xlsx
 H2coco/output.txt
 FutureYou/bullhorn/duplicatesReporting/*.xlsx
+FutureYou/bullhorn/placementsApprovalEventSubscription/test_audit_logs.py
