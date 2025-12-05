@@ -70,7 +70,7 @@ def _norm_employment_type(s: Optional[str]) -> str:
 
 def _is_allowed_employment_type(etype: Optional[str]) -> bool:
     et = _norm_employment_type(etype)
-    return et in {"permanent", "ftc", "temporary"}
+    return et in {"permanent", "ftc", "temporary", "retained"}
 
 def _is_contract_like(etype: Optional[str]) -> bool:
     et = _norm_employment_type(etype)
@@ -249,8 +249,8 @@ def upsert_followup_event(payload: dict) -> Dict:
         raise RuntimeError("Missing FUTUREYOU_GOOGLE_CALENDAR_ID.")
     cal_tz = os.environ.get("CAL_TZ", "Australia/Sydney")
     cand_name = (payload.get("candidateName") or "").strip().lower()
-    if cand_name == "retainer commencement":
-        return {"ok": True, "skipped": True, "reason": "retainer-commencement-skip"}
+    if cand_name in ("retainer commencement", "retainer shortlist"):
+        return {"ok": True, "skipped": True, "reason": "retainer-skip"}
     if not _is_allowed_employment_type(payload.get("employmentType")):
         return {"ok": True, "skipped": True, "reason": "employmentType-not-eligible"}
 
@@ -358,8 +358,8 @@ def upsert_batch_followups(payload: dict) -> Dict:
     cal_tz = os.environ.get("CAL_TZ", "Australia/Sydney")
 
     cand_name = (payload.get("candidateName") or "").strip().lower()
-    if cand_name == "retainer commencement":
-        return {"ok": True, "count": 0, "results": [], "reason": "retainer-commencement-skip"}
+    if cand_name in ("retainer commencement", "retainer shortlist"):
+        return {"ok": True, "count": 0, "results": [], "reason": "retainer-skip"}
     if not _is_allowed_employment_type(payload.get("employmentType")):
         return {"ok": True, "count": 0, "results": [], "reason": "employmentType-not-eligible"}
 
@@ -411,7 +411,7 @@ if __name__ == "__main__":
     payload = {
         "placementId": 987654,
         "status": "Approved",
-        "employmentType": "Permanent",
+        "employmentType": "Retained",  # Should be allowed now
         "dateBegin": sample_start_ms,
         "dateEnd": None,
         "ownerName": "Leo Shee",
@@ -422,22 +422,30 @@ if __name__ == "__main__":
     }
     
     temp_payload = {
-    "placementId": 246810,
-    "status": "Approved",
-    "employmentType": "Temporary",
-    "dateBegin": int(datetime(2025, 11, 12, tzinfo=timezone.utc).timestamp() * 1000),
-    "dateEnd": int(datetime(2026, 3, 12, tzinfo=timezone.utc).timestamp() * 1000),  # ~3 months
-    "ownerName": "Leo Shee",
-    "ownerEmail": "leoshi@future-you.com.au",
-    "candidateName": "patrick kim",
-    "clientName": "jeans chilli chicken Pty Ltd",
-    "jobTitle": "chef Officer",
-}
+        "placementId": 246810,
+        "status": "Approved",
+        "employmentType": "Temporary",
+        "dateBegin": int(datetime(2025, 11, 12, tzinfo=timezone.utc).timestamp() * 1000),
+        "dateEnd": int(datetime(2026, 3, 12, tzinfo=timezone.utc).timestamp() * 1000),
+        "ownerName": "Leo Shee",
+        "ownerEmail": "leoshi@future-you.com.au",
+        "candidateName": "Retainer Shortlist", # Should be skipped
+        "clientName": "jeans chilli chicken Pty Ltd",
+        "jobTitle": "chef Officer",
+    }
 
-    print("Creating primary 'first day' event…")
+    # Update payload to be in the future
+    future_start_ms = int(datetime(2025, 12, 20, tzinfo=timezone.utc).timestamp() * 1000)
+    payload["dateBegin"] = future_start_ms
+
+    print("Creating primary 'first day' event (Retained)…")
     res1 = upsert_followup_event(payload)
     print(json.dumps(res1, indent=2))
 
-    print("\nCreating batch follow-up events…")
+    print("\nCreating batch follow-up events (Retained)…")
     res2 = upsert_batch_followups(payload)
     print(json.dumps(res2, indent=2))
+
+    print("\nCreating primary 'first day' event (Retainer Shortlist)…")
+    res3 = upsert_followup_event(temp_payload)
+    print(json.dumps(res3, indent=2))

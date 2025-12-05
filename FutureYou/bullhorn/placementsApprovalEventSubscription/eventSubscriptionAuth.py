@@ -227,7 +227,6 @@ def main():
             owner_email = (cu or {}).get("email")
             owner_name = f"{(cu or {}).get('firstName','')} {(cu or {}).get('lastName','')}".strip()
             
-        print("Placement approved event:", i)
         payload = {
             "placementId": pid,
             "status": p.get("status"),
@@ -241,9 +240,10 @@ def main():
             "jobTitle": job_title,
         }
 
-        # --- Skip if this is an internal “Retainer Commencement” placeholder
-        if payload.get("candidateName", "").strip().lower() == "retainer commencement":
-            print(f"⏭️  Skipping placement {pid} — candidate marked 'Retainer Commencement'")
+        # --- Skip if this is an internal “Retainer Commencement” or “Retainer Shortlist” placeholder
+        cand_lower = payload.get("candidateName", "").strip().lower()
+        if cand_lower in ("retainer commencement", "retainer shortlist"):
+            print(f"⏭️  Skipping placement {pid} — candidate marked '{payload.get('candidateName')}'")
             continue
 
         # print("Payload:", json.dumps(payload, indent=2))
@@ -262,8 +262,8 @@ def main():
                         print("Status:     Skipped (Event date is in the past)")
                     elif reason == "duplicate-detected":
                         print("Status:     Skipped (Duplicate event detected)")
-                    elif reason == "retainer-commencement-skip":
-                        print("Status:     Skipped (Retainer Commencement)")
+                    elif reason == "retainer-skip":
+                        print("Status:     Skipped (Retainer Placeholder)")
                     elif reason == "employmentType-not-eligible":
                         print(f"Status:     Skipped (Employment Type '{payload.get('employmentType')}' not eligible)")
                     else:
