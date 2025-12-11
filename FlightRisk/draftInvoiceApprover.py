@@ -58,7 +58,12 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
         if "UnitAmount" in line and "Quantity" in line:
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
-            expected_line_amount = round(unit_amount * quantity, 2)
+            discount_rate = float(line.get("DiscountRate", 0))
+            
+            subtotal = unit_amount * quantity
+            discount_multiplier = 1 - (discount_rate / 100)
+            expected_line_amount = round(subtotal * discount_multiplier, 2)
+            
             if "LineAmount" in line:
                 current_line_amount = float(line["LineAmount"])
                 if current_line_amount != expected_line_amount:
@@ -99,7 +104,11 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     if invoiceResponse:
-        print(f"Invoice {inv['InvoiceNumber']} updated successfully.")
+        updated_invoice = invoiceResponse.get("Invoices", [{}])[0]
+        pre_total = inv.get("Total")
+        post_total = updated_invoice.get("Total")
+        print(f"Invoice {inv['InvoiceNumber']} updated successfully. Pre-Total: {pre_total}, Post-Total: {post_total}")
+        
         for bill in related_bills:
             print(f"Approving Bill: {bill.get('InvoiceNumber', 'No Invoice Number')}")
             

@@ -57,10 +57,16 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
         if description == "Rounding":
             rounding_line = line
             continue
+        # Recalculate LineAmount to avoid rounding errors
+        # Xero expects LineAmount = round(UnitAmount * Quantity * (1 - DiscountRate/100), 2)
         if "UnitAmount" in line and "Quantity" in line:
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
-            expected_line_amount = round(unit_amount * quantity, 2)
+            discount_rate = float(line.get("DiscountRate", 0))
+            
+            subtotal = unit_amount * quantity
+            discount_multiplier = 1 - (discount_rate / 100)
+            expected_line_amount = round(subtotal * discount_multiplier, 2)
             
             # If there's a mismatch, update the LineAmount
             if "LineAmount" in line:
@@ -115,18 +121,18 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
         for line in bill.get("LineItems", []):
             if line.get("AccountCode") == "5000": line["AccountCode"] = "5465"
             
-    # Remove TaxAmount from all lines to force Xero to recalculate tax
-    for line in inv.get("LineItems", []):
-        line.pop("TaxAmount", None)
-    for line in bill.get("LineItems", []):
-        line.pop("TaxAmount", None)
+    for line in inv.get("LineItems", []): line.pop("TaxAmount", None)
+    for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
     
-    # update the invoice and bill using Xero API
     print(f"Approving Invoice: {inv['InvoiceNumber']} and Bill: {bill['InvoiceNumber']}")
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     
     if invoiceResponse:
-        print(f"Invoice {inv['InvoiceNumber']} updated successfully.")
+        updated_invoice = invoiceResponse.get("Invoices", [{}])[0]
+        pre_total = inv.get("Total")
+        post_total = updated_invoice.get("Total")
+        print(f"Invoice {inv['InvoiceNumber']} updated successfully. Pre-Total: {pre_total}, Post-Total: {post_total}")
+        
         billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if billResponse:
             print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
