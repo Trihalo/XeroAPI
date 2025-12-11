@@ -1,0 +1,34 @@
+name: FlightRisk Draft Invoice and Bill Approver
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  FR-draft-invoice-bill-approver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r FlightRisk/requirements.txt
+
+      - name: Run FlightRisk Draft Invoice Approver
+        working-directory: FlightRisk
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+          FLIGHT_RISK_CLIENT_ID: ${{ secrets.FLIGHT_RISK_CLIENT_ID }}
+          FLIGHT_RISK_CLIENT_SECRET: ${{ secrets.FLIGHT_RISK_CLIENT_SECRET }}
+
+          XERO_REFRESH_TOKEN_FLIGHT_RISK: ${{ vars.XERO_REFRESH_TOKEN_FLIGHT_RISK }}
+        run: |
+          python draftInvoiceApprover.py

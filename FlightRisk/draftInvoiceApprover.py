@@ -42,10 +42,6 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
         if "AccountCode" not in line or not line["AccountCode"]:
             line["AccountCode"] = "PLACEHOLDER_CODE"
         
-        # Capture the first account code to use for rounding if needed
-        if not first_account_code and line.get("AccountCode"):
-            first_account_code = line["AccountCode"]
-        
         description = line.get("Description", "")
         if description.startswith("Invoice Comments:"):
             inv["LineItems"].remove(line)
@@ -55,6 +51,9 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
             rounding_line = line
             continue
         
+        if not first_account_code and line.get("AccountCode"):
+            first_account_code = line["AccountCode"]
+
         if "UnitAmount" in line and "Quantity" in line:
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
@@ -72,16 +71,18 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
                     line["LineAmount"] = expected_line_amount
                     total_adjustment += diff
 
-    # Apply the inverse of the total adjustment to the Rounding line
     if total_adjustment != 0:
         adjustment_amount = round(-total_adjustment, 2)
         
+        rounding_account_code = first_account_code if first_account_code else "PLACEHOLDER_CODE"
+
         if rounding_line:
             current_rounding = float(rounding_line.get("LineAmount", 0))
             new_rounding = round(current_rounding + adjustment_amount, 2)
             print(f"Adjusting existing Rounding line from {current_rounding} to {new_rounding}")
             rounding_line["LineAmount"] = new_rounding
             rounding_line["UnitAmount"] = new_rounding
+            rounding_line["AccountCode"] = rounding_account_code
         else:
             print(f"Creating new Rounding line with amount {adjustment_amount}")
             new_rounding_line = {
@@ -89,7 +90,7 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
                 "Quantity": 1.0,
                 "UnitAmount": adjustment_amount,
                 "LineAmount": adjustment_amount,
-                "AccountCode": first_account_code if first_account_code else "PLACEHOLDER_CODE",
+                "AccountCode": rounding_account_code,
                 "TaxType": "BASEXCLUDED"
             }
             if inv.get("LineItems"):
