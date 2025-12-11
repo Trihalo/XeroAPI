@@ -29,26 +29,23 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
     else:
         print("Failed to update invoice:", response.status_code, response.text)
         return None
-    
 
-def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
-    newZealand = False
-    marketing = False
-    if "New Zealand" in bill.get("InvoiceNumber", ""): newZealand = True
-    if "Marketing" in bill.get("InvoiceNumber", ""): marketing = True
-        
-    # change the status of the invoice and bill to AUTHORISED
+
+def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     inv["Status"] = "AUTHORISED"
-    bill["Status"] = "AUTHORISED"
-    
+
     total_adjustment = 0.0
     rounding_line = None
     first_account_code = None
-
+    
     for line in inv.get("LineItems", []):
-        if "AccountCode" not in line or not line["AccountCode"]: line["AccountCode"] = "5000" if not newZealand else "5001"
-        if not first_account_code and line.get("AccountCode"): first_account_code = line["AccountCode"]
-
+        if "AccountCode" not in line or not line["AccountCode"]:
+            line["AccountCode"] = "PLACEHOLDER_CODE"
+        
+        # Capture the first account code to use for rounding if needed
+        if not first_account_code and line.get("AccountCode"):
+            first_account_code = line["AccountCode"]
+        
         description = line.get("Description", "")
         if description.startswith("Invoice Comments:"):
             inv["LineItems"].remove(line)
@@ -57,12 +54,11 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
         if description == "Rounding":
             rounding_line = line
             continue
+        
         if "UnitAmount" in line and "Quantity" in line:
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
             expected_line_amount = round(unit_amount * quantity, 2)
-            
-            # If there's a mismatch, update the LineAmount
             if "LineAmount" in line:
                 current_line_amount = float(line["LineAmount"])
                 if current_line_amount != expected_line_amount:
@@ -71,6 +67,7 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
                     line["LineAmount"] = expected_line_amount
                     total_adjustment += diff
 
+    # Apply the inverse of the total adjustment to the Rounding line
     if total_adjustment != 0:
         adjustment_amount = round(-total_adjustment, 2)
         
@@ -87,65 +84,51 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
                 "Quantity": 1.0,
                 "UnitAmount": adjustment_amount,
                 "LineAmount": adjustment_amount,
-                "AccountCode": first_account_code if first_account_code else ("5000" if not newZealand else "5001"),
+                "AccountCode": first_account_code if first_account_code else "PLACEHOLDER_CODE",
                 "TaxType": "BASEXCLUDED"
             }
-
             if inv.get("LineItems"):
                  new_rounding_line["TaxType"] = inv["LineItems"][0].get("TaxType", "OUTPUT")
 
             inv["LineItems"].append(new_rounding_line)
+
+    for line in inv.get("LineItems", []): line.pop("TaxAmount", None)
+    for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
+
+    print(f"Approving Invoice: {inv['InvoiceNumber']} with {len(related_bills)} related bills.")
     
-    # change the Tax account to "BAS Excluded" for bill for both line items
-    for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
-        
-    # set the bill date & date string to match the invoice date
-    invoiceDate = inv.get("Date", None)
-    if invoiceDate:
-        bill["Date"] = invoiceDate
-        bill["DueDate"] = invoiceDate
-    
-    # Case 1: NZL Invoice - change 5000 account code to 5001
-    if newZealand:
-        for line in bill.get("LineItems", []):
-            if line.get("AccountCode") == "5000": line["AccountCode"] = "5001"
-            
-    # Case 2: Marketing Invoice - change 5000 account code to 5465
-    if marketing:
-        for line in bill.get("LineItems", []):
-            if line.get("AccountCode") == "5000": line["AccountCode"] = "5465"
-            
-    # Remove TaxAmount from all lines to force Xero to recalculate tax
-    for line in inv.get("LineItems", []):
-        line.pop("TaxAmount", None)
-    for line in bill.get("LineItems", []):
-        line.pop("TaxAmount", None)
-    
-    # update the invoice and bill using Xero API
-    print(f"Approving Invoice: {inv['InvoiceNumber']} and Bill: {bill['InvoiceNumber']}")
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
-    
     if invoiceResponse:
         print(f"Invoice {inv['InvoiceNumber']} updated successfully.")
-        billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
-        if billResponse:
-            print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
-        else: print("Bill update failed.")
-    else:
-        invoice_number = inv.get("InvoiceNumber", "")
-        print(f"Invoice: {invoice_number} approval failed, bill not updated.")
+        for bill in related_bills:
+            print(f"Approving Bill: {bill.get('InvoiceNumber', 'No Invoice Number')}")
+            
+            bill["Status"] = "AUTHORISED"
+            for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
+            invoiceDate = inv.get("Date", None)
+            if invoiceDate:
+                bill["Date"] = invoiceDate
+                bill["DueDate"] = invoiceDate
 
+            billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+            if billResponse:
+                print(f"Bill {bill.get('InvoiceNumber')} approved successfully.")
+            else:
+                print(f"Bill {bill.get('InvoiceNumber')} approval failed.")
+    else:
+        print(f"Invoice {inv['InvoiceNumber']} approval failed. Related bills will not be approved.")
     
     print("--------------------------------------------------")
 
+
 def main():
     
-    client = "H2COCO"
+    client = "FLIGHT_RISK"
     invoiceStatus = "DRAFT"
     try:
         invoices, accessToken, xeroTenantId = fetchInvoicesForClient(client, invoiceStatus)
     except Exception as e:
-        logging.error(f"Error fetching invoices: {e}")
+        logging.error(f"Error fetching data: {e}")
         return
     
     draftInvoices = [
@@ -157,20 +140,31 @@ def main():
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCPAY"
     ]
+
     print("--------------------------------------------------")
     for invoice in draftInvoices:
-        # get the matching billID for each draft invoice
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
-        if not invNumber.startswith("SI-"):
+        base_inv_number = invNumber.split('/')[0]
+        
+        search_term = None
+        
+        if base_inv_number.startswith("FRC#"): search_term = base_inv_number
+        elif base_inv_number.startswith("SI-"):
+            parts = base_inv_number.split("-")
+            if len(parts) > 1: search_term = "SO-" + parts[1]
+        if not search_term:
             logging.warning(f"Skipping invoice with unexpected format: {invNumber}")
             continue
-        soNumber = "SO-" + invNumber.split("-")[1]
-        for bill in draftBills:
-            if soNumber in bill.get("InvoiceNumber", ""):
-                # Approve the draft invoice and draft bill, matching the bill date to the invoice date
-                approveDraftInvoiceAndBill(invoice, bill, accessToken, xeroTenantId)
-                
-
+        related_bills = [
+            bill for bill in draftBills 
+            if search_term in bill.get("InvoiceNumber", "")
+        ]
         
+        if related_bills:
+            approveInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId)
+        else:
+            print(f"Invoice {invNumber} (Search: {search_term}) found but no matching bills. Skipping.")
+                
+    
 if __name__ == "__main__":
     main()
