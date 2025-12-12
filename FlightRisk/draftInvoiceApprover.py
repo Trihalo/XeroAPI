@@ -38,15 +38,7 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     rounding_line = None
     first_account_code = None
     
-    for line in inv.get("LineItems", []):
-        if "AccountCode" not in line or not line["AccountCode"]:
-            line["AccountCode"] = "PLACEHOLDER_CODE"
-        
-        description = line.get("Description", "")
-        if description.startswith("Invoice Comments:"):
-            inv["LineItems"].remove(line)
-            continue
-        
+    for line in inv.get("LineItems", []):        
         if description == "Rounding":
             rounding_line = line
             continue
@@ -99,19 +91,21 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
             inv["LineItems"].append(new_rounding_line)
 
     for line in inv.get("LineItems", []): line.pop("TaxAmount", None)
-    for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
+    for bill in related_bills:
+        for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
 
-    print(f"Approving Invoice: {inv['InvoiceNumber']} with {len(related_bills)} related bills.")
+    print(f"Approving Invoice...")
     
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     if invoiceResponse:
         updated_invoice = invoiceResponse.get("Invoices", [{}])[0]
         pre_total = inv.get("Total")
         post_total = updated_invoice.get("Total")
-        print(f"Invoice {inv['InvoiceNumber']} updated successfully. Pre-Total: {pre_total}, Post-Total: {post_total}")
+        print(f"  [✓] Invoice Approved. Total: {pre_total} -> {post_total}")
         
-        for bill in related_bills:
-            print(f"Approving Bill: {bill.get('InvoiceNumber', 'No Invoice Number')}")
+        for i, bill in enumerate(related_bills, 1):
+            bill_num = bill.get('InvoiceNumber', 'No Invoice Number')
+            print(f"  > Processing Bill {i}/{len(related_bills)}: {bill_num}")
             
             bill["Status"] = "AUTHORISED"
             for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
@@ -121,14 +115,9 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
                 bill["DueDate"] = invoiceDate
 
             billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
-            if billResponse:
-                print(f"Bill {bill.get('InvoiceNumber')} approved successfully.")
-            else:
-                print(f"Bill {bill.get('InvoiceNumber')} approval failed.")
-    else:
-        print(f"Invoice {inv['InvoiceNumber']} approval failed. Related bills will not be approved.")
-    
-    print("--------------------------------------------------")
+            if billResponse: print(f"    [✓] Bill Approved")
+            else: print(f"    [X] Bill Approval Failed")
+    else: print(f"  [X] Invoice Approval Failed. Related bills will not be approved.")
 
 
 def main():
@@ -155,25 +144,54 @@ def main():
     for invoice in draftInvoices:
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
         base_inv_number = invNumber.split('/')[0]
-        
         search_term = None
-        
         if base_inv_number.startswith("FRC#"): search_term = base_inv_number
         elif base_inv_number.startswith("SI-"):
             parts = base_inv_number.split("-")
             if len(parts) > 1: search_term = "SO-" + parts[1]
+        print(f"\n{'='*60}")
+        print(f"PROCESSING INVOICE: {invNumber}")
+        print(f"{'-'*60}")
+
         if not search_term:
             logging.warning(f"Skipping invoice with unexpected format: {invNumber}")
+            print("ACTION: SKIPPING (Reason: Unexpected invoice format)")
             continue
+        
         related_bills = [
             bill for bill in draftBills 
             if search_term in bill.get("InvoiceNumber", "")
         ]
         
         if related_bills:
+            bill_count = len(related_bills)
+            split_msg = " (SPLIT SHIPMENT)" if bill_count > 1 else ""
+            print(f"Found {bill_count} related bill(s){split_msg}")
+
+            # Check for Marketing Loan in related bills
+            is_marketing_loan = False
+            is_giveaways = False
+            for bill in related_bills:
+                bill_inv_num = bill.get("InvoiceNumber", "").upper()
+                if "MARKETING" in bill_inv_num: is_marketing_loan = True
+                if "GIVEAWAYS" in bill_inv_num: is_giveaways = True
+            
+            if is_marketing_loan:
+                print(f"ACTION: SKIPPING (Reason: Bill is Marketing Loan, manually process)")
+                continue
+
+            if is_giveaways:
+                print(f"ACTION: PROCESSING AS GIVEAWAYS")                
+                for bill in related_bills:
+                     for line in bill.get("LineItems", []):
+                        if line.get("AccountCode") == "5001": 
+                            print(f"  -> Updating Bill Line AccountCode from 5001 to 5560")
+                            line["AccountCode"] = "5560"
+
             approveInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId)
         else:
-            print(f"Invoice {invNumber} (Search: {search_term}) found but no matching bills. Skipping.")
+            print(f"No matching bills found for search term: {search_term}")
+            print("ACTION: SKIPPING")
                 
     
 if __name__ == "__main__":
