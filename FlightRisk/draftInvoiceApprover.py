@@ -39,6 +39,7 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     first_account_code = None
     
     for line in inv.get("LineItems", []):        
+        description = line.get("Description", "")
         if description == "Rounding":
             rounding_line = line
             continue
