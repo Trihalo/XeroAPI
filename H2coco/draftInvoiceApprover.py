@@ -1,4 +1,5 @@
 import sys
+import time
 import logging
 import os
 import requests
@@ -165,6 +166,7 @@ def main():
     ]
     print("--------------------------------------------------")
     for invoice in draftInvoices:
+        time.sleep(1)
         # get the matching billID for each draft invoice
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
         if not invNumber.startswith("SI-"):

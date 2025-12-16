@@ -1,4 +1,5 @@
 import sys
+import time
 import logging
 import os
 import requests
@@ -143,6 +144,7 @@ def main():
 
     print("--------------------------------------------------")
     for invoice in draftInvoices:
+        time.sleep(1)
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
         base_inv_number = invNumber.split('/')[0]
         search_term = None
