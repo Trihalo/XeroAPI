@@ -24,7 +24,7 @@ def fetch_bill_by_invoice_number(invoice_number, access_token, xero_tenant_id):
         "Accept": "application/json",
     }
     # Filter by InvoiceNumber and Type=ACCPAY
-    where_clause = f'InvoiceNumber=="{invoice_number}" AND Type=="ACCPAY"'
+    where_clause = f'InvoiceNumber=="{invoice_number}" AND Type=="ACCREC"'
     params = {"where": where_clause}
     
     response = requests.get(url, headers=headers, params=params)

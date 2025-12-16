@@ -23,13 +23,28 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
 
     payload = {k: v for k, v in invoice.items() if k in update_fields and v is not None}
 
-    response = requests.post(url, headers=headers, json=payload)
+    max_retries = 5
+    for attempt in range(max_retries):
+        response = requests.post(url, headers=headers, json=payload)
 
-    if response.status_code in [200, 201]:        
-        return response.json()
-    else:
-        print("Failed to update invoice:", response.status_code, response.text)
-        return None
+        if response.status_code in [200, 201]:        
+            return response.json()
+        elif response.status_code == 429:
+            retry_after = response.headers.get("Retry-After")
+            if retry_after:
+                wait_time = int(retry_after) + 1
+            else:
+                wait_time = 10 * (attempt + 1)
+            
+            print(f"Hit rate limit (429). Waiting {wait_time}s before retry ({attempt+1}/{max_retries})...")
+            time.sleep(wait_time)
+            continue
+        else:
+            print("Failed to update invoice:", response.status_code, response.text)
+            return None
+
+    print(f"Failed to update invoice after {max_retries} attempts.")
+    return None
 
 
 def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
