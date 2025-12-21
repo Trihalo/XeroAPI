@@ -47,15 +47,17 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
     return None
     
 
-def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
+def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     newZealand = False
     marketing = False
-    if "New Zealand" in bill.get("InvoiceNumber", ""): newZealand = True
-    if "Marketing" in bill.get("InvoiceNumber", ""): marketing = True
+    
+    # Check flags across ALL related bills
+    for bill in related_bills:
+        if "New Zealand" in bill.get("InvoiceNumber", ""): newZealand = True
+        if "Marketing" in bill.get("InvoiceNumber", ""): marketing = True
         
     # change the status of the invoice and bill to AUTHORISED
     inv["Status"] = "AUTHORISED"
-    bill["Status"] = "AUTHORISED"
     
     total_adjustment = 0.0
     rounding_line = None
@@ -118,29 +120,35 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
 
             inv["LineItems"].append(new_rounding_line)
     
-    # change the Tax account to "BAS Excluded" for bill for both line items
-    for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
+    # Process modifications for ALL matching bills
+    for bill in related_bills:
+        bill["Status"] = "AUTHORISED"
         
-    # set the bill date & date string to match the invoice date
-    invoiceDate = inv.get("Date", None)
-    if invoiceDate:
-        bill["Date"] = invoiceDate
-        bill["DueDate"] = invoiceDate
-    
-    # Case 1: NZL Invoice - change 5000 account code to 5001
-    if newZealand:
-        for line in bill.get("LineItems", []):
-            if line.get("AccountCode") == "5000": line["AccountCode"] = "5001"
+        # change the Tax account to "BAS Excluded" for bill for both line items
+        for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
             
-    # Case 2: Marketing Invoice - change 5000 account code to 5465
-    if marketing:
-        for line in bill.get("LineItems", []):
-            if line.get("AccountCode") == "5000": line["AccountCode"] = "5465"
+        # set the bill date & date string to match the invoice date
+        invoiceDate = inv.get("Date", None)
+        if invoiceDate:
+            bill["Date"] = invoiceDate
+            bill["DueDate"] = invoiceDate
+        
+        # Case 1: NZL Invoice - change 5000 account code to 5001
+        if newZealand:
+            for line in bill.get("LineItems", []):
+                if line.get("AccountCode") == "5000": line["AccountCode"] = "5001"
+                
+        # Case 2: Marketing Invoice - change 5000 account code to 5465
+        if marketing:
+            for line in bill.get("LineItems", []):
+                if line.get("AccountCode") == "5000": line["AccountCode"] = "5465"
+
+        for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
             
     for line in inv.get("LineItems", []): line.pop("TaxAmount", None)
-    for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
     
-    print(f"Approving Invoice: {inv['InvoiceNumber']} and Bill: {bill['InvoiceNumber']}")
+    
+    print(f"Approving Invoice: {inv['InvoiceNumber']} with {len(related_bills)} related bill(s)")
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     
     if invoiceResponse:
@@ -149,13 +157,15 @@ def approveDraftInvoiceAndBill(inv, bill, accessToken, xeroTenantId):
         post_total = updated_invoice.get("Total")
         print(f"Invoice {inv['InvoiceNumber']} updated successfully. Pre-Total: {pre_total}, Post-Total: {post_total}")
         
-        billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
-        if billResponse:
-            print(f"Invoice {bill['InvoiceNumber']} updated successfully.")
-        else: print("Bill update failed.")
+        for bill in related_bills:
+            billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+            if billResponse:
+                print(f"Bill {bill['InvoiceNumber']} updated successfully.")
+            else: 
+                print(f"Bill {bill['InvoiceNumber']} update failed.")
     else:
         invoice_number = inv.get("InvoiceNumber", "")
-        print(f"Invoice: {invoice_number} approval failed, bill not updated.")
+        print(f"Invoice: {invoice_number} approval failed, bills not updated.")
 
     
     print("--------------------------------------------------")
@@ -187,13 +197,16 @@ def main():
         if not invNumber.startswith("SI-"):
             logging.warning(f"Skipping invoice with unexpected format: {invNumber}")
             continue
+        
         soNumber = "SO-" + invNumber.split("-")[1]
+        
+        related_bills = []
         for bill in draftBills:
             if soNumber in bill.get("InvoiceNumber", ""):
-                # Approve the draft invoice and draft bill, matching the bill date to the invoice date
-                approveDraftInvoiceAndBill(invoice, bill, accessToken, xeroTenantId)
-                
-
+                related_bills.append(bill)
+        
+        if related_bills:
+            approveDraftInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId)
         
 if __name__ == "__main__":
     main()
