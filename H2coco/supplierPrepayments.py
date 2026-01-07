@@ -173,7 +173,33 @@ def main():
                     "usdAmount": amount,
                 })
             else:
-                print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {response.text}")
+                try:
+                    error_data = response.json()
+                    messages = []
+                    # Handle Xero Validation Errors
+                    if "Elements" in error_data:
+                        for element in error_data.get("Elements", []):
+                            for error in element.get("ValidationErrors", []):
+                                if "Message" in error:
+                                    messages.append(error["Message"])
+                    
+                    if not messages and "Message" in error_data:
+                        messages.append(error_data["Message"])
+
+                    if messages:
+                        cleaned_text = "; ".join(messages)
+                    else:
+                        cleaned_text = json.dumps(error_data, indent=2)
+
+                except ValueError:
+                    # Truncate likely HTML response
+                    text = response.text
+                    if len(text) > 300:
+                        cleaned_text = f"Non-JSON Response (truncated): {text[:300]}..."
+                    else:
+                        cleaned_text = f"Non-JSON Response: {text}"
+
+                print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {cleaned_text}")
         elif invoiceData and not invoiceData["supplierInvNumber"]:
             print(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
         elif invoiceData["AmountPaid"] > 0:
