@@ -17,6 +17,22 @@ def get_financial_year(date):
 
 # --- Month Cutoffs ---
 def get_month_cutoffs(year):
+    if year == 2026:
+        return {
+            "Jan": datetime(year, 1, 31),
+            "Feb": datetime(year, 2, 28),
+            "Mar": datetime(year, 3, 31),
+            "Apr": datetime(year, 4, 25),
+            "May": datetime(year, 5, 23),
+            "Jun": datetime(year, 6, 30),
+            "Jul": datetime(year, 7, 25),
+            "Aug": datetime(year, 8, 22),
+            "Sep": datetime(year, 9, 30),
+            "Oct": datetime(year, 10, 24),
+            "Nov": datetime(year, 11, 21),
+            "Dec": datetime(year, 12, 31)
+        }
+        
     return {
         "Jan": datetime(year, 1, 26 if year == 2025 else 28),
         "Feb": datetime(year, 2, 23 if year == 2025 else 25),
@@ -34,18 +50,42 @@ def get_month_cutoffs(year):
 
 # --- Company Month Calculation ---
 def get_company_month(invoice_date):
+    # Ensure invoice_date is date object for comparison
+    date_to_check = invoice_date if isinstance(invoice_date, datetime) else invoice_date
+    if isinstance(date_to_check, datetime):
+        date_to_check = date_to_check.date()
+        
     cutoffs = get_month_cutoffs(invoice_date.year)
     for month, cutoff in cutoffs.items():
-        if invoice_date <= cutoff.date():
+        if date_to_check <= cutoff.date():
             return month
     return "Dec"
 
 # --- Week of Company Month ---
 def week_of_company_month(date):
-    year = date.year
-    cutoffs = get_month_cutoffs(year)
-    company_month = get_company_month(date)
+    # Ensure we work with date objects (not datetime)
+    if isinstance(date, datetime):
+        date_val = date.date()
+    else:
+        date_val = date
 
+    year = date_val.year
+    company_month = get_company_month(date_val)
+    
+    # Custom 2026 Jan Logic
+    if year == 2026 and company_month == "Jan":
+        if date_val.day <= 10:
+            return 1
+        else:
+            # Shifted calculation: Jan 11 is start of Week 2?
+            # Or standard calculation from Jan 11?
+            # Standard: (date - start) // 7 + 1
+            # If date is Jan 11. 11-11 = 0..
+            # We want Jan 11 to be Week 2.
+            # So return (date_val.day - 11) // 7 + 2
+            return (date_val.day - 11) // 7 + 2
+
+    cutoffs = get_month_cutoffs(year)
     month_names = list(cutoffs.keys())
     current_index = month_names.index(company_month)
 
@@ -56,6 +96,6 @@ def week_of_company_month(date):
         prev_month = month_names[current_index - 1]
         start_date = cutoffs[prev_month].date() + timedelta(days=1)
 
-    delta_days = (date - start_date).days
+    delta_days = (date_val - start_date).days
     adjusted_day = delta_days + start_date.weekday()
     return (adjusted_day // 7) + 1 if (adjusted_day // 7) + 1 < 6 else 5
