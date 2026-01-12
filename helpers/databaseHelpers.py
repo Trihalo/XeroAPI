@@ -19,17 +19,17 @@ def get_financial_year(date):
 def get_month_cutoffs(year):
     if year == 2026:
         return {
-            "Jan": datetime(year, 1, 31),
-            "Feb": datetime(year, 2, 28),
+            "Jan": datetime(year, 1, 23),
+            "Feb": datetime(year, 2, 20),
             "Mar": datetime(year, 3, 31),
-            "Apr": datetime(year, 4, 25),
-            "May": datetime(year, 5, 23),
+            "Apr": datetime(year, 4, 24),
+            "May": datetime(year, 5, 22),
             "Jun": datetime(year, 6, 30),
-            "Jul": datetime(year, 7, 25),
-            "Aug": datetime(year, 8, 22),
+            "Jul": datetime(year, 7, 24),
+            "Aug": datetime(year, 8, 21),
             "Sep": datetime(year, 9, 30),
-            "Oct": datetime(year, 10, 24),
-            "Nov": datetime(year, 11, 21),
+            "Oct": datetime(year, 10, 23),
+            "Nov": datetime(year, 11, 20),
             "Dec": datetime(year, 12, 31)
         }
         
@@ -74,16 +74,10 @@ def week_of_company_month(date):
     
     # Custom 2026 Jan Logic
     if year == 2026 and company_month == "Jan":
-        if date_val.day <= 10:
+        if date_val.day <= 2:
             return 1
         else:
-            # Shifted calculation: Jan 11 is start of Week 2?
-            # Or standard calculation from Jan 11?
-            # Standard: (date - start) // 7 + 1
-            # If date is Jan 11. 11-11 = 0..
-            # We want Jan 11 to be Week 2.
-            # So return (date_val.day - 11) // 7 + 2
-            return (date_val.day - 11) // 7 + 2
+            return (date_val.day - 3) // 7 + 2
 
     cutoffs = get_month_cutoffs(year)
     month_names = list(cutoffs.keys())
