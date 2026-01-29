@@ -33,18 +33,34 @@ def get_month_cutoffs(year):
             "Dec": datetime(year, 12, 31)
         }
         
+    if year == 2025:
+        return {
+            "Jan": datetime(year, 1, 26),
+            "Feb": datetime(year, 2, 23),
+            "Mar": datetime(year, 3, 28), # calendar.js says Apr starts 29/3
+            "Apr": datetime(year, 4, 25), # calendar.js says May starts 26/4
+            "May": datetime(year, 5, 23), # calendar.js says Jun starts 24/5
+            "Jun": datetime(year, 6, 27), # calendar.js says Jul starts 28/6
+            "Jul": datetime(year, 7, 25), # calendar.js says Aug starts 26/7
+            "Aug": datetime(year, 8, 22), # calendar.js says Sep starts 23/8
+            "Sep": datetime(year, 9, 26), # calendar.js says Oct starts 27/9
+            "Oct": datetime(year, 10, 24), # calendar.js says Nov starts 25/10
+            "Nov": datetime(year, 11, 21), # calendar.js says Dec starts 22/11
+            "Dec": datetime(year, 12, 31)
+        }
+
     return {
-        "Jan": datetime(year, 1, 26 if year == 2025 else 28),
-        "Feb": datetime(year, 2, 23 if year == 2025 else 25),
+        "Jan": datetime(year, 1, 28),
+        "Feb": datetime(year, 2, 25),
         "Mar": datetime(year, 3, 31),
-        "Apr": datetime(year, 4, 27 if year == 2025 else 28),
-        "May": datetime(year, 5, 25 if year == 2025 else 26),
+        "Apr": datetime(year, 4, 28),
+        "May": datetime(year, 5, 26),
         "Jun": datetime(year, 6, 30),
-        "Jul": datetime(year, 7, 27 if year == 2025 else 28),
-        "Aug": datetime(year, 8, 24 if year == 2025 else 25),
+        "Jul": datetime(year, 7, 28),
+        "Aug": datetime(year, 8, 25),
         "Sep": datetime(year, 9, 30),
-        "Oct": datetime(year, 10, 26 if year == 2025 else 27),
-        "Nov": datetime(year, 11, 23 if year == 2025 else 24),
+        "Oct": datetime(year, 10, 27),
+        "Nov": datetime(year, 11, 24),
         "Dec": datetime(year, 12, 31)
     }
 
@@ -91,5 +107,11 @@ def week_of_company_month(date):
         start_date = cutoffs[prev_month].date() + timedelta(days=1)
 
     delta_days = (date_val - start_date).days
-    adjusted_day = delta_days + start_date.weekday()
-    return (adjusted_day // 7) + 1 if (adjusted_day // 7) + 1 < 6 else 5
+    adjusted_day = delta_days + ((start_date.weekday() + 2) % 7)
+    raw_week = (adjusted_day // 7) + 1
+    
+    # Exception for Dec 2025 which explicitly has 6 weeks in calendar.js
+    if year == 2025 and company_month == "Dec":
+        return raw_week
+        
+    return raw_week if raw_week < 6 else 5
