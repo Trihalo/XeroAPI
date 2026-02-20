@@ -277,7 +277,7 @@ def extract_invoice_lines(invoice, journal_amounts, journal_units):
 
                 proportion = (subtotal / total_exgst) if total_exgst else 0.0
 
-                if "program fee" in description.lower():
+                if "program fee" in description.lower() or invoice_number.startswith("TC-INV"):
                     margin = subtotal
                 elif invoice_cost_share != 0:
                     margin = subtotal + (proportion * invoice_cost_share)
