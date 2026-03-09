@@ -302,18 +302,26 @@ def processStockJournalCreditNotes(accessToken, xeroTenantId):
             continue
 
         cn_number = cn.get("CreditNoteNumber", cn.get("InvoiceNumber", ""))
-        cn["Status"] = "AUTHORISED"
+        cn_type = cn.get("Type", "")
+        is_bill_credit = cn_type == "ACCPAYCREDIT"
+
+        if is_bill_credit:
+            cn["Status"] = "AUTHORISED"
+
         for line in cn.get("LineItems", []):
             line["TaxType"] = "BASEXCLUDED"
             line.pop("TaxAmount", None)
 
         time.sleep(1)
-        print(f"Approving credit note: {cn_number}")
+        if is_bill_credit:
+            print(f"Approving credit note (bill): {cn_number}")
+        else:
+            print(f"Saving credit note (invoice, draft): {cn_number}")
         response = xeroAPIUpdateCreditNote(cn, accessToken, xeroTenantId)
         if response:
-            print(f"Credit note {cn_number} approved successfully.")
+            print(f"Credit note {cn_number} {'approved' if is_bill_credit else 'saved'} successfully.")
         else:
-            print(f"Credit note {cn_number} approval failed.")
+            print(f"Credit note {cn_number} {'approval' if is_bill_credit else 'save'} failed.")
         print("--------------------------------------------------")
 
 
