@@ -1,66 +1,117 @@
 import os
-import sys
+import logging
 import smtplib
-from email.message import EmailMessage
 import mimetypes
-from datetime import datetime, timedelta
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None):
-    """Sends an email with an attachment to multiple recipients using an SMTP Provider."""
+SMTP_PROVIDERS = {
+    "GMAIL": ("smtp.gmail.com", 587),
+    "OUTLOOK": ("smtp.office365.com", 587),
+}
+
+
+def sendEmail(
+    recipients,
+    subject,
+    body_text,
+    provider,
+    body_html=None,
+    attachments=None,
+    cc=None,
+):
+    """
+    Send an email with optional HTML body and multiple attachments.
+
+    Args:
+        recipients (str | list[str]): To addresses.
+        subject (str): Email subject.
+        body_text (str): Plain-text fallback body.
+        provider (str): "GMAIL" or "OUTLOOK".
+        body_html (str | None): HTML body. If provided, sends multipart/alternative.
+        attachments (str | list[str] | None): File path(s) to attach.
+        cc (str | list[str] | None): CC addresses.
+
+    Raises:
+        ValueError: If provider is unsupported or credentials are missing.
+        smtplib.SMTPException: On SMTP-level failures.
+    """
+    provider = provider.upper()
+    if provider not in SMTP_PROVIDERS:
+        raise ValueError(f"Unsupported provider '{provider}'. Use one of: {list(SMTP_PROVIDERS)}")
 
     sender_email = os.getenv(f"EMAIL_SENDER_{provider}")
     sender_password = os.getenv(f"EMAIL_PASSWORD_{provider}")
-
     if not sender_email or not sender_password:
-        raise Exception(
-            "❌ Missing email credentials. Set EMAIL_SENDER and EMAIL_PASSWORD as environment variables.")
+        raise ValueError(
+            f"Missing credentials. Set EMAIL_SENDER_{provider} and EMAIL_PASSWORD_{provider}."
+        )
 
     if isinstance(recipients, str):
         recipients = [recipients]
-    recipient_list = ", ".join(recipients)
+    if isinstance(cc, str):
+        cc = [cc]
+    if isinstance(attachments, str):
+        attachments = [attachments]
+    attachments = [a for a in (attachments or []) if a and os.path.exists(a)]
 
-    msg = EmailMessage()
+    # Build message
+    msg = MIMEMultipart("mixed")
     msg["From"] = sender_email
-    msg["To"] = recipient_list
+    msg["To"] = ", ".join(recipients)
     msg["Subject"] = subject
-    msg.set_content(body)
+    if cc:
+        msg["Cc"] = ", ".join(cc)
 
-    if file_path is not None and os.path.exists(file_path):
+    # Body: multipart/alternative for plain+html, or plain only
+    if body_html:
+        alt = MIMEMultipart("alternative")
+        alt.attach(MIMEText(body_text, "plain"))
+        alt.attach(MIMEText(body_html, "html"))
+        msg.attach(alt)
+    else:
+        msg.attach(MIMEText(body_text, "plain"))
+
+    # Attachments
+    for file_path in attachments:
         mime_type, _ = mimetypes.guess_type(file_path)
         mime_type = mime_type or "application/octet-stream"
-        with open(file_path, "rb") as attachment:
-            msg.add_attachment(attachment.read(), maintype=mime_type.split(
-                "/")[0], subtype=mime_type.split("/")[1], filename=os.path.basename(file_path))
+        maintype, subtype = mime_type.split("/", 1)
 
-    if provider == "OUTLOOK": emailUrl = "smtp.office365.com"
-    elif provider == "GMAIL": emailUrl = "smtp.gmail.com"
-    
-    try:
-        with smtplib.SMTP(emailUrl, 587) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            server.send_message(msg)
+        with open(file_path, "rb") as f:
+            data = f.read()
 
-        print(f"📧 Email sent successfully to {recipient_list}")
+        part = MIMEBase(maintype, subtype)
+        part.set_payload(data)
+        encoders.encode_base64(part)
+        part.add_header("Content-Disposition", "attachment", filename=os.path.basename(file_path))
+        msg.attach(part)
 
-    except smtplib.SMTPAuthenticationError as e:
-        print(f"❌ Authentication error: {e.smtp_code} - {e.smtp_error}")
-    except Exception as e:
-        print(f"❌ Error sending email: {e}")
+    smtp_host, smtp_port = SMTP_PROVIDERS[provider]
+    all_recipients = recipients + (cc or [])
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, all_recipients, msg.as_string())
+
+    logging.info(f"Email '{subject}' sent to {', '.join(all_recipients)}")
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python3 emailAttachment.py <Recipient Name> <Recipient Email>")
-        sys.exit(1)
-    recipient_name = sys.argv[1]
-    recipient_email = sys.argv[2]
-    
-    subject = "Test Email"
-    time = (datetime.now() + timedelta(hours=11)).strftime("%d-%m-%Y %I:%M%p").lower()
-    body = f"Hi {recipient_name},\n\n This is a test email that was sent at {time}.\n\nThanks"
-
-    sendEmailWithAttachment([recipient_email], subject, body, provider="GMAIL")
+# ---------------------------------------------------------------------------
+# Back-compat shim — keeps existing callers working without changes
+# ---------------------------------------------------------------------------
+def sendEmailWithAttachment(recipients, subject, body, provider, file_path=None):
+    sendEmail(
+        recipients=recipients,
+        subject=subject,
+        body_text=body,
+        provider=provider,
+        attachments=[file_path] if file_path else None,
+    )

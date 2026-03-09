@@ -1,0 +1,54 @@
+name: FlightRisk Customer Prepayment AR Allocator
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Recipient name (for the results email)"
+        required: true
+      email:
+        description: "Recipient email address"
+        required: true
+      dry_run:
+        description: "Dry run (preview only, no payments allocated)"
+        type: boolean
+        default: false
+
+jobs:
+  fr-prepayment-allocator:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r FlightRisk/requirements.txt
+
+      - name: Run Customer Prepayment AR Allocator
+        working-directory: FlightRisk
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FLIGHT_RISK_CLIENT_ID: ${{ secrets.FLIGHT_RISK_CLIENT_ID }}
+          FLIGHT_RISK_CLIENT_SECRET: ${{ secrets.FLIGHT_RISK_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_FLIGHT_RISK: ${{ vars.XERO_REFRESH_TOKEN_FLIGHT_RISK }}
+          EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
+          EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
+        run: |
+          ARGS="--output-dir output"
+          ARGS="$ARGS --name '${{ inputs.name }}' --email '${{ inputs.email }}'"
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          python CustomerPrepaymentARAllocator.py $ARGS
+
+      - name: Upload output artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepayment-report-${{ github.run_number }}
+          path: FlightRisk/output/
+          retention-days: 30
