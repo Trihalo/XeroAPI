@@ -54,17 +54,19 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
 
 def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     inv["Status"] = "AUTHORISED"
+    inv_number = inv.get("InvoiceNumber", "Unknown")
+    results = []
 
     total_adjustment = 0.0
     rounding_line = None
     first_account_code = None
-    
-    for line in inv.get("LineItems", []):        
+
+    for line in inv.get("LineItems", []):
         description = line.get("Description", "")
         if description == "Rounding":
             rounding_line = line
             continue
-        
+
         if not first_account_code and line.get("AccountCode"):
             first_account_code = line["AccountCode"]
 
@@ -72,11 +74,11 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
             discount_rate = float(line.get("DiscountRate", 0))
-            
+
             subtotal = unit_amount * quantity
             discount_multiplier = 1 - (discount_rate / 100)
             expected_line_amount = round(subtotal * discount_multiplier, 2)
-            
+
             if "LineAmount" in line:
                 current_line_amount = float(line["LineAmount"])
                 if current_line_amount != expected_line_amount:
@@ -87,7 +89,7 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
 
     if total_adjustment != 0:
         adjustment_amount = round(-total_adjustment, 2)
-        
+
         rounding_account_code = first_account_code if first_account_code else "PLACEHOLDER_CODE"
 
         if rounding_line:
@@ -117,18 +119,19 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
         for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
 
     print(f"Approving Invoice...")
-    
+
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
     if invoiceResponse:
         updated_invoice = invoiceResponse.get("Invoices", [{}])[0]
         pre_total = inv.get("Total")
         post_total = updated_invoice.get("Total")
         print(f"  [✓] Invoice Approved. Total: {pre_total} -> {post_total}")
-        
+        results.append((inv_number, "Invoice", "✅ Approved"))
+
         for i, bill in enumerate(related_bills, 1):
             bill_num = bill.get('InvoiceNumber', 'No Invoice Number')
             print(f"  > Processing Bill {i}/{len(related_bills)}: {bill_num}")
-            
+
             bill["Status"] = "AUTHORISED"
             for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
             invoiceDate = inv.get("Date", None)
@@ -137,9 +140,17 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
                 bill["DueDate"] = invoiceDate
 
             billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
-            if billResponse: print(f"    [✓] Bill Approved")
-            else: print(f"    [X] Bill Approval Failed")
-    else: print(f"  [X] Invoice Approval Failed. Related bills will not be approved.")
+            if billResponse:
+                print(f"    [✓] Bill Approved")
+                results.append((bill_num, "Bill", "✅ Approved"))
+            else:
+                print(f"    [X] Bill Approval Failed")
+                results.append((bill_num, "Bill", "❌ Failed"))
+    else:
+        print(f"  [X] Invoice Approval Failed. Related bills will not be approved.")
+        results.append((inv_number, "Invoice", "❌ Failed"))
+
+    return results
 
 
 def queryUnleashedSalesOrder(orderNumber, apiId, apiKey):
@@ -212,6 +223,7 @@ def processPOBills(bills, accessToken, xeroTenantId, unleashedApiId, unleashedAp
     Skips bills prefixed with 'Cost#'."""
     pattern = re.compile(r"^(PO-(\d{8})(\/\d+)?)( - .+)?$")
     print(f"processPOBills: checking {len(bills)} bill(s) for PO pattern.")
+    results = []
 
     for bill in bills:
         inv_number = bill.get("InvoiceNumber", "")
@@ -262,13 +274,17 @@ def processPOBills(bills, accessToken, xeroTenantId, unleashedApiId, unleashedAp
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"PO bill {short_po} saved successfully.")
+            results.append((inv_number, short_po, "✅ Saved"))
         else:
             print(f"PO bill {short_po} save failed.")
+            results.append((inv_number, short_po, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
 
 
 def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
     """Stock Adjustment Journals (Journal-SA-*): set BAS Excluded + account 5010, approve."""
+    results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
             continue
@@ -288,13 +304,17 @@ def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"Stock adjustment journal {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
         else:
             print(f"Stock adjustment journal {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
 
 
 def processRecostJournals(bills, accessToken, xeroTenantId):
     """Recost Journals (Journal - PO-*[ReCost]): set BAS Excluded + account 5020, approve."""
+    results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
             continue
@@ -314,13 +334,57 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"Recost journal {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
         else:
             print(f"Recost journal {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
+
+
+def write_github_summary(invoice_results, sa_results, recost_results, po_results):
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+
+    def section(title, rows, headers):
+        lines = [f"\n### {title} ({len(rows)})\n"]
+        if not rows:
+            lines.append("_None processed._\n")
+            return "".join(lines)
+        lines.append("| " + " | ".join(headers) + " |")
+        lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+        for row in rows:
+            lines.append("| " + " | ".join(str(c) for c in row) + " |")
+        lines.append("")
+        return "\n".join(lines)
+
+    with open(summary_file, "a") as f:
+        f.write("## FlightRisk Draft Invoice & Bill Approver\n")
+        f.write(section(
+            "Invoices & Bills",
+            invoice_results,
+            ["Number", "Type", "Result"],
+        ))
+        f.write(section(
+            "Stock Adjustment Journals",
+            sa_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "Recost Journals",
+            recost_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "PO Bills",
+            po_results,
+            ["Original", "Renamed", "Result"],
+        ))
 
 
 def main():
-    
+
     client = "FLIGHT_RISK"
     invoiceStatus = "DRAFT"
     try:
@@ -328,12 +392,12 @@ def main():
     except Exception as e:
         logging.error(f"Error fetching data: {e}")
         return
-    
+
     draftInvoices = [
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCREC"
     ]
-    
+
     draftBills = [
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCPAY"
@@ -341,6 +405,8 @@ def main():
 
     unleashed_api_id = os.getenv("FLIGHT_RISK_API_ID")
     unleashed_api_key = os.getenv("FLIGHT_RISK_API_KEY")
+
+    invoice_results = []
 
     print("--------------------------------------------------")
     for invoice in draftInvoices:
@@ -359,6 +425,7 @@ def main():
         if not search_term:
             logging.warning(f"Skipping invoice with unexpected format: {invNumber}")
             print("ACTION: SKIPPING (Reason: Unexpected invoice format)")
+            invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (unexpected format)"))
             continue
 
         completed_date = None
@@ -366,34 +433,36 @@ def main():
             order = queryUnleashedSalesOrder(search_term, unleashed_api_id, unleashed_api_key)
             if not order:
                 print(f"Unleashed: no order found for {search_term}, skipping.")
+                invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (not in Unleashed)"))
                 continue
             order_status = order.get("OrderStatus", "")
             if order_status not in ("Completed", "Complete"):
                 print(f"Unleashed: {search_term} not completed (status: {order_status}), skipping.")
+                invoice_results.append((invNumber, "Invoice", f"⚠️ Skipped (order {order_status})"))
                 continue
             completed_date = parseUnleashedDate(order.get("CompletedDate"))
             print(f"Unleashed: {search_term} completed on {completed_date}.")
 
         related_bills = [
-            bill for bill in draftBills 
+            bill for bill in draftBills
             if search_term in bill.get("InvoiceNumber", "")
         ]
-        
+
         if related_bills:
             bill_count = len(related_bills)
             split_msg = " (SPLIT SHIPMENT)" if bill_count > 1 else ""
             print(f"Found {bill_count} related bill(s){split_msg}")
 
-            # Check for Marketing Loan in related bills
             is_marketing_loan = False
             is_giveaways = False
             for bill in related_bills:
                 bill_inv_num = bill.get("InvoiceNumber", "").upper()
                 if "MARKETING" in bill_inv_num: is_marketing_loan = True
                 if "GIVEAWAYS" in bill_inv_num: is_giveaways = True
-            
+
             if is_marketing_loan:
                 print(f"ACTION: SKIPPING (Reason: Bill is Marketing Loan, manually process)")
+                invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (marketing loan)"))
                 continue
 
             if is_giveaways:
@@ -409,14 +478,17 @@ def main():
                 invoice["DueDate"] = completed_date
                 print(f"Date set to Unleashed completed date: {completed_date}")
 
-            approveInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId)
+            invoice_results.extend(approveInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId))
         else:
             print(f"No matching bills found for search term: {search_term}")
             print("ACTION: SKIPPING")
+            invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (no matching bills)"))
 
-    processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
-    processRecostJournals(draftBills, accessToken, xeroTenantId)
-    processPOBills(draftBills, accessToken, xeroTenantId, unleashed_api_id, unleashed_api_key)
+    sa_results = processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
+    recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
+    po_results = processPOBills(draftBills, accessToken, xeroTenantId, unleashed_api_id, unleashed_api_key)
+
+    write_github_summary(invoice_results, sa_results, recost_results, po_results)
 
 if __name__ == "__main__":
     main()

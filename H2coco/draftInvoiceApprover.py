@@ -51,15 +51,17 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
 def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     newZealand = False
     marketing = False
-    
+    inv_number = inv.get("InvoiceNumber", "Unknown")
+    results = []
+
     # Check flags across ALL related bills
     for bill in related_bills:
         if "New Zealand" in bill.get("InvoiceNumber", ""): newZealand = True
         if "Marketing" in bill.get("InvoiceNumber", ""): marketing = True
-        
+
     # change the status of the invoice and bill to AUTHORISED
     inv["Status"] = "AUTHORISED"
-    
+
     total_adjustment = 0.0
     rounding_line = None
     first_account_code = None
@@ -72,7 +74,7 @@ def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
         if description.startswith("Invoice Comments:"):
             inv["LineItems"].remove(line)
             continue
-        
+
         if description == "Rounding":
             rounding_line = line
             continue
@@ -82,11 +84,11 @@ def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
             unit_amount = float(line["UnitAmount"])
             quantity = float(line["Quantity"])
             discount_rate = float(line.get("DiscountRate", 0))
-            
+
             subtotal = unit_amount * quantity
             discount_multiplier = 1 - (discount_rate / 100)
             expected_line_amount = round(subtotal * discount_multiplier, 2)
-            
+
             # If there's a mismatch, update the LineAmount
             if "LineAmount" in line:
                 current_line_amount = float(line["LineAmount"])
@@ -98,7 +100,7 @@ def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
 
     if total_adjustment != 0:
         adjustment_amount = round(-total_adjustment, 2)
-        
+
         if rounding_line:
             current_rounding = float(rounding_line.get("LineAmount", 0))
             new_rounding = round(current_rounding + adjustment_amount, 2)
@@ -120,60 +122,64 @@ def approveDraftInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
                  new_rounding_line["TaxType"] = inv["LineItems"][0].get("TaxType", "OUTPUT")
 
             inv["LineItems"].append(new_rounding_line)
-    
+
     # Process modifications for ALL matching bills
     for bill in related_bills:
         bill["Status"] = "AUTHORISED"
-        
+
         # change the Tax account to "BAS Excluded" for bill for both line items
         for line in bill.get("LineItems", []): line["TaxType"] = "BASEXCLUDED"
-            
+
         # set the bill date & date string to match the invoice date
         invoiceDate = inv.get("Date", None)
         if invoiceDate:
             bill["Date"] = invoiceDate
             bill["DueDate"] = invoiceDate
-        
+
         # Case 1: NZL Invoice - change 5000 account code to 5001
         if newZealand:
             for line in bill.get("LineItems", []):
                 if line.get("AccountCode") == "5000": line["AccountCode"] = "5001"
-                
+
         # Case 2: Marketing Invoice - change 5000 account code to 5465
         if marketing:
             for line in bill.get("LineItems", []):
                 if line.get("AccountCode") == "5000": line["AccountCode"] = "5465"
 
         for line in bill.get("LineItems", []): line.pop("TaxAmount", None)
-            
+
     for line in inv.get("LineItems", []): line.pop("TaxAmount", None)
-    
-    
-    print(f"Approving invoice: {inv['InvoiceNumber']} ({len(related_bills)} bill(s))")
+
+    print(f"Approving invoice: {inv_number} ({len(related_bills)} bill(s))")
     invoiceResponse = xeroAPIUpdateBill(inv, accessToken, xeroTenantId)
 
     if invoiceResponse:
         updated_invoice = invoiceResponse.get("Invoices", [{}])[0]
         pre_total = inv.get("Total")
         post_total = updated_invoice.get("Total")
-        print(f"Invoice {inv['InvoiceNumber']} approved successfully. Pre-total: {pre_total}, Post-total: {post_total}")
+        print(f"Invoice {inv_number} approved successfully. Pre-total: {pre_total}, Post-total: {post_total}")
+        results.append((inv_number, "Invoice", "✅ Approved"))
 
         for bill in related_bills:
             billResponse = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+            bill_num = bill.get("InvoiceNumber", "Unknown")
             if billResponse:
-                print(f"Bill {bill['InvoiceNumber']} approved successfully.")
+                print(f"Bill {bill_num} approved successfully.")
+                results.append((bill_num, "Bill", "✅ Approved"))
             else:
-                print(f"Bill {bill['InvoiceNumber']} approval failed.")
+                print(f"Bill {bill_num} approval failed.")
+                results.append((bill_num, "Bill", "❌ Failed"))
     else:
-        invoice_number = inv.get("InvoiceNumber", "")
-        print(f"Invoice {invoice_number} approval failed, bills not updated.")
+        print(f"Invoice {inv_number} approval failed, bills not updated.")
+        results.append((inv_number, "Invoice", "❌ Failed"))
 
-    
     print("--------------------------------------------------")
+    return results
 
 
 def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
     """Stock Adjustment Journals (Journal-SA-*): set BAS Excluded + account 5010, keep DRAFT."""
+    results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
             continue
@@ -192,13 +198,17 @@ def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"Stock adjustment journal {inv_number} saved successfully.")
+            results.append((inv_number, "✅ Saved"))
         else:
             print(f"Stock adjustment journal {inv_number} save failed.")
+            results.append((inv_number, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
 
 
 def processRecostJournals(bills, accessToken, xeroTenantId):
     """Recost Journals (Journal - PO-*[ReCost]): set BAS Excluded + account 5020, approve."""
+    results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
             continue
@@ -218,13 +228,17 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"Recost journal {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
         else:
             print(f"Recost journal {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
 
 
 def processSunRoadBills(bills, accessToken, xeroTenantId):
     """Stock Journals with 'Sun Road Food & Beverage - CDS' in reference: set BAS Excluded, approve."""
+    results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
             continue
@@ -242,14 +256,18 @@ def processSunRoadBills(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"Sun Road bill {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
         else:
             print(f"Sun Road bill {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
         
 
 def processPOBills(bills, accessToken, xeroTenantId):
     """PO bills (PO-XXXXXXXX - PO-XXXXXXXX): shorten reference and prepend full PO to line item descriptions, save as DRAFT."""
     pattern = re.compile(r"^(PO-(\d{8})) - PO-\d{8}$")
+    results = []
 
     for bill in bills:
         inv_number = bill.get("InvoiceNumber", "")
@@ -270,13 +288,62 @@ def processPOBills(bills, accessToken, xeroTenantId):
         response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
         if response:
             print(f"PO bill {short_po} saved successfully.")
+            results.append((inv_number, short_po, "✅ Saved"))
         else:
             print(f"PO bill {short_po} save failed.")
+            results.append((inv_number, short_po, "❌ Failed"))
         print("--------------------------------------------------")
+    return results
+
+
+def write_github_summary(invoice_results, sa_results, recost_results, sun_road_results, po_results):
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+
+    def section(title, rows, headers):
+        lines = [f"\n### {title} ({len(rows)})\n"]
+        if not rows:
+            lines.append("_None processed._\n")
+            return "".join(lines)
+        lines.append("| " + " | ".join(headers) + " |")
+        lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+        for row in rows:
+            lines.append("| " + " | ".join(str(c) for c in row) + " |")
+        lines.append("")
+        return "\n".join(lines)
+
+    with open(summary_file, "a") as f:
+        f.write("## H2coco Draft Invoice & Bill Approver\n")
+        f.write(section(
+            "Invoices & Bills",
+            invoice_results,
+            ["Number", "Type", "Result"],
+        ))
+        f.write(section(
+            "Stock Adjustment Journals",
+            sa_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "Recost Journals",
+            recost_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "Sun Road Bills",
+            sun_road_results,
+            ["Bill", "Result"],
+        ))
+        f.write(section(
+            "PO Bills",
+            po_results,
+            ["Original", "Renamed", "Result"],
+        ))
 
 
 def main():
-    
+
     client = "H2COCO"
     invoiceStatus = "DRAFT"
     try:
@@ -284,39 +351,47 @@ def main():
     except Exception as e:
         logging.error(f"Error fetching invoices: {e}")
         return
-    
+
     draftInvoices = [
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCREC"
     ]
-    
+
     draftBills = [
         invoice for invoice in invoices
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCPAY"
     ]
+
+    invoice_results = []
+
     print("--------------------------------------------------")
     for invoice in draftInvoices:
         time.sleep(1)
-        # get the matching billID for each draft invoice
         invNumber = invoice.get("InvoiceNumber", "No Invoice Number")
         if not invNumber.startswith("SI-"):
             logging.warning(f"Skipping invoice with unexpected format: {invNumber}")
+            invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (unexpected format)"))
             continue
-        
-        soNumber = "SO-" + invNumber.split("-")[1]
-        
-        related_bills = []
-        for bill in draftBills:
-            if soNumber in bill.get("InvoiceNumber", ""):
-                related_bills.append(bill)
-        
-        if related_bills:
-            approveDraftInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId)
 
-    processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
-    processRecostJournals(draftBills, accessToken, xeroTenantId)
-    processSunRoadBills(draftBills, accessToken, xeroTenantId)
-    processPOBills(draftBills, accessToken, xeroTenantId)
+        soNumber = "SO-" + invNumber.split("-")[1]
+
+        related_bills = [
+            bill for bill in draftBills
+            if soNumber in bill.get("InvoiceNumber", "")
+        ]
+
+        if related_bills:
+            invoice_results.extend(approveDraftInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId))
+        else:
+            logging.warning(f"No matching bills found for {invNumber} (search: {soNumber}), skipping.")
+            invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (no matching bills)"))
+
+    sa_results = processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
+    recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
+    sun_road_results = processSunRoadBills(draftBills, accessToken, xeroTenantId)
+    po_results = processPOBills(draftBills, accessToken, xeroTenantId)
+
+    write_github_summary(invoice_results, sa_results, recost_results, sun_road_results, po_results)
 
 if __name__ == "__main__":
     main()
