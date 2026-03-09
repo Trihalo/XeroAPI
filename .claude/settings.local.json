@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -l \"GITHUB_STEP_SUMMARY\\\\|github_summary\\\\|step_summary\\\\|store-summary\" f:/TRIHALO/XeroAPI/.github/workflows/*.yml f:/TRIHALO/XeroAPI/FlightRisk/*.py f:/TRIHALO/XeroAPI/FutureYou/*.py)"
+      "Bash(powershell.exe -Command \"\\(New-Object Net.WebClient\\).DownloadFile\\(''https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe'', \"\"$env:TEMP\\\\GoogleCloudSDKInstaller.exe\"\"\\); Start-Process -FilePath \"\"$env:TEMP\\\\GoogleCloudSDKInstaller.exe\"\" -Wait\")",
+      "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri ''https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe'' -OutFile \"\"$env:TEMP\\\\GoogleCloudSDKInstaller.exe\"\" -UseBasicParsing; Write-Host ''Downloaded''\")",
+      "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri ''https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe'' -OutFile ''C:\\\\Users\\\\Leo\\\\Downloads\\\\GoogleCloudSDKInstaller.exe'' -UseBasicParsing; Write-Host ''Done''\")",
+      "Bash(gcloud auth application-default login)",
+      "Bash(source ~/.bashrc)",
+      "Bash(gcloud auth application-default login --no-browser)",
+      "Bash(python -c \":*)",
+      "Bash(pip install openpyxl -q)",
+      "Bash(npm install xlsx)"
     ]
   }
 }
