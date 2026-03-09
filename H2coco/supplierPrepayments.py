@@ -63,7 +63,43 @@ def fetch_paid_po_records():
     return df["poNumber"].astype(int).tolist()
 
     
-def main():    
+def write_github_summary(paid, skipped, failed):
+    summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not summary_file:
+        return
+
+    def section(title, rows, headers):
+        lines = [f"\n### {title} ({len(rows)})\n"]
+        if not rows:
+            lines.append("_None._\n")
+            return "".join(lines)
+        lines.append("| " + " | ".join(headers) + " |")
+        lines.append("| " + " | ".join(["---"] * len(headers)) + " |")
+        for row in rows:
+            lines.append("| " + " | ".join(str(c) for c in row) + " |")
+        lines.append("")
+        return "\n".join(lines)
+
+    with open(summary_file, "a") as f:
+        f.write("## H2coco Supplier Prepayment Allocator\n")
+        f.write(section(
+            "✅ Paid",
+            paid,
+            ["PO Number", "Supplier Invoice", "Amount (USD)", "Payment Date"],
+        ))
+        f.write(section(
+            "⚠️ Skipped",
+            skipped,
+            ["PO Number", "Reason"],
+        ))
+        f.write(section(
+            "❌ Failed",
+            failed,
+            ["PO Number", "Error"],
+        ))
+
+
+def main():
     client = "H2COCO"
     invoiceStatus = "AUTHORISED"
 
@@ -120,10 +156,13 @@ def main():
         }
 
     paidPOs = []
+    paid_results = []    # (poNumber, supplierInv, amount, paymentDate)
+    skipped_results = [] # (poNumber, reason)
+    failed_results = []  # (poNumber, reason)
 
     # Fetch previously paid PO records from BigQuery
     paid_po_records = fetch_paid_po_records()
-    
+
     # Create and send individual payment requests
     for poNumber, date, currencyRate, amount in zip(poNumbers, dates, currencyRates, amounts):
 
@@ -133,9 +172,9 @@ def main():
         invoiceDate = datetime.strptime(invoiceData["InvoiceDate"], "%Y-%m-%d")
         dateObj = datetime.strptime(date, "%Y-%m-%d")
         paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
-        
+
         if poNumber in paid_po_records:
-            # Skip if the PO number has already been processed
+            skipped_results.append((poNumber, "Already processed (in BigQuery)"))
             continue
         elif invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
             payment = {
@@ -172,6 +211,7 @@ def main():
                     "date": paymentDate.strftime("%Y-%m-%d"),
                     "usdAmount": amount,
                 })
+                paid_results.append((poNumber, invoiceData["supplierInvNumber"], f"${amount:,.2f}", paymentDate.strftime("%Y-%m-%d")))
             else:
                 try:
                     error_data = response.json()
@@ -182,7 +222,7 @@ def main():
                             for error in element.get("ValidationErrors", []):
                                 if "Message" in error:
                                     messages.append(error["Message"])
-                    
+
                     if not messages and "Message" in error_data:
                         messages.append(error_data["Message"])
 
@@ -200,19 +240,25 @@ def main():
                         cleaned_text = f"Non-JSON Response: {text}"
 
                 print(f"Failed to allocate payment for PO {poNumber} ({invoiceData['supplierInvNumber']}): {response.status_code} - {cleaned_text}")
+                failed_results.append((poNumber, f"HTTP {response.status_code}: {cleaned_text[:120]}"))
         elif invoiceData and not invoiceData["supplierInvNumber"]:
             print(f"PO {poNumber}'s payment not allocated since supplier invoice number is missing")
+            skipped_results.append((poNumber, "Missing supplier invoice number"))
         elif invoiceData["AmountPaid"] > 0:
             print(f"PO {poNumber} has already has a prepayment allocated to it. Please manually check")
+            skipped_results.append((poNumber, f"Already paid (AmountPaid: {invoiceData['AmountPaid']})"))
         elif not invoiceData:
             print(f"PO {poNumber} not found in bills")
+            skipped_results.append((poNumber, "Not found in Xero bills"))
 
     # Output the dictionary to a JSON file
     with open("poInvoiceMapping.json", "w") as outfile:
         json.dump(poInvoiceDict, outfile, indent=4)
-    
+
     if paidPOs:
         export_to_bigquery(paidPOs)
+
+    write_github_summary(paid_results, skipped_results, failed_results)
 
 if __name__ == "__main__":
     main()
