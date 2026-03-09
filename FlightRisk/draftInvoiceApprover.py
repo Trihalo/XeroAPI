@@ -23,7 +23,7 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
     }
 
     update_fields = [
-        "Type", "Date", "DueDate", "Status", "LineItems",
+        "Type", "Date", "DueDate", "Status", "LineItems", "InvoiceNumber",
     ]
 
     payload = {k: v for k, v in invoice.items() if k in update_fields and v is not None}
@@ -182,6 +182,91 @@ def parseUnleashedDate(date_str):
     return s.split("T")[0]
 
 
+def queryUnleashedPurchaseOrder(orderNumber, apiId, apiKey):
+    """Query Unleashed for a purchase order by exact order number. Returns the order dict or None."""
+    query_string = f"orderNumber={orderNumber}"
+    signature = base64.b64encode(
+        hmac.new(apiKey.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).digest()
+    ).decode("utf-8")
+
+    url = f"https://api.unleashedsoftware.com/PurchaseOrders?{query_string}"
+    headers = {
+        "api-auth-id": apiId,
+        "api-auth-signature": signature,
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        items = response.json().get("Items", [])
+        return items[0] if items else None
+    else:
+        print(f"Failed to query Unleashed for {orderNumber}: {response.status_code} - {response.text}")
+        return None
+
+
+def processPOBills(bills, accessToken, xeroTenantId, unleashedApiId, unleashedApiKey):
+    """PO bills (PO-XXXXXXXX[/N]): query Unleashed for completion date,
+    shorten reference (strip first 4 digits), prepend full PO to descriptions, save as DRAFT.
+    Skips bills prefixed with 'Cost#'."""
+    pattern = re.compile(r"^(PO-(\d{8})(\/\d+)?)( - .+)?$")
+    print(f"processPOBills: checking {len(bills)} bill(s) for PO pattern.")
+
+    for bill in bills:
+        inv_number = bill.get("InvoiceNumber", "")
+        if inv_number.startswith("Cost#"):
+            continue
+        match = pattern.match(inv_number)
+        if not match:
+            if inv_number.startswith("PO-"):
+                print(f"  -> PO bill skipped (pattern mismatch): {inv_number}")
+            continue
+
+        full_po = match.group(1)              # e.g. PO-00000086/2 or PO-00005132
+        numeric = match.group(2)              # e.g. 00000086 or 00005132
+        suffix = match.group(3) or ""         # e.g. /2 or ""
+        trailing = match.group(4) or ""       # e.g. " - PO-04-05 FIX CHANGE OF COLORS" or ""
+        short_po = f"PO-{numeric[4:]}{suffix}{trailing}"  # e.g. PO-0086/2 - PO-04-05 FIX CHANGE OF COLORS
+
+        order = queryUnleashedPurchaseOrder(full_po, unleashedApiId, unleashedApiKey)
+        if order:
+            order_status = order.get("OrderStatus", "")
+            if order_status in ("Completed", "Complete"):
+                completed_date = parseUnleashedDate(order.get("CompletedDate"))
+                if completed_date:
+                    bill["Date"] = completed_date
+                    bill["DueDate"] = completed_date
+                    print(f"Date updated from Unleashed: {completed_date}")
+            else:
+                print(f"Unleashed: {full_po} not completed (status: {order_status}), date not updated.")
+        else:
+            print(f"Unleashed: {full_po} not found, date not updated.")
+
+        bill["InvoiceNumber"] = short_po
+        for line in bill.get("LineItems", []):
+            desc = line.get("Description", "")
+            line["Description"] = f"{full_po} {desc}"
+            if "UnitAmount" in line and "Quantity" in line:
+                unit_amount = float(line["UnitAmount"])
+                quantity = float(line["Quantity"])
+                discount_rate = float(line.get("DiscountRate", 0))
+                expected = round(unit_amount * quantity * (1 - discount_rate / 100), 2)
+                if "LineAmount" in line and float(line["LineAmount"]) != expected:
+                    print(f"  Adjusting LineAmount: {line['LineAmount']} → {expected}")
+                    line["LineAmount"] = expected
+            line.pop("TaxAmount", None)
+
+        time.sleep(1)
+        print(f"Saving PO bill: {inv_number} → {short_po}")
+        response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+        if response:
+            print(f"PO bill {short_po} saved successfully.")
+        else:
+            print(f"PO bill {short_po} save failed.")
+        print("--------------------------------------------------")
+
+
 def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
     """Stock Adjustment Journals (Journal-SA-*): set BAS Excluded + account 5010, approve."""
     for bill in bills:
@@ -234,108 +319,6 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
         print("--------------------------------------------------")
 
 
-def processSunRoadBills(bills, accessToken, xeroTenantId):
-    """Stock Journals with 'Sun Road Food & Beverage - CDS' in reference: set BAS Excluded, approve."""
-    for bill in bills:
-        if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
-            continue
-        inv_number = bill.get("InvoiceNumber", "")
-        if "Sun Road Food & Beverage - CDS" not in inv_number:
-            continue
-
-        bill["Status"] = "AUTHORISED"
-        for line in bill.get("LineItems", []):
-            line["TaxType"] = "BASEXCLUDED"
-            line.pop("TaxAmount", None)
-
-        time.sleep(1)
-        print(f"Approving Sun Road bill: {inv_number}")
-        response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
-        if response:
-            print(f"Sun Road bill {inv_number} approved successfully.")
-        else:
-            print(f"Sun Road bill {inv_number} approval failed.")
-        print("--------------------------------------------------")
-
-
-def fetchStockJournalCreditNotes(accessToken, xeroTenantId):
-    """Fetch draft credit notes from the Xero CreditNotes endpoint."""
-    url = "https://api.xero.com/api.xro/2.0/CreditNotes"
-    headers = {
-        "Authorization": f"Bearer {accessToken}",
-        "Xero-tenant-id": xeroTenantId,
-        "Accept": "application/json",
-    }
-    response = requests.get(url, headers=headers, params={"Statuses": ["DRAFT"], "pageSize": 1000})
-    if response.status_code == 200:
-        return response.json().get("CreditNotes", [])
-    else:
-        print(f"Failed to fetch credit notes: {response.status_code} - {response.text}")
-        return []
-
-
-def xeroAPIUpdateCreditNote(credit_note, accessToken, xeroTenantId):
-    """POST an update to a Xero CreditNote."""
-    url = f"https://api.xero.com/api.xro/2.0/CreditNotes/{credit_note.get('CreditNoteID')}"
-    headers = {
-        "Authorization": f"Bearer {accessToken}",
-        "Xero-tenant-id": xeroTenantId,
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    update_fields = ["Type", "Date", "Status", "LineItems"]
-    payload = {k: v for k, v in credit_note.items() if k in update_fields and v is not None}
-
-    max_retries = 5
-    for attempt in range(max_retries):
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code in [200, 201]:
-            return response.json()
-        elif response.status_code == 429:
-            retry_after = response.headers.get("Retry-After")
-            wait_time = int(retry_after) + 1 if retry_after else 10 * (attempt + 1)
-            print(f"Rate limit (429): waiting {wait_time}s before retry ({attempt+1}/{max_retries})...")
-            time.sleep(wait_time)
-            continue
-        else:
-            print(f"Failed to update credit note: {response.status_code} - {response.text}")
-            return None
-
-    print(f"Failed to update credit note after {max_retries} attempts.")
-    return None
-
-
-def processStockJournalCreditNotes(accessToken, xeroTenantId):
-    """Stock Journal credit notes: set BAS Excluded, approve."""
-    credit_notes = fetchStockJournalCreditNotes(accessToken, xeroTenantId)
-    for cn in credit_notes:
-        if cn.get("Contact", {}).get("Name", "") != "Stock Journal":
-            continue
-
-        cn_number = cn.get("CreditNoteNumber", cn.get("InvoiceNumber", ""))
-        cn_type = cn.get("Type", "")
-        is_bill_credit = cn_type == "ACCPAYCREDIT"
-
-        if is_bill_credit:
-            cn["Status"] = "AUTHORISED"
-
-        for line in cn.get("LineItems", []):
-            line["TaxType"] = "BASEXCLUDED"
-            line.pop("TaxAmount", None)
-
-        time.sleep(1)
-        if is_bill_credit:
-            print(f"Approving credit note (bill): {cn_number}")
-        else:
-            print(f"Saving credit note (invoice, draft): {cn_number}")
-        response = xeroAPIUpdateCreditNote(cn, accessToken, xeroTenantId)
-        if response:
-            print(f"Credit note {cn_number} {'approved' if is_bill_credit else 'saved'} successfully.")
-        else:
-            print(f"Credit note {cn_number} {'approval' if is_bill_credit else 'save'} failed.")
-        print("--------------------------------------------------")
-
-
 def main():
     
     client = "FLIGHT_RISK"
@@ -385,7 +368,7 @@ def main():
                 print(f"Unleashed: no order found for {search_term}, skipping.")
                 continue
             order_status = order.get("OrderStatus", "")
-            if order_status != "Completed":
+            if order_status not in ("Completed", "Complete"):
                 print(f"Unleashed: {search_term} not completed (status: {order_status}), skipping.")
                 continue
             completed_date = parseUnleashedDate(order.get("CompletedDate"))
@@ -433,8 +416,7 @@ def main():
 
     processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
     processRecostJournals(draftBills, accessToken, xeroTenantId)
-    processSunRoadBills(draftBills, accessToken, xeroTenantId)
-    processStockJournalCreditNotes(accessToken, xeroTenantId)
+    processPOBills(draftBills, accessToken, xeroTenantId, unleashed_api_id, unleashed_api_key)
 
 if __name__ == "__main__":
     main()
