@@ -155,6 +155,9 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
 
 def queryUnleashedSalesOrder(orderNumber, apiId, apiKey):
     """Query Unleashed for a sales order by order number. Returns the order dict or None."""
+    if not apiId or not apiKey:
+        logging.warning(f"Unleashed credentials not set, skipping query for {orderNumber}.")
+        return None
     query_string = f"orderNumber={orderNumber}"
     signature = base64.b64encode(
         hmac.new(apiKey.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).digest()
@@ -195,6 +198,9 @@ def parseUnleashedDate(date_str):
 
 def queryUnleashedPurchaseOrder(orderNumber, apiId, apiKey):
     """Query Unleashed for a purchase order by exact order number. Returns the order dict or None."""
+    if not apiId or not apiKey:
+        logging.warning(f"Unleashed credentials not set, skipping query for {orderNumber}.")
+        return None
     query_string = f"orderNumber={orderNumber}"
     signature = base64.b64encode(
         hmac.new(apiKey.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).digest()

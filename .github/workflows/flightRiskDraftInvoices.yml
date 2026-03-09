@@ -28,6 +28,8 @@ jobs:
 
           FLIGHT_RISK_CLIENT_ID: ${{ secrets.FLIGHT_RISK_CLIENT_ID }}
           FLIGHT_RISK_CLIENT_SECRET: ${{ secrets.FLIGHT_RISK_CLIENT_SECRET }}
+          FLIGHT_RISK_API_ID: ${{ secrets.FLIGHT_RISK_API_ID }}
+          FLIGHT_RISK_API_KEY: ${{ secrets.FLIGHT_RISK_API_KEY }}
 
           XERO_REFRESH_TOKEN_FLIGHT_RISK: ${{ vars.XERO_REFRESH_TOKEN_FLIGHT_RISK }}
         run: |
