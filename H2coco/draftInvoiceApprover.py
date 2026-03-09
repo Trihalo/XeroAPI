@@ -245,77 +245,7 @@ def processSunRoadBills(bills, accessToken, xeroTenantId):
         else:
             print(f"Sun Road bill {inv_number} approval failed.")
         print("--------------------------------------------------")
-
-
-def fetchStockJournalCreditNotes(accessToken, xeroTenantId):
-    """Fetch draft credit notes from the Xero CreditNotes endpoint."""
-    url = "https://api.xero.com/api.xro/2.0/CreditNotes"
-    headers = {
-        "Authorization": f"Bearer {accessToken}",
-        "Xero-tenant-id": xeroTenantId,
-        "Accept": "application/json",
-    }
-    response = requests.get(url, headers=headers, params={"Statuses": ["DRAFT"], "pageSize": 1000})
-    if response.status_code == 200:
-        return response.json().get("CreditNotes", [])
-    else:
-        print(f"Failed to fetch credit notes: {response.status_code} - {response.text}")
-        return []
-
-
-def xeroAPIUpdateCreditNote(credit_note, accessToken, xeroTenantId):
-    """POST an update to a Xero CreditNote."""
-    url = f"https://api.xero.com/api.xro/2.0/CreditNotes/{credit_note.get('CreditNoteID')}"
-    headers = {
-        "Authorization": f"Bearer {accessToken}",
-        "Xero-tenant-id": xeroTenantId,
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    update_fields = ["Type", "Date", "Status", "LineItems"]
-    payload = {k: v for k, v in credit_note.items() if k in update_fields and v is not None}
-
-    max_retries = 5
-    for attempt in range(max_retries):
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code in [200, 201]:
-            return response.json()
-        elif response.status_code == 429:
-            retry_after = response.headers.get("Retry-After")
-            wait_time = int(retry_after) + 1 if retry_after else 10 * (attempt + 1)
-            print(f"Rate limit (429): waiting {wait_time}s before retry ({attempt+1}/{max_retries})...")
-            time.sleep(wait_time)
-            continue
-        else:
-            print(f"Failed to update credit note: {response.status_code} - {response.text}")
-            return None
-
-    print(f"Failed to update credit note after {max_retries} attempts.")
-    return None
-
-
-def processStockJournalCreditNotes(accessToken, xeroTenantId):
-    """Stock Journal credit notes: set BAS Excluded, approve."""
-    credit_notes = fetchStockJournalCreditNotes(accessToken, xeroTenantId)
-    for cn in credit_notes:
-        if cn.get("Contact", {}).get("Name", "") != "Stock Journal":
-            continue
-
-        cn_number = cn.get("CreditNoteNumber", cn.get("InvoiceNumber", ""))
-        cn["Status"] = "AUTHORISED"
-        for line in cn.get("LineItems", []):
-            line["TaxType"] = "BASEXCLUDED"
-            line.pop("TaxAmount", None)
-
-        time.sleep(1)
-        print(f"Approving credit note: {cn_number}")
-        response = xeroAPIUpdateCreditNote(cn, accessToken, xeroTenantId)
-        if response:
-            print(f"Credit note {cn_number} approved successfully.")
-        else:
-            print(f"Credit note {cn_number} approval failed.")
-        print("--------------------------------------------------")
-
+        
 
 def processPOBills(bills, accessToken, xeroTenantId):
     """PO bills (PO-XXXXXXXX - PO-XXXXXXXX): shorten reference and prepend full PO to line item descriptions, save as DRAFT."""
@@ -327,8 +257,8 @@ def processPOBills(bills, accessToken, xeroTenantId):
         if not match:
             continue
 
-        full_po = match.group(1)                      # e.g. PO-00005132
-        short_po = f"PO-{int(match.group(2))}"        # e.g. PO-5132
+        full_po = match.group(1)                    # e.g. PO-00005132
+        short_po = f"PO-{int(match.group(2))}"      # e.g. PO-5132
 
         bill["InvoiceNumber"] = short_po
         for line in bill.get("LineItems", []):
@@ -386,7 +316,6 @@ def main():
     processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
     processRecostJournals(draftBills, accessToken, xeroTenantId)
     processSunRoadBills(draftBills, accessToken, xeroTenantId)
-    processStockJournalCreditNotes(accessToken, xeroTenantId)
     processPOBills(draftBills, accessToken, xeroTenantId)
 
 if __name__ == "__main__":
