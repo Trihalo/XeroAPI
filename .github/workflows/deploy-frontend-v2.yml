@@ -1,0 +1,52 @@
+name: Deploy Frontend v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboardWebsite/frontend-v2/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: trihalo
+  REGION: australia-southeast1
+  REPO: trihalo-images
+  SERVICE: frontend-v2
+
+permissions:
+  id-token: write   # Required for WIF
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.FRONTEND_WIF_PROVIDER }}
+          service_account: ${{ vars.FRONTEND_WIF_SA }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        working-directory: dashboardWebsite/frontend-v2
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/frontend-v2:${{ github.sha }}"
+          docker build \
+            --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
+            -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/frontend-v2:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080

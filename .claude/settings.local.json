@@ -9,7 +9,19 @@
       "Bash(gcloud auth application-default login --no-browser)",
       "Bash(python -c \":*)",
       "Bash(pip install openpyxl -q)",
-      "Bash(npm install xlsx)"
+      "Bash(npm install xlsx)",
+      "Bash(find /Users/leo/Github/XeroAPI/dashboardWebsite/frontend-v2 -type f -name package.json -o -name Dockerfile* -o -name nginx* -o -name .dockerignore -o -name docker-compose*)",
+      "Bash(find /Users/leo/Github/XeroAPI/dashboardWebsite/frontend-v2 -name .gitignore -o -name .dockerignore -o -name *.env*)",
+      "Bash(grep -r \"cloud run\\\\|Cloud Run\\\\|cloudbuild\\\\|gcloud\\\\|Cloud Build\" /Users/leo/Github/XeroAPI --include=*.yml --include=*.yaml --include=*.py --include=*.sh --include=*.md)",
+      "Bash(find /Users/leo/Github/XeroAPI -maxdepth 3 -name README* -o -name DEPLOY* -o -name SETUP*)",
+      "Bash(grep -r \"gcloud\\\\|cloud run\\\\|Cloud Run\" /Users/leo/Github/XeroAPI --include=*.py --include=*.md --include=*.txt)",
+      "Bash(xargs ls:*)",
+      "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline --source -- **/Dockerfile **/cloudbuild* **/.gcloudignore **/app.yaml)",
+      "Bash(git -C /Users/leo/Github/XeroAPI show d1ac61d --stat)",
+      "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline -- dashboardWebsite/backend/)",
+      "Bash(git -C /Users/leo/Github/XeroAPI show HEAD:dashboardWebsite/backend/Dockerfile)",
+      "Bash(git -C /Users/leo/Github/XeroAPI log --all --pretty=format:\"%h %s\" -- \"**/requirements.txt\")",
+      "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline)"
     ]
   }
 }

@@ -1,0 +1,52 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboardWebsite/backend/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: trihalo
+  REGION: australia-southeast1
+  REPO: trihalo-images
+  SERVICE: trihalo-backend   # UPDATE if your Cloud Run service has a different name
+
+permissions:
+  id-token: write   # Required for WIF
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.FRONTEND_WIF_PROVIDER }}
+          service_account: ${{ vars.FRONTEND_WIF_SA }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        working-directory: dashboardWebsite/backend
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/backend:${{ github.sha }}"
+          docker build -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/backend:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --set-env-vars "GCP_PROJECT_ID=trihalo" \
+            --set-env-vars "GH_PAT=${{ secrets.GH_PAT }}"
