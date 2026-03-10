@@ -65,7 +65,7 @@ export default function Dashboard() {
         {
           name: "Supplier Payment Allocator",
           description:
-            "Allocates supplier DPs to any approved bills in Xero. DP list is up to date as of the first day of the month.",
+            "Allocates supplier DPs to any approved bills in Xero. DP list is up to date as of the first day of the month. Please see Files tab to upload new version.",
           action: triggerH2cocoSupplierPayment,
           estimatedTime: 30,
           requiresFileUpload: false,
@@ -73,7 +73,7 @@ export default function Dashboard() {
         {
           name: "Draft Invoice Approver",
           description:
-            "Approves draft invoices and stock journals in Xero for H2coco. Doesn't approve Costco Australia invoices.",
+            "Approves draft invoices and stock journals in Xero for H2coco. Also edits Stock Adjustments and approves ReCost Journals.",
           action: triggerH2cocoInvoiceApprover,
           estimatedTime: 30,
           requiresFileUpload: false,
@@ -283,8 +283,8 @@ export default function Dashboard() {
                   client.scripts.some(
                     (script) =>
                       script.name === selectedScript &&
-                      script.requiresFileUpload
-                  )
+                      script.requiresFileUpload,
+                  ),
                 ) && (
                   <div className="form-control">
                     <input

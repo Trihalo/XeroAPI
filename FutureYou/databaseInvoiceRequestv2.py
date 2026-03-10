@@ -5,7 +5,7 @@ import csv
 import pandas as pd
 import re
 import numpy as np
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
@@ -28,6 +28,43 @@ quarters = {
     "Jul": "Q1", "Aug": "Q1", "Sep": "Q1",
     "Oct": "Q2", "Nov": "Q2", "Dec": "Q2"
 }
+
+# --- GitHub Summary ---
+def writeGithubSummary(all_rows):
+    today = date.today()
+    run_number = os.environ.get("GITHUB_RUN_NUMBER", "?")
+
+    deleted = [r for r in all_rows if r.get("__deleted__")]
+    valid = [r for r in all_rows if not r.get("__deleted__")]
+
+    lines = [f"## FutureYou Revenue DB — Run #{run_number}", ""]
+    lines += [
+        "### Overview",
+        "| Metric | Value |",
+        "| --- | --- |",
+        f"| Rows Uploaded | {len(valid)} |",
+        f"| Voided / Deleted | {len(deleted)} |",
+        "",
+    ]
+
+    if valid:
+        df = pd.DataFrame(valid)
+
+        type_counts = df["Type"].value_counts()
+        lines += ["### By Type", "| Type | Rows |", "| --- | --- |"]
+        for t, count in type_counts.items():
+            lines.append(f"| {t} | {count} |")
+        lines.append("")
+
+    lines.append(f"_Generated {today.strftime('%d %b %Y')} — delta sync (last 24 hours)_")
+
+    summary = "\n".join(lines)
+    print(summary)
+    gh_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if gh_summary:
+        with open(gh_summary, "a") as f:
+            f.write(summary + "\n")
+
 
 # --- BigQuery Functions ---
 def export_to_bigquery(rows):
@@ -597,6 +634,7 @@ def main():
     # You can keep or remove the CSV export
     # export_to_csv(all_rows)
     export_to_bigquery(all_rows)
+    writeGithubSummary(all_rows)
 
 if __name__ == "__main__":
     main()
