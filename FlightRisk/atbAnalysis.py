@@ -13,10 +13,11 @@ def buildLineItemsText(line_items):
         qty = float(line.get("Quantity", 0) or 0)
         if qty == 0:
             continue
-        description = line.get("Description", "").strip()
+        # Take only the first line of the description to drop barcodes/serials on subsequent lines
+        description = line.get("Description", "").split("\n")[0].strip()
         unit_amount = float(line.get("UnitAmount", 0) or 0)
-        parts.append(f"{description} | Qty: {qty:g} | ${unit_amount:.2f}")
-    return "; ".join(parts)
+        parts.append(f"{description} | Qty: {qty:g} | {unit_amount:.2f}")
+    return "\n".join(parts)
 
 
 def buildAtbRows(invoices):
