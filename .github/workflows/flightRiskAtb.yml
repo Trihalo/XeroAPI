@@ -1,0 +1,39 @@
+name: Flight Risk ATB
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # Daily at 7 PM UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Required for OIDC / Workload Identity Federation
+  contents: read
+
+jobs:
+  run-atb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.FLIGHT_RISK_WIF_PROVIDER }}
+          service_account: ${{ vars.FLIGHT_RISK_WIF_SA }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r FlightRisk/requirements.txt
+
+      - name: Run ATB script
+        run: python FlightRisk/atbRequest.py
+        env:
+          FLIGHT_RISK_CLIENT_ID: ${{ secrets.FLIGHT_RISK_CLIENT_ID }}
+          FLIGHT_RISK_CLIENT_SECRET: ${{ secrets.FLIGHT_RISK_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_FLIGHT_RISK: ${{ vars.XERO_REFRESH_TOKEN_FLIGHT_RISK }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+          FLIGHT_RISK_BQ_PROJECT: ${{ vars.FLIGHT_RISK_BQ_PROJECT }}

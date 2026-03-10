@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -l \"GITHUB_STEP_SUMMARY\\\\|github_summary\\\\|step_summary\\\\|store-summary\" f:/TRIHALO/XeroAPI/.github/workflows/*.yml f:/TRIHALO/XeroAPI/FlightRisk/*.py f:/TRIHALO/XeroAPI/FutureYou/*.py)"
+    ]
+  }
+}
