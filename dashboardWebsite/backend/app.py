@@ -43,13 +43,14 @@ BRANCH        = "main"
 UPLOAD_FOLDER = "uploads"
 
 WORKFLOWS = {
-    "test-email":               "sendEmail.yml",
-    "futureyou-reports":        "futureYouReports.yml",
-    "h2coco-supplier-payment":  "h2cocoSupplierPayment.yml",
-    "h2coco-invoice-approver":  "h2cocoDraftInvoices.yml",
-    "cosmo-bills-approver":     "cosmoBillsApprover.yml",
-    "futureyou-revenue-database": "futureYouInvoiceRevenue.yml",
-    "futureyou-atb-database":   "futureYouATB.yml",
+    "test-email":                        "sendEmail.yml",
+    "futureyou-reports":                 "futureYouReports.yml",
+    "h2coco-supplier-payment":           "h2cocoSupplierPayment.yml",
+    "h2coco-invoice-approver":           "h2cocoDraftInvoices.yml",
+    "futureyou-revenue-database":        "futureYouInvoiceRevenue.yml",
+    "futureyou-atb-database":            "futureYouATB.yml",
+    "flight-risk-invoice-approver":      "flightRiskDraftInvoices.yml",
+    "flight-risk-prepayment-allocator":  "flightRiskPrepaymentAllocator.yml",
 }
 
 # Workflows that pass name/email as inputs to GitHub Actions
@@ -57,8 +58,10 @@ WORKFLOWS_WITH_INPUTS = {
     "sendEmail.yml",
     "futureYouReports.yml",
     "tradeFinance.yml",
-    "cosmoBillsApprover.yml",
+    "flightRiskPrepaymentAllocator.yml",
 }
+
+BACKEND_API_KEY = os.getenv("BACKEND_API_KEY")
 
 # ---------------------------------------------------------------------------
 # Request lifecycle — log every incoming request and its response time
@@ -423,6 +426,46 @@ def debug_users():
     except Exception as exc:
         log.exception("Debug | error listing users")
         return jsonify({"error": str(exc)}), 500
+
+
+@app.route("/store-summary", methods=["POST"])
+def store_summary():
+    api_key = request.headers.get("X-API-Key", "")
+    if not BACKEND_API_KEY or api_key != BACKEND_API_KEY:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json or {}
+    run_id = data.get("run_id")
+    run_number = data.get("run_number")
+    workflow_file = data.get("workflow_file", "")
+    summary = data.get("summary", "").strip()
+
+    if not summary or not workflow_file:
+        return jsonify({"error": "Missing summary or workflow_file"}), 400
+
+    doc_ref = db.collection("summaries").document()
+    doc_ref.set({
+        "run_id":        run_id,
+        "run_number":    run_number,
+        "workflow_file": workflow_file,
+        "summary":       summary,
+        "stored_at":     firestore.SERVER_TIMESTAMP,
+    })
+    log.info("Summary | stored for '%s' run #%s", workflow_file, run_number)
+    return jsonify({"success": True})
+
+
+@app.route("/summaries", methods=["GET"])
+def get_summaries():
+    docs = (
+        db.collection("summaries")
+        .order_by("stored_at", direction=firestore.Query.DESCENDING)
+        .limit(30)
+        .stream()
+    )
+    result = [doc.to_dict() for doc in docs]
+    log.info("Summaries | returned %d records", len(result))
+    return jsonify(result)
 
 
 # ---------------------------------------------------------------------------

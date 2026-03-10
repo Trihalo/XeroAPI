@@ -121,3 +121,20 @@ export const fetchRunStatus = async (
   const response = await fetch(url)
   return response.json() as Promise<RunStatus>
 }
+
+export interface SummaryEntry {
+  run_id: number
+  run_number: number
+  workflow_file: string
+  summary: string
+  stored_at: unknown
+}
+
+export const fetchSummaries = async (): Promise<SummaryEntry[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/summaries`)
+    return response.json() as Promise<SummaryEntry[]>
+  } catch {
+    return []
+  }
+}
