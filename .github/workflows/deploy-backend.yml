@@ -4,17 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - 'dashboardWebsite/backend/**'
+      - "dashboardWebsite/backend/**"
   workflow_dispatch:
 
 env:
   PROJECT_ID: trihalo
   REGION: australia-southeast1
   REPO: trihalo-images
-  SERVICE: trihalo-backend   # UPDATE if your Cloud Run service has a different name
+  SERVICE: trihalo-backend # UPDATE if your Cloud Run service has a different name
 
 permissions:
-  id-token: write   # Required for WIF
+  id-token: write # Required for WIF
   contents: read
 
 jobs:
