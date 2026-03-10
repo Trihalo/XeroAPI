@@ -40,3 +40,34 @@ jobs:
           XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
         run: |
           python atbRequestv2.py
+
+      - name: Store summary
+        if: always()
+        run: |
+          python3 -c "
+import json, os, urllib.request
+summary = open(os.environ['GITHUB_STEP_SUMMARY']).read().strip()
+if not summary:
+    print('No summary to store')
+    exit(0)
+payload = json.dumps({
+    'run_id': int(os.environ.get('GITHUB_RUN_ID', 0)),
+    'run_number': int(os.environ.get('GITHUB_RUN_NUMBER', 0)),
+    'workflow_file': 'futureYouATB.yml',
+    'summary': summary,
+}).encode()
+req = urllib.request.Request(
+    os.environ['BACKEND_URL'] + '/store-summary',
+    data=payload,
+    headers={'Content-Type': 'application/json', 'X-API-Key': os.environ['BACKEND_API_KEY']},
+    method='POST',
+)
+try:
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        print('Summary stored:', resp.read().decode())
+except Exception as e:
+    print('Warning: Failed to store summary:', e)
+"
+        env:
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+          BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}

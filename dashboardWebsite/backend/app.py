@@ -51,6 +51,7 @@ WORKFLOWS = {
     "futureyou-atb-database":            "futureYouATB.yml",
     "flight-risk-invoice-approver":      "flightRiskDraftInvoices.yml",
     "flight-risk-prepayment-allocator":  "flightRiskPrepaymentAllocator.yml",
+    "flight-risk-atb":                   "flightRiskAtb.yml",
 }
 
 # Workflows that pass name/email as inputs to GitHub Actions

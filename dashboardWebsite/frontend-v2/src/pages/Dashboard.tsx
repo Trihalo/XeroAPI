@@ -148,6 +148,16 @@ const CLIENTS: ClientConfig[] = [
         requiresFileUpload: false,
         icon: CreditCard,
       },
+      {
+        name: "ATB Updater",
+        description:
+          "Updates the Aged Trial Balance BigQuery database with the latest outstanding AR invoices from Xero.",
+        workflowKey: "flight-risk-atb",
+        workflowFile: "flightRiskAtb.yml",
+        estimatedTime: 120,
+        requiresFileUpload: false,
+        icon: Database,
+      },
     ],
   },
   {

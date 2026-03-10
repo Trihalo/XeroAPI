@@ -36,6 +36,7 @@ const WORKFLOW_DISPLAY_NAMES: Record<string, string> = {
   "futureYouATB.yml": "FutureYou ATB DB",
   "flightRiskDraftInvoices.yml": "FlightRisk Invoice Approver",
   "flightRiskPrepaymentAllocator.yml": "FlightRisk Prepayment Allocator",
+  "flightRiskAtb.yml": "FlightRisk ATB Updater",
   test: "Test Workflow",
 };
 

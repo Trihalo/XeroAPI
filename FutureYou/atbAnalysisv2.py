@@ -143,6 +143,55 @@ def getAtbData(data, client_tokens):
         logging.info(f"✅ Processed invoice {index}/{len(accrec_invoices)} - {invoice_number}")
     return invoice_rows
 
+def writeGithubSummary(df, table_ref):
+    today = date.today()
+    run_number = os.environ.get("GITHUB_RUN_NUMBER", "?")
+
+    lines = [f"## FutureYou ATB — Run #{run_number}", ""]
+
+    total_amount = df["Total"].sum()
+    lines += [
+        "### Overview",
+        "| Metric | Value |",
+        "| --- | --- |",
+        f"| Rows Uploaded | {len(df)} |",
+        f"| Total Outstanding | ${total_amount:,.2f} |",
+        f"| Table | {table_ref} |",
+        "",
+    ]
+
+    def age_bucket(invoice_date):
+        days = (today - invoice_date).days
+        if days <= 30: return "0–30 days"
+        elif days <= 60: return "31–60 days"
+        elif days <= 90: return "61–90 days"
+        elif days <= 120: return "91–120 days"
+        else: return "> 120 days"
+
+    bucket_order = ["0–30 days", "31–60 days", "61–90 days", "91–120 days", "> 120 days"]
+    df2 = df.copy()
+    df2["AgeBucket"] = df2["InvoiceDate"].apply(age_bucket)
+    aged = df2.groupby("AgeBucket")["Total"].sum()
+
+    lines += ["### Aged Receivables", "| Period | Amount |", "| --- | --- |"]
+    for b in bucket_order:
+        lines.append(f"| {b} | ${aged.get(b, 0):,.2f} |")
+    lines.append("")
+
+    type_summary = df2.groupby("Type").agg(Rows=("Total", "count"), Amount=("Total", "sum"))
+    lines += ["### By Type", "| Type | Rows | Amount |", "| --- | --- | --- |"]
+    for t, row in type_summary.iterrows():
+        lines.append(f"| {t or '—'} | {int(row['Rows'])} | ${row['Amount']:,.2f} |")
+    lines += ["", f"_Generated {today.strftime('%d %b %Y')}_"]
+
+    summary = "\n".join(lines)
+    print(summary)
+    gh_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if gh_summary:
+        with open(gh_summary, "a") as f:
+            f.write(summary + "\n")
+
+
 def processAtbData(data, client_tokens):
     invoices = getAtbData(data, client_tokens)
 
@@ -177,6 +226,7 @@ def processAtbData(data, client_tokens):
     load_job.result()  # Wait for the job to complete
 
     print(f"📊 Successfully uploaded {len(df)} rows to BigQuery table {table_ref}")
+    writeGithubSummary(df, table_ref)
     return table_ref
 
 
