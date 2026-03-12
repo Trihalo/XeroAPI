@@ -86,20 +86,8 @@ def _log_request(response):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-def log_api_call(workflow_id: str, auth_user: dict, status_code: int):
-    """Write a workflow execution record to Firestore."""
-    doc_ref = db.collection("api_call_history").document()
-    doc_ref.set({
-        "workflow":  workflow_id,
-        "name":      auth_user,
-        "called_at": firestore.SERVER_TIMESTAMP,
-        "success":   "Success" if status_code in (200, 204) else "Fail",
-    })
-    log.info("Firestore | logged execution of '%s' (status %d)", workflow_id, status_code)
-
-
 def trigger_github_action(workflow_id: str):
-    """Dispatch a GitHub Actions workflow and log the result."""
+    """Dispatch a GitHub Actions workflow."""
     auth_user = request.json.get("user")
     if not auth_user:
         log.warning("Trigger '%s' rejected — no user data in request", workflow_id)
@@ -127,14 +115,10 @@ def trigger_github_action(workflow_id: str):
         response = requests.post(url, headers=headers, json=payload, timeout=15)
     except requests.Timeout:
         log.error("Trigger | GitHub API timed out for '%s'", workflow_id)
-        log_api_call(workflow_id, auth_user, 504)
         return jsonify({"success": False, "error": "GitHub API timed out."}), 504
     except requests.RequestException as exc:
         log.error("Trigger | GitHub API request failed: %s", exc)
-        log_api_call(workflow_id, auth_user, 500)
         return jsonify({"success": False, "error": str(exc)}), 500
-
-    log_api_call(workflow_id, auth_user, response.status_code)
 
     if response.status_code in (200, 204):
         log.info("Trigger | '%s' dispatched successfully (HTTP %d)", workflow_id, response.status_code)
@@ -165,14 +149,7 @@ def trigger_workflow(workflow_key):
 
 @app.route("/test-api", methods=["POST"])
 def test_api():
-    try:
-        json_data = request.get_json(force=True) or {}
-        auth_user = json_data.get("user", "anonymous")
-        log_api_call("test", auth_user, 200)
-        return jsonify({"success": True, "message": "Test API is working!"})
-    except Exception as exc:
-        log.exception("test-api error")
-        return jsonify({"success": False, "error": str(exc)}), 500
+    return jsonify({"success": True, "message": "Test API is working!"})
 
 
 @app.route("/authenticate", methods=["POST"])
@@ -319,19 +296,6 @@ def file_info():
         "last_updated_at": author.get("date"),
         "last_updated_by": author.get("name"),
     })
-
-
-@app.route("/history", methods=["GET"])
-def get_history():
-    docs = (
-        db.collection("api_call_history")
-        .order_by("called_at", direction=firestore.Query.DESCENDING)
-        .limit(100)
-        .stream()
-    )
-    history = [doc.to_dict() for doc in docs]
-    log.info("History | returned %d records", len(history))
-    return jsonify(history)
 
 
 @app.route("/run-status", methods=["GET"])
