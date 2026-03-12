@@ -105,11 +105,11 @@ def trigger_github_action(workflow_id: str):
         "Accept": "application/vnd.github.v3+json",
     }
     payload = {"ref": BRANCH}
+    inputs = {"triggered_by_name": auth_user.get("name", auth_user.get("username", ""))}
     if workflow_id in WORKFLOWS_WITH_INPUTS:
-        payload["inputs"] = {
-            "name":  auth_user.get("name"),
-            "email": auth_user.get("email"),
-        }
+        inputs["name"] = auth_user.get("name")
+        inputs["email"] = auth_user.get("email")
+    payload["inputs"] = inputs
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=15)

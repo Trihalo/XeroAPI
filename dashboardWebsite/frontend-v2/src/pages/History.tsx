@@ -213,7 +213,7 @@ export default function History() {
                       {currentRows.map((s, index) => {
                         const isScheduled = s.event_name === "schedule" || !s.event_name;
                         const triggeredBy = isScheduled
-                          ? `Daily Schedule (${formatDate(s.stored_at)})`
+                          ? "Daily Schedule"
                           : (s.triggered_by || "—");
                         const succeeded = s.job_status?.toLowerCase() === "success";
                         const hasFailed = s.job_status?.toLowerCase() === "failure";
