@@ -37,6 +37,8 @@ def writeGithubSummary(all_rows):
     deleted = [r for r in all_rows if r.get("__deleted__")]
     valid = [r for r in all_rows if not r.get("__deleted__")]
 
+    total_margin = sum(r["Margin"] for r in valid if isinstance(r.get("Margin"), (int, float)))
+
     lines = [f"## FutureYou Revenue DB — Run #{run_number}", ""]
     lines += [
         "### Overview",
@@ -44,6 +46,7 @@ def writeGithubSummary(all_rows):
         "| --- | --- |",
         f"| Rows Uploaded | {len(valid)} |",
         f"| Voided / Deleted | {len(deleted)} |",
+        f"| Total Margin | ${total_margin:,.2f} |",
         "",
     ]
 
@@ -51,9 +54,27 @@ def writeGithubSummary(all_rows):
         df = pd.DataFrame(valid)
 
         type_counts = df["Type"].value_counts()
-        lines += ["### By Type", "| Type | Rows |", "| --- | --- |"]
+        lines += ["### By Type", "| Type | Rows | Margin |", "| --- | --- | --- |"]
         for t, count in type_counts.items():
-            lines.append(f"| {t} | {count} |")
+            type_margin = df[df["Type"] == t]["Margin"].apply(lambda x: x if isinstance(x, (int, float)) else 0).sum()
+            lines.append(f"| {t} | {count} | ${type_margin:,.2f} |")
+        lines.append("")
+
+        # Row preview (up to 30 rows)
+        preview_rows = valid[:30]
+        lines += ["### Row Preview", "| Invoice # | Type | Client | Consultant | EX GST | Margin |", "| --- | --- | --- | --- | --- | --- |"]
+        for r in preview_rows:
+            inv = r.get("Invoice #") or r.get("InvoiceNumber", "—")
+            rtype = r.get("Type", "—")
+            client = r.get("To") or r.get("ToClient", "—")
+            consultant = r.get("Consultant", "—") or "—"
+            exgst = r.get("EX GST") or r.get("EXGST", 0)
+            margin = r.get("Margin", "")
+            exgst_str = f"${float(exgst):,.2f}" if exgst not in (None, "") else "—"
+            margin_str = f"${float(margin):,.2f}" if isinstance(margin, (int, float)) else "—"
+            lines.append(f"| {inv} | {rtype} | {client} | {consultant} | {exgst_str} | {margin_str} |")
+        if len(valid) > 30:
+            lines.append(f"_… and {len(valid) - 30} more rows_")
         lines.append("")
 
     lines.append(f"_Generated {today.strftime('%d %b %Y')} — delta sync (last 24 hours)_")

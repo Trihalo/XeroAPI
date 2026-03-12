@@ -22,13 +22,6 @@ export interface AuthResponse {
   user?: AuthUser;
 }
 
-export interface HistoryEntry {
-  workflow: string;
-  called_at: unknown;
-  name: unknown;
-  success: string | number;
-}
-
 export const triggerWorkflow = async (
   workflowKey: string,
   authUser: AuthUser,
@@ -113,11 +106,6 @@ export const authenticateUser = async (
   } catch {
     return { success: false, message: "Authentication request failed." };
   }
-};
-
-export const fetchHistory = async (): Promise<HistoryEntry[]> => {
-  const response = await fetch(`${API_BASE_URL}/history`);
-  return response.json() as Promise<HistoryEntry[]>;
 };
 
 export interface WorkflowStep {

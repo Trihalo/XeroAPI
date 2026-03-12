@@ -44,6 +44,36 @@ jobs:
           ARGS="$ARGS --name '${{ inputs.name }}' --email '${{ inputs.email }}'"
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
           python CustomerPrepaymentARAllocator.py $ARGS
+          cp "$GITHUB_STEP_SUMMARY" "$GITHUB_WORKSPACE/_job_summary.md" 2>/dev/null || true
+
+      - name: Send job summary to dashboard
+        if: always()
+        continue-on-error: true
+        env:
+          BACKEND_API_URL: ${{ vars.BACKEND_API_URL }}
+          BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
+        run: |
+          python3 -c "
+          import os, json, urllib.request
+          url = os.environ.get('BACKEND_API_URL', '').strip()
+          key = os.environ.get('BACKEND_API_KEY', '').strip()
+          if not url or not key:
+              print('BACKEND_API_URL or BACKEND_API_KEY not set, skipping.')
+              exit(0)
+          path = os.path.join(os.environ.get('GITHUB_WORKSPACE', ''), '_job_summary.md')
+          if not path or not os.path.isfile(path):
+              print('No job summary file found, skipping.')
+              exit(0)
+          with open(path) as f:
+              summary = f.read().strip()
+          if not summary:
+              print('Summary is empty, skipping.')
+              exit(0)
+          payload = json.dumps({'run_id': int(os.environ['GITHUB_RUN_ID']), 'run_number': int(os.environ['GITHUB_RUN_NUMBER']), 'workflow_file': 'flightRiskPrepaymentAllocator.yml', 'summary': summary}).encode()
+          req = urllib.request.Request(url + '/store-summary', data=payload, headers={'Content-Type': 'application/json', 'X-API-Key': key}, method='POST')
+          with urllib.request.urlopen(req) as r:
+              print(r.read().decode())
+          "
 
       - name: Upload output artifacts
         if: always()
