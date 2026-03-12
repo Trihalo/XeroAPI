@@ -21,7 +21,10 @@
       "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline -- dashboardWebsite/backend/)",
       "Bash(git -C /Users/leo/Github/XeroAPI show HEAD:dashboardWebsite/backend/Dockerfile)",
       "Bash(git -C /Users/leo/Github/XeroAPI log --all --pretty=format:\"%h %s\" -- \"**/requirements.txt\")",
-      "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline)"
+      "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh run:*)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

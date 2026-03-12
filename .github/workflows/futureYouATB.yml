@@ -40,6 +40,7 @@ jobs:
           XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT: ${{ vars.XERO_REFRESH_TOKEN_FUTUREYOU_RECRUITMENT }}
         run: |
           python atbRequestv2.py
+          cp "$GITHUB_STEP_SUMMARY" "$GITHUB_WORKSPACE/_job_summary.md" 2>/dev/null || true
 
       - name: Send job summary to dashboard
         if: always()
@@ -55,9 +56,9 @@ jobs:
           if not url or not key:
               print('BACKEND_API_URL or BACKEND_API_KEY not set, skipping.')
               exit(0)
-          path = os.environ.get('GITHUB_STEP_SUMMARY', '')
+          path = os.path.join(os.environ.get('GITHUB_WORKSPACE', ''), '_job_summary.md')
           if not path or not os.path.isfile(path):
-              print('No GITHUB_STEP_SUMMARY file, skipping.')
+              print('No job summary file found, skipping.')
               exit(0)
           with open(path) as f:
               summary = f.read().strip()
