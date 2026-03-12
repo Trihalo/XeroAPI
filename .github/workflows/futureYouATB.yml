@@ -50,15 +50,22 @@ jobs:
         run: |
           python3 -c "
           import os, json, urllib.request
+          url = os.environ.get('BACKEND_API_URL', '').strip()
+          key = os.environ.get('BACKEND_API_KEY', '').strip()
+          if not url or not key:
+              print('BACKEND_API_URL or BACKEND_API_KEY not set, skipping.')
+              exit(0)
           path = os.environ.get('GITHUB_STEP_SUMMARY', '')
           if not path or not os.path.isfile(path):
+              print('No GITHUB_STEP_SUMMARY file, skipping.')
               exit(0)
           with open(path) as f:
               summary = f.read().strip()
           if not summary:
+              print('Summary is empty, skipping.')
               exit(0)
           payload = json.dumps({'run_id': int(os.environ['GITHUB_RUN_ID']), 'run_number': int(os.environ['GITHUB_RUN_NUMBER']), 'workflow_file': 'futureYouATB.yml', 'summary': summary}).encode()
-          req = urllib.request.Request(os.environ['BACKEND_API_URL'] + '/store-summary', data=payload, headers={'Content-Type': 'application/json', 'X-API-Key': os.environ['BACKEND_API_KEY']}, method='POST')
+          req = urllib.request.Request(url + '/store-summary', data=payload, headers={'Content-Type': 'application/json', 'X-API-Key': key}, method='POST')
           with urllib.request.urlopen(req) as r:
               print(r.read().decode())
           "
