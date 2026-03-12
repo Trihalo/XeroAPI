@@ -105,11 +105,11 @@ def trigger_github_action(workflow_id: str):
         "Accept": "application/vnd.github.v3+json",
     }
     payload = {"ref": BRANCH}
+    inputs = {"triggered_by_name": auth_user.get("name", auth_user.get("username", ""))}
     if workflow_id in WORKFLOWS_WITH_INPUTS:
-        payload["inputs"] = {
-            "name":  auth_user.get("name"),
-            "email": auth_user.get("email"),
-        }
+        inputs["name"] = auth_user.get("name")
+        inputs["email"] = auth_user.get("email")
+    payload["inputs"] = inputs
 
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=15)
@@ -404,6 +404,9 @@ def store_summary():
     run_number = data.get("run_number")
     workflow_file = data.get("workflow_file", "")
     summary = data.get("summary", "").strip()
+    triggered_by = data.get("triggered_by", "")
+    event_name = data.get("event_name", "")
+    job_status = data.get("job_status", "")
 
     if not summary or not workflow_file:
         return jsonify({"error": "Missing summary or workflow_file"}), 400
@@ -414,9 +417,12 @@ def store_summary():
         "run_number":    run_number,
         "workflow_file": workflow_file,
         "summary":       summary,
+        "triggered_by":  triggered_by,
+        "event_name":    event_name,
+        "job_status":    job_status,
         "stored_at":     firestore.SERVER_TIMESTAMP,
     })
-    log.info("Summary | stored for '%s' run #%s", workflow_file, run_number)
+    log.info("Summary | stored for '%s' run #%s by %s (%s)", workflow_file, run_number, triggered_by, event_name)
     return jsonify({"success": True})
 
 

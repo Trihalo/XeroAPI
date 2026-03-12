@@ -137,6 +137,9 @@ export interface SummaryEntry {
   workflow_file: string;
   summary: string;
   stored_at: unknown;
+  triggered_by?: string;
+  event_name?: string;
+  job_status?: string;
 }
 
 export const fetchSummaries = async (): Promise<SummaryEntry[]> => {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -203,11 +204,21 @@ export default function History() {
                         <TableHead>Workflow</TableHead>
                         <TableHead>Run</TableHead>
                         <TableHead>Date</TableHead>
+                        <TableHead>Triggered By</TableHead>
+                        <TableHead>Status</TableHead>
                         <TableHead />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {currentRows.map((s, index) => (
+                      {currentRows.map((s, index) => {
+                        const isScheduled = s.event_name === "schedule" || !s.event_name;
+                        const triggeredBy = isScheduled
+                          ? "Daily Schedule"
+                          : (s.triggered_by || "—");
+                        const succeeded = s.job_status?.toLowerCase() === "success";
+                        const hasFailed = s.job_status?.toLowerCase() === "failure";
+
+                        return (
                         <TableRow key={pageStart + index}>
                           <TableCell className="font-medium">
                             {WORKFLOW_DISPLAY_NAMES[s.workflow_file] ?? s.workflow_file}
@@ -217,6 +228,16 @@ export default function History() {
                           </TableCell>
                           <TableCell className="text-muted-foreground tabular-nums">
                             {formatDate(s.stored_at)}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {triggeredBy}
+                          </TableCell>
+                          <TableCell>
+                            {s.job_status ? (
+                              <Badge variant={succeeded ? "success" : hasFailed ? "destructive" : "secondary"}>
+                                {succeeded ? "Success" : hasFailed ? "Failed" : s.job_status}
+                              </Badge>
+                            ) : null}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
@@ -230,7 +251,8 @@ export default function History() {
                             </Button>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
 
