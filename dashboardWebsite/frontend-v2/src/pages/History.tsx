@@ -188,6 +188,7 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [page, setPage] = useState(1);
+  const [summaryPage, setSummaryPage] = useState(1);
   const [selectedSummary, setSelectedSummary] = useState<SummaryEntry | null>(
     null,
   );
@@ -204,6 +205,11 @@ export default function History() {
         setLoading(false);
       });
   }, []);
+
+  const SUMMARY_PAGE_SIZE = 5;
+  const summaryTotalPages = Math.max(1, Math.ceil(summaries.length / SUMMARY_PAGE_SIZE));
+  const summaryStart = (summaryPage - 1) * SUMMARY_PAGE_SIZE;
+  const currentSummaries = summaries.slice(summaryStart, summaryStart + SUMMARY_PAGE_SIZE);
 
   const totalPages = Math.max(1, Math.ceil(history.length / PAGE_SIZE));
   const pageStart = (page - 1) * PAGE_SIZE;
@@ -225,6 +231,75 @@ export default function History() {
         </div>
 
         <div className="p-8 max-w-6xl space-y-6">
+          {/* ── Job Summaries ── */}
+          {!loading && summaries.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Job Summaries</CardTitle>
+                  <span className="text-sm text-muted-foreground">
+                    {summaries.length} recent run
+                    {summaries.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Workflow</TableHead>
+                      <TableHead>Run</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentSummaries.map((s, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">
+                          {WORKFLOW_DISPLAY_NAMES[s.workflow_file] ??
+                            s.workflow_file}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">
+                          {s.run_number ? `#${s.run_number}` : "—"}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">
+                          {formatDate(s.stored_at)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs"
+                            onClick={() => setSelectedSummary(s)}
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Preview
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {summaryTotalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {summaryStart + 1}–{Math.min(summaryStart + SUMMARY_PAGE_SIZE, summaries.length)} of {summaries.length}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" onClick={() => setSummaryPage((p) => p - 1)} disabled={summaryPage === 1}>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => setSummaryPage((p) => p + 1)} disabled={summaryPage === summaryTotalPages}>
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* ── Trigger History ── */}
           <Card>
             <CardHeader>
@@ -366,59 +441,6 @@ export default function History() {
             </CardContent>
           </Card>
 
-          {/* ── Job Summaries ── */}
-          {!loading && summaries.length > 0 && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Job Summaries</CardTitle>
-                  <span className="text-sm text-muted-foreground">
-                    {summaries.length} recent run
-                    {summaries.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Workflow</TableHead>
-                      <TableHead>Run</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {summaries.map((s, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium">
-                          {WORKFLOW_DISPLAY_NAMES[s.workflow_file] ??
-                            s.workflow_file}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground tabular-nums">
-                          {s.run_number ? `#${s.run_number}` : "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground tabular-nums">
-                          {formatDate(s.stored_at)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1.5 text-xs"
-                            onClick={() => setSelectedSummary(s)}
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                            Preview
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </main>
 
@@ -439,7 +461,7 @@ export default function History() {
           </DialogHeader>
           {selectedSummary && (
             <div className="mt-2">
-              <MarkdownRenderer md={selectedSummary.summary} />
+              <MarkdownRenderer md={selectedSummary.summary.replace(/^##[^\n]*\n?/, "")} />
             </div>
           )}
         </DialogContent>
