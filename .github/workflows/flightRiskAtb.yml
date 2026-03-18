@@ -2,7 +2,7 @@ name: Flight Risk ATB
 
 on:
   schedule:
-    - cron: '0 19 * * *'  # Daily at 7 PM UTC
+    - cron: '0 20 * * *'  # Daily at 7 PM UTC
   workflow_dispatch:
     inputs:
       triggered_by_name:
