@@ -29,3 +29,4 @@ H2coco/output.txt
 FutureYou/bullhorn/duplicatesReporting/*.xlsx
 FutureYou/bullhorn/placementsApprovalEventSubscription/test_audit_logs.py
 FlightRisk/logs
+FutureYou/bullhorn/talentMapping/output
