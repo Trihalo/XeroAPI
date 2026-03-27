@@ -6,3 +6,5 @@ pandas
 openpyxl
 python-docx
 gunicorn
+google-cloud-bigquery
+google-auth
