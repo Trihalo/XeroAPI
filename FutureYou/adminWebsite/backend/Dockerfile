@@ -20,6 +20,7 @@ COPY helpers/ helpers/
 
 # FutureYou-specific scripts (added to sys.path via FUTUREYOU_DIR)
 COPY FutureYou/fetchFYAnnualLeave.py FutureYou/
+COPY FutureYou/LeaveTypes.json FutureYou/
 
 # Talent map generator (added to sys.path via TALENT_MAP_DIR)
 COPY FutureYou/bullhorn/talentMapping/ FutureYou/bullhorn/talentMapping/
