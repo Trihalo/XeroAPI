@@ -24,7 +24,11 @@
       "Bash(git -C /Users/leo/Github/XeroAPI log --all --oneline)",
       "WebFetch(domain:github.com)",
       "Bash(gh run:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//Users/leo/Github/XeroAPI/**)",
+      "Bash(done)"
     ]
   }
 }

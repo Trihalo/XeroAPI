@@ -7,6 +7,7 @@ FutureYou/ATB
 FutureYou/Overdue
 FutureYou/*.csv
 FutureYou/*.json
+!FutureYou/LeaveTypes.json
 .DS_Store/
 H2coco/*.json
 H2coco/*.csv
