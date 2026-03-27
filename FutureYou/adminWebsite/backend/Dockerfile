@@ -15,6 +15,9 @@ COPY FutureYou/adminWebsite/backend/app.py FutureYou/adminWebsite/backend/
 COPY xeroAuthHelper.py .
 COPY xeroAuth.py .
 
+# Shared helpers (dateStringsHelper, emailAttachment, etc.)
+COPY helpers/ helpers/
+
 # FutureYou-specific scripts (added to sys.path via FUTUREYOU_DIR)
 COPY FutureYou/fetchFYAnnualLeave.py FutureYou/
 
