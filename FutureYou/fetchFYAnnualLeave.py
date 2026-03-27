@@ -174,8 +174,8 @@ def build_leave_email(annual_leave_df, leave_applications_df):
             logo_b64 = base64.b64encode(f.read()).decode("utf-8")
     logo_tag = f'<img src="data:image/png;base64,{logo_b64}" alt="FutureYou" height="48" width="auto" style="height:48px; width:auto; display:block; border:0;">' if logo_b64 else ""
 
-    BRAND_PRIMARY = "#003464"
-    BRAND_RED     = "#ED5C5B"
+    BRAND_PRIMARY = "#003464"  # Navy
+    BRAND_RED     = "#F25A57"  # Salmon
 
     # Filter excluded employees
     al_df = annual_leave_df[~annual_leave_df['EmployeeName'].isin(EXCLUDED_EMPLOYEES)].copy()

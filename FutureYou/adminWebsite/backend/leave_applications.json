@@ -1,0 +1,90 @@
+[
+  {
+    "LeaveApplicationID": "5227901c-49f7-43b0-8658-0255c55e8444",
+    "EmployeeName": "Chloe Crewdson",
+    "Title": "Uncles 60th birthday Noosa ",
+    "StartDate": "2026-03-26",
+    "EndDate": "2026-03-30",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "2e32f402-700e-46ba-9860-78695bde2c29",
+    "EmployeeName": "Emma McGuigan",
+    "Title": "Day off",
+    "StartDate": "2026-04-02",
+    "EndDate": "2026-04-02",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "71a86b0e-63d7-433b-8f6d-5fbb570852ed",
+    "EmployeeName": "Ashley Duffy",
+    "Title": "Birthday Leave",
+    "StartDate": "2026-04-07",
+    "EndDate": "2026-04-07",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "f86d90a6-8940-4de6-96ff-b1d279d9a932",
+    "EmployeeName": "Corin Roberts",
+    "Title": "AL",
+    "StartDate": "2026-04-08",
+    "EndDate": "2026-04-10",
+    "NumberofUnits": 16.0
+  },
+  {
+    "LeaveApplicationID": "ac61d85d-c425-4c6f-86da-ab6fe1da597c",
+    "EmployeeName": "Natalie Gibbins",
+    "Title": "Birthday leave",
+    "StartDate": "2026-04-20",
+    "EndDate": "2026-04-20",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "83a7c4fd-4118-4d02-babb-197800bf9cd6",
+    "EmployeeName": "Emma McGuigan",
+    "Title": "Annual leave ",
+    "StartDate": "2026-06-03",
+    "EndDate": "2026-06-05",
+    "NumberofUnits": 24.0
+  },
+  {
+    "LeaveApplicationID": "b76f7a0d-b696-44b0-9092-d14fd17847b7",
+    "EmployeeName": "Emma McGuigan",
+    "Title": "A/L",
+    "StartDate": "2026-06-08",
+    "EndDate": "2026-06-09",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "aee83547-60f0-4a74-85ac-d0be1b1f8a2e",
+    "EmployeeName": "Emma McGuigan",
+    "Title": "A/L",
+    "StartDate": "2026-06-15",
+    "EndDate": "2026-06-16",
+    "NumberofUnits": 16.0
+  },
+  {
+    "LeaveApplicationID": "64f9c37f-899d-4081-b6b3-0918fd6771b4",
+    "EmployeeName": "Ashley Duffy",
+    "Title": "Wellbeing Day",
+    "StartDate": "2026-06-29",
+    "EndDate": "2026-06-29",
+    "NumberofUnits": 8.0
+  },
+  {
+    "LeaveApplicationID": "9d71ba29-be4e-433b-9671-552daa0e0cdc",
+    "EmployeeName": "Ashley Duffy",
+    "Title": "Annual leave",
+    "StartDate": "2026-10-06",
+    "EndDate": "2026-10-08",
+    "NumberofUnits": 24.0
+  },
+  {
+    "LeaveApplicationID": "61085efe-927d-4b62-a79d-08c94a263646",
+    "EmployeeName": "Tarryn Kaufmann",
+    "Title": "AL",
+    "StartDate": "2026-10-06",
+    "EndDate": "2026-10-06",
+    "NumberofUnits": 8.0
+  }
+]

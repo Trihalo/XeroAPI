@@ -1,0 +1,52 @@
+name: Deploy FY Admin Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'FutureYou/adminWebsite/frontend/**'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: futureyou-458212
+  REGION: australia-southeast1
+  REPO: futureyou-images
+  SERVICE: fy-admin-frontend
+
+permissions:
+  id-token: write   # Required for WIF
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.FY_WIF_PROVIDER }}
+          service_account: ${{ vars.FY_WIF_SA }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and push Docker image
+        working-directory: FutureYou/adminWebsite/frontend
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/fy-admin-frontend:${{ github.sha }}"
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.FY_ADMIN_API_URL }} \
+            -t $IMAGE .
+          docker push $IMAGE
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/fy-admin-frontend:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080

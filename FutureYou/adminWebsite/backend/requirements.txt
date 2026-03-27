@@ -1,0 +1,8 @@
+flask==2.3.3
+flask-cors==4.0.0
+python-dotenv
+requests
+pandas
+openpyxl
+python-docx
+gunicorn
