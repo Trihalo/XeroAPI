@@ -49,4 +49,5 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --set-env-vars "GCP_PROJECT_ID=trihalo" \
-            --set-env-vars "GH_PAT=${{ secrets.GH_PAT }}"
+            --set-env-vars "GH_PAT=${{ secrets.GH_PAT }}" \
+            --set-env-vars "BACKEND_API_KEY=${{ secrets.BACKEND_API_KEY }}"

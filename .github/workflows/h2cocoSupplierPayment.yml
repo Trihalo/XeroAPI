@@ -2,6 +2,11 @@ name: H2coco Supplier Payment Update
 
 on:
   workflow_dispatch:
+    inputs:
+      triggered_by_name:
+        description: "Dashboard user who triggered this run"
+        required: false
+        default: ""
   schedule:
     - cron: "0 19 * * *"
 
@@ -37,4 +42,37 @@ jobs:
           XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
         run: |
           python supplierPrepayments.py
+          cp "$GITHUB_STEP_SUMMARY" "$GITHUB_WORKSPACE/_job_summary.md" 2>/dev/null || true
+
+      - name: Send job summary to dashboard
+        if: always()
+        continue-on-error: true
+        env:
+          BACKEND_API_URL: ${{ vars.BACKEND_API_URL }}
+          BACKEND_API_KEY: ${{ secrets.BACKEND_API_KEY }}
+          JOB_STATUS: ${{ job.status }}
+          TRIGGERED_BY_NAME: ${{ inputs.triggered_by_name }}
+        run: |
+          python3 -c "
+          import os, json, urllib.request
+          url = os.environ.get('BACKEND_API_URL', '').strip()
+          key = os.environ.get('BACKEND_API_KEY', '').strip()
+          if not url or not key:
+              print('BACKEND_API_URL or BACKEND_API_KEY not set, skipping.')
+              exit(0)
+          path = os.path.join(os.environ.get('GITHUB_WORKSPACE', ''), '_job_summary.md')
+          if not path or not os.path.isfile(path):
+              print('No job summary file found, skipping.')
+              exit(0)
+          with open(path) as f:
+              summary = f.read().strip()
+          if not summary:
+              print('Summary is empty, skipping.')
+              exit(0)
+          triggered_by = os.environ.get('TRIGGERED_BY_NAME') or os.environ.get('GITHUB_ACTOR', '')
+          payload = json.dumps({'run_id': int(os.environ['GITHUB_RUN_ID']), 'run_number': int(os.environ['GITHUB_RUN_NUMBER']), 'workflow_file': 'h2cocoSupplierPayment.yml', 'summary': summary, 'triggered_by': triggered_by, 'event_name': os.environ.get('GITHUB_EVENT_NAME', ''), 'job_status': os.environ.get('JOB_STATUS', '')}).encode()
+          req = urllib.request.Request(url + '/store-summary', data=payload, headers={'Content-Type': 'application/json', 'X-API-Key': key}, method='POST')
+          with urllib.request.urlopen(req) as r:
+              print(r.read().decode())
+          "
 

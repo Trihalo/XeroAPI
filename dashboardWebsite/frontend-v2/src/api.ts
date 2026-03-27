@@ -22,13 +22,6 @@ export interface AuthResponse {
   user?: AuthUser;
 }
 
-export interface HistoryEntry {
-  workflow: string;
-  called_at: unknown;
-  name: unknown;
-  success: string | number;
-}
-
 export const triggerWorkflow = async (
   workflowKey: string,
   authUser: AuthUser,
@@ -115,11 +108,6 @@ export const authenticateUser = async (
   }
 };
 
-export const fetchHistory = async (): Promise<HistoryEntry[]> => {
-  const response = await fetch(`${API_BASE_URL}/history`);
-  return response.json() as Promise<HistoryEntry[]>;
-};
-
 export interface WorkflowStep {
   name: string;
   status: "queued" | "in_progress" | "completed";
@@ -149,6 +137,9 @@ export interface SummaryEntry {
   workflow_file: string;
   summary: string;
   stored_at: unknown;
+  triggered_by?: string;
+  event_name?: string;
+  job_status?: string;
 }
 
 export const fetchSummaries = async (): Promise<SummaryEntry[]> => {
