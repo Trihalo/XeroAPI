@@ -8,3 +8,4 @@ python-docx
 gunicorn
 google-cloud-bigquery
 google-auth
+pytz
