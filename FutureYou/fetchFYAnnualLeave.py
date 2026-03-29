@@ -200,11 +200,11 @@ def build_leave_email(annual_leave_df, leave_applications_df):
     rows_html = ""
     for i, row in df.iterrows():
         if pd.isna(row['AnnualLeaveBalance']):
-            al_now_str, al_inc_str, inc_style = "N/A", "N/A", ""
+            al_now_str, al_inc_str, inc_extra = "N/A", "N/A", ""
         else:
             al_now_str = f"{row['ALNow']:.2f}"
             al_inc_str = f"{row['ALIncScheduled']:.2f}"
-            inc_style = f' style="color:{BRAND_RED}; font-weight:bold;"' if row['ALIncScheduled'] < 0 else ''
+            inc_extra = f' color:{BRAND_RED}; font-weight:bold;' if row['ALIncScheduled'] < 0 else ''
         sched_str = f"{row['ScheduledHours']:.2f}"
         row_bg = "#f5f7fa" if i % 2 == 0 else "#ffffff"
         rows_html += f"""
@@ -212,11 +212,11 @@ def build_leave_email(annual_leave_df, leave_applications_df):
                 <td style="padding:7px 12px; border-bottom:1px solid #e8e8e8;">{row['EmployeeName']}</td>
                 <td style="padding:7px 12px; text-align:right; border-bottom:1px solid #e8e8e8;">{al_now_str}</td>
                 <td style="padding:7px 12px; text-align:right; border-bottom:1px solid #e8e8e8;">{sched_str}</td>
-                <td style="padding:7px 12px; text-align:right; border-bottom:1px solid #e8e8e8;"{inc_style}>{al_inc_str}</td>
+                <td style="padding:7px 12px; text-align:right; border-bottom:1px solid #e8e8e8;{inc_extra}">{al_inc_str}</td>
             </tr>"""
 
     balances_table = f"""
-    <table style="border-collapse:collapse; font-family:Arial,sans-serif; font-size:13px; width:100%; max-width:760px;">
+    <table style="border-collapse:collapse; font-family:Raleway,Arial,sans-serif; font-size:13px; width:100%; max-width:760px;">
         <thead>
             <tr style="background:{BRAND_PRIMARY}; color:white;">
                 <th style="padding:10px 12px; text-align:left;">Employee</th>
@@ -256,7 +256,7 @@ def build_leave_email(annual_leave_df, leave_applications_df):
             </tr>"""
 
     leave_table = f"""
-    <table style="border-collapse:collapse; font-family:Arial,sans-serif; font-size:13px; width:100%; max-width:760px;">
+    <table style="border-collapse:collapse; font-family:Raleway,Arial,sans-serif; font-size:13px; width:100%; max-width:760px;">
         <thead>
             <tr style="background:{BRAND_PRIMARY}; color:white;">
                 <th style="padding:10px 12px; text-align:left;">Employee</th>
@@ -280,7 +280,7 @@ def build_leave_email(annual_leave_df, leave_applications_df):
             d += timedelta(days=1)
 
     if not day_map:
-        calendar_html = "<p style='font-family:Arial,sans-serif;'>No scheduled leave found.</p>"
+        calendar_html = "<p style='font-family:Raleway,Arial,sans-serif;'>No scheduled leave found.</p>"
     else:
         leave_months = set((d.year, d.month) for d in day_map)
         # Fill every month in the range, even if empty
@@ -304,14 +304,14 @@ def build_leave_email(annual_leave_df, leave_applications_df):
         calendar_html = ""
         for year, month in all_months:
             month_name = cal_module.month_name[month]
-            calendar_html += f'<h3 class="cal-heading" style="font-family:Arial,sans-serif; color:{BRAND_PRIMARY}; margin:28px 0 8px;">{month_name} {year}</h3>'
+            calendar_html += f'<h3 class="cal-heading" style="font-family:Raleway,Arial,sans-serif; color:{BRAND_PRIMARY}; margin:28px 0 8px;">{month_name} {year}</h3>'
 
             if (year, month) not in leave_months:
-                calendar_html += f'<p style="font-family:Arial,sans-serif; font-size:13px; color:#888; margin:0 0 16px; padding:12px 16px; background:#f5f7fa; border-left:3px solid #ddd;">No scheduled leave this month.</p>'
+                calendar_html += f'<p style="font-family:Raleway,Arial,sans-serif; font-size:13px; color:#888; margin:0 0 16px; padding:12px 16px; background:#f5f7fa; border-left:3px solid #ddd;">No scheduled leave this month.</p>'
                 continue
 
             weeks = cal_module.monthcalendar(year, month)
-            calendar_html += f'<div class="cal-wrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;"><table style="border-collapse:collapse; font-family:Arial,sans-serif; font-size:12px; width:100%; min-width:420px; table-layout:fixed;"><thead><tr style="background:{BRAND_PRIMARY}; color:white; text-align:center;"><th style="padding:7px;">Mon</th><th style="padding:7px;">Tue</th><th style="padding:7px;">Wed</th><th style="padding:7px;">Thu</th><th style="padding:7px;">Fri</th><th style="padding:7px; background:#1a2f4a;">Sat</th><th style="padding:7px; background:#1a2f4a;">Sun</th></tr></thead><tbody>'
+            calendar_html += f'<div class="cal-wrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch;"><table style="border-collapse:collapse; font-family:Raleway,Arial,sans-serif; font-size:12px; width:100%; min-width:420px; table-layout:fixed;"><thead><tr style="background:{BRAND_PRIMARY}; color:white; text-align:center;"><th style="padding:7px;">Mon</th><th style="padding:7px;">Tue</th><th style="padding:7px;">Wed</th><th style="padding:7px;">Thu</th><th style="padding:7px;">Fri</th><th style="padding:7px; background:#1a2f4a;">Sat</th><th style="padding:7px; background:#1a2f4a;">Sun</th></tr></thead><tbody>'
             for week in weeks:
                 calendar_html += "<tr>"
                 for col_idx, day in enumerate(week):
@@ -331,7 +331,7 @@ def build_leave_email(annual_leave_df, leave_applications_df):
                 calendar_html += "</tr>"
             calendar_html += "</tbody></table></div>"
 
-        legend = f'<div style="margin-top:16px; font-family:Arial,sans-serif; font-size:12px;"><strong>Legend:</strong><br>'
+        legend = f'<div style="margin-top:16px; font-family:Raleway,Arial,sans-serif; font-size:12px;"><strong>Legend:</strong><br>'
         for emp in all_employees:
             legend += f'<span style="display:inline-block; background:{emp_colors[emp]}; color:white; border-radius:3px; padding:3px 10px; margin:3px; font-size:11px;">{emp}</span>'
         legend += '</div>'
@@ -341,8 +341,10 @@ def build_leave_email(annual_leave_df, leave_applications_df):
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  body {{ font-family: Arial, sans-serif; color: #333; max-width: 960px; margin: 0 auto; padding: 0; }}
+  body {{ font-family: 'Raleway', Arial, sans-serif; color: #333; max-width: 960px; margin: 0 auto; padding: 0; }}
   .scroll-wrap {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
   @media (max-width: 600px) {{
     .content-pad {{ padding: 16px !important; }}
@@ -358,7 +360,7 @@ def build_leave_email(annual_leave_df, leave_applications_df):
                 <table cellpadding="0" cellspacing="0" border="0">
                     <tr>
                         <td valign="middle">{logo_tag}</td>
-                        <td valign="middle" style="padding-left:16px; color:{BRAND_PRIMARY}; font-size:20px; font-weight:700; font-family:Arial,sans-serif;">Annual Leave Report</td>
+                        <td valign="middle" style="padding-left:16px; color:{BRAND_PRIMARY}; font-size:20px; font-weight:700; font-family:Raleway,Arial,sans-serif;">Annual Leave Report</td>
                     </tr>
                 </table>
             </td>
