@@ -487,8 +487,31 @@ def main():
             invoice_results.extend(approveInvoiceAndBills(invoice, related_bills, accessToken, xeroTenantId))
         else:
             print(f"No matching bills found for search term: {search_term}")
-            print("ACTION: SKIPPING")
-            invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (no matching bills)"))
+            if base_inv_number.startswith("FRC#"):
+                # Query Unleashed — order number matches Xero invoice number exactly
+                order = queryUnleashedSalesOrder(base_inv_number, unleashed_api_id, unleashed_api_key)
+                if not order:
+                    print(f"Unleashed: no order found for {base_inv_number}, skipping.")
+                    invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (not in Unleashed)"))
+                    continue
+                order_status = order.get("OrderStatus", "")
+                if order_status not in ("Completed", "Complete"):
+                    print(f"Unleashed: {base_inv_number} not completed (status: {order_status}), skipping.")
+                    invoice_results.append((invNumber, "Invoice", f"⚠️ Skipped (order {order_status})"))
+                    continue
+
+                # Fix gift card line items before approving
+                for line in invoice.get("LineItems", []):
+                    if "gift" in line.get("Description", "").lower():
+                        print(f"  [GIFT] '{line.get('Description')}': AccountCode → 2004, TaxType → BASEXCLUDED")
+                        line["AccountCode"] = "2004"
+                        line["TaxType"] = "BASEXCLUDED"
+
+                print(f"Unleashed: {base_inv_number} is completed. Approving invoice (no bills).")
+                invoice_results.extend(approveInvoiceAndBills(invoice, [], accessToken, xeroTenantId))
+            else:
+                print("ACTION: SKIPPING")
+                invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (no matching bills)"))
 
     sa_results = processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
     recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
