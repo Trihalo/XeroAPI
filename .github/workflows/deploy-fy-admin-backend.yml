@@ -56,4 +56,5 @@ jobs:
             --port 8080 \
             --set-env-vars "GH_PAT=${{ secrets.GH_PAT }}" \
             --set-env-vars "FUTUREYOU_RECRUITMENT_CLIENT_ID=${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_ID }}" \
-            --set-env-vars "FUTUREYOU_RECRUITMENT_CLIENT_SECRET=${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}"
+            --set-env-vars "FUTUREYOU_RECRUITMENT_CLIENT_SECRET=${{ secrets.FUTUREYOU_RECRUITMENT_CLIENT_SECRET }}" \
+            --set-env-vars "FUTUREYOU_FORECAST_SECRET_KEY=${{ secrets.FUTUREYOU_FORECAST_SECRET_KEY }}"

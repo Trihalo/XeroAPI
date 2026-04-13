@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, FileText } from "lucide-react";
+import { CalendarDays, FileText, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/annual-leave", label: "Annual Leave", icon: CalendarDays },
   { href: "/talent-map",   label: "Talent Map",   icon: FileText },
+  { href: "/forecasting",  label: "Forecasting",  icon: TrendingUp },
 ];
 
 export default function Sidebar() {
@@ -28,7 +29,9 @@ export default function Sidebar() {
 
       <nav className="flex-1 px-3 py-5 space-y-0.5">
         {NAV.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
+          const active = href === "/forecasting"
+            ? pathname.startsWith("/forecasting")
+            : pathname === href;
           return (
             <Link
               key={href}

@@ -58,7 +58,7 @@
   /* ── FutureYou brand palette ── */
   --navy:       #003464;
   --salmon:     #F25A57;
-  --dark-grey:  #87888a;
+  --dark-grey:  #6b6c6e;
   --light-grey: #EEEEEE;
 
   /* ── Shadcn tokens mapped to brand ── */
@@ -73,7 +73,7 @@
   --secondary:          #EEEEEE;
   --secondary-foreground: #003464;
   --muted:              #EEEEEE;
-  --muted-foreground:   #87888a;
+  --muted-foreground:   #6b6c6e;
   --accent:             #F25A57;
   --accent-foreground:  #FFFFFF;
   --destructive:        #F25A57;
@@ -82,7 +82,7 @@
   --ring:               #003464;
   --chart-1:            #003464;
   --chart-2:            #F25A57;
-  --chart-3:            #87888a;
+  --chart-3:            #6b6c6e;
   --chart-4:            #EEEEEE;
   --chart-5:            #1a5599;
   --radius: 0.625rem;

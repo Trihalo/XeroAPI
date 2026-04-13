@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, FileText, ArrowRight } from "lucide-react";
+import { CalendarDays, FileText, TrendingUp, ArrowRight } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -22,6 +22,13 @@ const TOOLS = [
     title: "Talent Map Generator",
     description:
       "Upload a talent map Excel file and generate a branded, landscape Word document ready for PDF export.",
+  },
+  {
+    href: "/forecasting",
+    icon: TrendingUp,
+    title: "Forecasting",
+    description:
+      "Enter weekly revenue forecasts, view actuals vs targets, and manage recruiters and monthly goals.",
   },
 ];
 
