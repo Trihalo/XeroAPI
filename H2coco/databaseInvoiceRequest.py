@@ -246,7 +246,7 @@ def main():
     tenant_id = XeroTenants(access_token)
 
     invoice_params = {
-        "where": 'Type=="ACCREC" AND Date>=DateTime(2023,07,01)' if FULL_RESET else f'Type=="ACCREC" AND UpdatedDateUTC>={updated_date_str}',
+        "where": 'Type=="ACCREC" AND Date>=DateTime(2024,07,01)' if FULL_RESET else f'Type=="ACCREC" AND UpdatedDateUTC>={updated_date_str}',
         "page": 1,
         "pageSize": 1000
     }
