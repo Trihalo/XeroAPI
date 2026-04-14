@@ -6,17 +6,17 @@ import { fcFetchForecastSummary, type ForecastSummaryRow } from "@/lib/forecasti
 export function useCumulativeForecasts(
   currentFY: string,
   currentMonth: string,
-  summaryMapping: Record<string, string[]> | null,
+  recruiterToArea: Record<string, string> | null,
 ) {
-  const [rawForecastRows, setRawForecastRows]                           = useState<ForecastSummaryRow[]>([]);
-  const [cumulativeForecasts, setCumulativeForecasts]                   = useState<Record<string, Record<number, number>>>({});
+  const [rawForecastRows, setRawForecastRows] = useState<ForecastSummaryRow[]>([]);
+  const [cumulativeForecasts, setCumulativeForecasts] = useState<Record<string, Record<number, number>>>({});
   const [cumulativeForecastsByRecruiter, setCumulativeForecastsByRecruiter] = useState<Record<string, Record<number, number>>>({});
-  const [forecastByAreaForWeek, setForecastByAreaForWeek]               = useState<Record<string, Record<number, number>>>({});
+  const [forecastByAreaForWeek, setForecastByAreaForWeek] = useState<Record<string, Record<number, number>>>({});
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!summaryMapping || Object.keys(summaryMapping).length === 0) return;
+    if (!recruiterToArea || Object.keys(recruiterToArea).length === 0) return;
 
     setLoading(true);
     setError(null);
@@ -25,34 +25,32 @@ export function useCumulativeForecasts(
       .then((summary) => {
         // Attach area to each row
         const enriched = summary.map((entry) => {
-          const area = Object.entries(summaryMapping).find(([, names]) =>
-            names.includes(entry.name),
-          )?.[0];
+          const area = recruiterToArea[entry.name];
           return { ...entry, area: area ?? "Unknown" };
         });
 
         setRawForecastRows(enriched);
 
-        const forecasts:   Record<string, Record<number, number>> = {};
+        const forecasts: Record<string, Record<number, number>> = {};
         const byRecruiter: Record<string, Record<number, number>> = {};
-        const byAreaWeek:  Record<string, Record<number, number>> = {};
+        const byAreaWeek: Record<string, Record<number, number>> = {};
 
         enriched.forEach(({ week, total_revenue, uploadWeek, area, name }) => {
-          const w       = Number(week);
-          const u       = Number(uploadWeek);
+          const w = Number(week);
+          const u = Number(uploadWeek);
           const revenue = Number(total_revenue);
 
-          if (!forecasts[area])            forecasts[area] = {};
-          if (!forecasts[area][u])         forecasts[area][u] = 0;
+          if (!forecasts[area]) forecasts[area] = {};
+          if (!forecasts[area][u]) forecasts[area][u] = 0;
           if (w >= u) forecasts[area][u] += revenue;
 
-          if (!byRecruiter[name])          byRecruiter[name] = {};
-          if (!byRecruiter[name][u])       byRecruiter[name][u] = 0;
+          if (!byRecruiter[name]) byRecruiter[name] = {};
+          if (!byRecruiter[name][u]) byRecruiter[name][u] = 0;
           if (w >= u) byRecruiter[name][u] += revenue;
 
           if (w === u) {
-            if (!byAreaWeek[area])         byAreaWeek[area] = {};
-            if (!byAreaWeek[area][w])      byAreaWeek[area][w] = 0;
+            if (!byAreaWeek[area]) byAreaWeek[area] = {};
+            if (!byAreaWeek[area][w]) byAreaWeek[area][w] = 0;
             byAreaWeek[area][w] += revenue;
           }
         });
@@ -66,7 +64,7 @@ export function useCumulativeForecasts(
         setError("Failed to load forecast data.");
       })
       .finally(() => setLoading(false));
-  }, [currentFY, currentMonth, summaryMapping]);
+  }, [currentFY, currentMonth, recruiterToArea]);
 
   return { rawForecastRows, cumulativeForecasts, cumulativeForecastsByRecruiter, forecastByAreaForWeek, loading, error };
 }

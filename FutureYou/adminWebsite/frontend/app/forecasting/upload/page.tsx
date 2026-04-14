@@ -41,8 +41,8 @@ function InvoicePanel({
     .filter((inv) => inv.Consultant === name)
     .sort((a, b) => Number(a.Week) - Number(b.Week));
 
-  const permList  = list.filter((inv) => inv.Type === "Perm");
-  const tempList  = list.filter((inv) => inv.Type === "Temp");
+  const permList = list.filter((inv) => inv.Type === "Perm");
+  const tempList = list.filter((inv) => inv.Type === "Temp");
   const permTotal = Math.round(permList.reduce((s, inv) => s + (Number(inv.Margin) || 0), 0));
   const tempTotal = Math.round(tempList.reduce((s, inv) => s + (Number(inv.Margin) || 0), 0));
 
@@ -202,9 +202,9 @@ function RecruiterSection({
               </thead>
               <tbody>
                 {rows.map((row, idx) => {
-                  const editable    = row.week >= currentWeekIndex;
-                  const permActual  = actualsByWeek["Perm"][row.week] || 0;
-                  const tempActual  = actualsByWeek["Temp"][row.week] || 0;
+                  const editable = row.week >= currentWeekIndex;
+                  const permActual = actualsByWeek["Perm"][row.week] || 0;
+                  const tempActual = actualsByWeek["Temp"][row.week] || 0;
                   const totalActual = Math.round(permActual + tempActual);
 
                   return (
@@ -215,9 +215,8 @@ function RecruiterSection({
                       <td className="py-2.5 px-4">
                         <input
                           type="number"
-                          className={`w-24 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${
-                            !editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
-                          }`}
+                          className={`w-24 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${!editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
+                            }`}
                           placeholder="$"
                           value={row.revenue ?? ""}
                           onChange={(e) => editable && onChange(idx, "revenue", e.target.value)}
@@ -228,9 +227,8 @@ function RecruiterSection({
                       <td className="py-2.5 px-4">
                         <input
                           type="number"
-                          className={`w-24 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${
-                            !editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
-                          }`}
+                          className={`w-24 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${!editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
+                            }`}
                           placeholder="$"
                           value={row.tempRevenue ?? ""}
                           onChange={(e) => editable && onChange(idx, "tempRevenue", e.target.value)}
@@ -261,9 +259,8 @@ function RecruiterSection({
                       <td className="py-2.5 px-4">
                         <input
                           type="text"
-                          className={`w-48 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${
-                            !editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
-                          }`}
+                          className={`w-48 rounded border px-2 py-1 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-navy/30 ${!editable ? "opacity-40 cursor-not-allowed bg-gray-100" : "border-gray-200"
+                            }`}
                           placeholder="Optional notes"
                           value={row.notes ?? ""}
                           onChange={(e) => editable && onChange(idx, "notes", e.target.value)}
@@ -353,22 +350,22 @@ function RecruiterSection({
 // ── Main upload content ───────────────────────────────────────────────────────
 
 function UploadContent() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const area         = searchParams.get("area") ?? "";
+  const area = searchParams.get("area") ?? "";
 
   const calInfo = useMemo(() => getCurrentMonthInfo(), []);
 
   // Use URL params if provided (e.g. next-month upload), otherwise fall back to current month
-  const activeFY        = searchParams.get("fy")       ?? calInfo.currentFY;
-  const activeMonth     = searchParams.get("month")    ?? calInfo.currentMonth;
+  const activeFY = searchParams.get("fy") ?? calInfo.currentFY;
+  const activeMonth = searchParams.get("month") ?? calInfo.currentMonth;
   const activeWeekIndex = Number(searchParams.get("weekIndex") ?? calInfo.currentWeekIndex);
-  const weeksInMonth    = activeFY === calInfo.currentFY && activeMonth === calInfo.currentMonth
+  const weeksInMonth = activeFY === calInfo.currentFY && activeMonth === calInfo.currentMonth
     ? calInfo.weeksInMonth
     : activeFY === calInfo.nextMonthFY && activeMonth === calInfo.nextMonth
       ? calInfo.nextMonthWeeks
       : calInfo.weeksInMonth;
-  const previousMonth   = calInfo.previousMonth;
+  const previousMonth = calInfo.previousMonth;
 
   const { summaryMapping, loading: recruiterLoading } = useRecruiterData();
   const { currentData, prevData, loading: invoiceLoading, error: invoiceError } = useInvoiceData();
@@ -378,11 +375,11 @@ function UploadContent() {
     [area, summaryMapping],
   );
 
-  const [allRows, setAllRows]     = useState<Record<string, ForecastRow[]>>({});
-  const [fetching, setFetching]   = useState(true);
+  const [allRows, setAllRows] = useState<Record<string, ForecastRow[]>>({});
+  const [fetching, setFetching] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<Set<string>>(new Set());
-  const [submitted, setSubmitted]   = useState<Set<string>>(new Set());
+  const [submitted, setSubmitted] = useState<Set<string>>(new Set());
 
   // Fetch forecasts for all recruiters in area in parallel
   useEffect(() => {
@@ -423,7 +420,7 @@ function UploadContent() {
   ) {
     setAllRows((prev) => {
       const rows = [...(prev[name] ?? [])];
-      (rows[weekIdx] as Record<string, string | number>)[field] = value;
+      rows[weekIdx] = { ...rows[weekIdx], [field]: value };
       return { ...prev, [name]: rows };
     });
   }

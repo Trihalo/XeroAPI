@@ -198,32 +198,32 @@ export default function LegendsPage() {
           <ScrollArea className="w-full max-w-xl rounded-lg border border-gray-200">
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
+                <tr className="divide-x divide-gray-200">
                   <th className="py-2.5 px-4 font-semibold text-navy">
                     {viewMode === "Consultant" ? "Consultant" : "Area"}
                   </th>
                   <th className="py-2.5 px-4 font-semibold text-navy text-right">Perm</th>
                   <th className="py-2.5 px-4 font-semibold text-navy text-right">Temp</th>
-                  <th className="py-2.5 px-4 font-semibold text-navy text-right">Total</th>
+                  <th className="py-2.5 px-4 font-semibold text-navy text-right border-l-2 border-gray-300 bg-navy/5">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {sorted.map((entity, idx) => {
                   const { perm, temp, total } = getPermTemp(entity);
                   return (
-                    <tr key={entity} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                      <td className="py-2 px-4 whitespace-nowrap">{entity}</td>
-                      <td className="py-2 px-4 text-right text-dark-grey">{Math.round(perm).toLocaleString("en-AU")}</td>
-                      <td className="py-2 px-4 text-right text-dark-grey">{Math.round(temp).toLocaleString("en-AU")}</td>
-                      <td className="py-2 px-4 text-right font-semibold text-navy">{Math.round(total).toLocaleString("en-AU")}</td>
+                    <tr key={entity} className={`border-b border-gray-100 divide-x divide-gray-200 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                      <td className="py-2 px-4 whitespace-nowrap text-gray-900">{entity}</td>
+                      <td className="py-2 px-4 text-right text-gray-900 tabular-nums">{Math.round(perm).toLocaleString("en-AU")}</td>
+                      <td className="py-2 px-4 text-right text-gray-900 tabular-nums">{Math.round(temp).toLocaleString("en-AU")}</td>
+                      <td className="py-2 px-4 text-right font-semibold text-gray-900 tabular-nums border-l-2 border-gray-300 bg-navy/5">{Math.round(total).toLocaleString("en-AU")}</td>
                     </tr>
                   );
                 })}
-                <tr className="font-semibold bg-gray-50 border-t border-gray-200">
-                  <td className="py-2.5 px-4">Total</td>
-                  <td className="py-2.5 px-4 text-right">{sumCol("perm")}</td>
-                  <td className="py-2.5 px-4 text-right">{sumCol("temp")}</td>
-                  <td className="py-2.5 px-4 text-right text-navy">{sumCol("total")}</td>
+                <tr className="font-semibold bg-gray-100 border-t-2 border-gray-300 divide-x divide-gray-200">
+                  <td className="py-2.5 px-4 text-navy">Total</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{sumCol("perm")}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{sumCol("temp")}</td>
+                  <td className="py-2.5 px-4 text-right font-bold text-navy tabular-nums border-l-2 border-gray-300 bg-navy/10">{sumCol("total")}</td>
                 </tr>
               </tbody>
             </table>

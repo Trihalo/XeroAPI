@@ -22,7 +22,7 @@ import {
 } from "@/lib/forecasting-api";
 import { FC_AUTH } from "@/lib/forecasting-cache";
 
-const MONTHS = ["Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May","Jun"] as const;
+const MONTHS = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"] as const;
 
 interface ConfirmState {
   open: boolean;
@@ -35,19 +35,20 @@ export default function AdminPage() {
   const { recruiters, areas, loading, error } = useRecruiterData(refreshKey);
 
   // Recruiter management
-  const [newName, setNewName]       = useState("");
-  const [newArea, setNewArea]       = useState("");
-  const [areaEdits, setAreaEdits]   = useState<Record<string, string>>({});
+  const [newName, setNewName] = useState("");
+  const [newArea, setNewArea] = useState("");
+  const [newTracking, setNewTracking] = useState("");
+  const [areaEdits, setAreaEdits] = useState<Record<string, string>>({});
 
   // Monthly targets
-  const [fy, setFy]               = useState("FY26");
-  const [month, setMonth]         = useState<string>("Jul");
-  const [amount, setAmount]       = useState("");
+  const [fy, setFy] = useState("FY26");
+  const [month, setMonth] = useState<string>("Jul");
+  const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [summaryByMonth, setSummaryByMonth] = useState<Record<string, number>>({});
 
   // Confirm dialog
-  const [confirm, setConfirm] = useState<ConfirmState>({ open: false, message: "", onConfirm: () => {} });
+  const [confirm, setConfirm] = useState<ConfirmState>({ open: false, message: "", onConfirm: () => { } });
 
   function ask(message: string, onConfirm: () => void) {
     setConfirm({ open: true, message, onConfirm });
@@ -64,11 +65,12 @@ export default function AdminPage() {
   async function handleAddRecruiter() {
     if (!newName || !newArea) return;
     ask(`Add ${newName} to ${newArea}?`, async () => {
-      const result = await fcAddRecruiter(newName, newArea);
+      const result = await fcAddRecruiter(newName, newArea, newTracking);
       if (result.success) {
         toast.success("Recruiter added.");
         setNewName("");
         setNewArea("");
+        setNewTracking("");
         setRefreshKey((k) => k + 1);
       } else {
         toast.error(result.error ?? "Failed to add recruiter.");
@@ -148,7 +150,7 @@ export default function AdminPage() {
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-navy">Add Recruiter</h3>
             <div className="flex flex-wrap gap-3 items-end">
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
                 <Label className="text-xs text-dark-grey">Name</Label>
                 <Input
                   placeholder="Full Name"
@@ -157,18 +159,29 @@ export default function AdminPage() {
                   className="w-48"
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-dark-grey">Tracking Name</Label>
+                <Input
+                  placeholder="e.g. SCB013 Sharon Callaghan"
+                  value={newTracking}
+                  onChange={(e) => setNewTracking(e.target.value)}
+                  className="w-56"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
                 <Label className="text-xs text-dark-grey">Area</Label>
-                <Select value={newArea} onValueChange={setNewArea}>
-                  <SelectTrigger className="w-52">
-                    <SelectValue placeholder="Select area" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {areas.map((a) => (
-                      <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <Select value={newArea} onValueChange={(v) => v && setNewArea(v)}>
+                    <SelectTrigger className="w-52">
+                      <SelectValue placeholder="Select area" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map((a) => (
+                        <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Button
                 onClick={handleAddRecruiter}
@@ -185,7 +198,7 @@ export default function AdminPage() {
             <h3 className="text-sm font-semibold text-navy">Recruiters</h3>
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {[1,2,3,4,5,6].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+                {[1, 2, 3, 4, 5, 6].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -197,6 +210,11 @@ export default function AdminPage() {
                     <div>
                       <p className="text-sm font-medium text-navy">{r.name}</p>
                       <p className="text-xs text-dark-grey">{r.area}</p>
+                      {r.xeroTrackingName && (
+                        <p className="text-xs text-salmon font-medium mt-0.5" title="Xero Tracking Mapping">
+                          {r.xeroTrackingName}
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={() => handleDeleteRecruiter(r.id, r.name)}
@@ -216,7 +234,7 @@ export default function AdminPage() {
             <h3 className="text-sm font-semibold text-navy">Area Headcounts</h3>
             {loading ? (
               <div className="space-y-2">
-                {[1,2,3].map((i) => <Skeleton key={i} className="h-10 w-80" />)}
+                {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-80" />)}
               </div>
             ) : (
               <ul className="space-y-2">
@@ -251,7 +269,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl">
               <div className="space-y-1.5">
                 <Label className="text-xs text-dark-grey">Financial Year</Label>
-                <Select value={fy} onValueChange={setFy}>
+                <Select value={fy} onValueChange={(v) => v && setFy(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -263,7 +281,7 @@ export default function AdminPage() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-dark-grey">Month</Label>
-                <Select value={month} onValueChange={setMonth}>
+                <Select value={month} onValueChange={(v) => v && setMonth(v)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -305,8 +323,8 @@ export default function AdminPage() {
                 <tbody>
                   {MONTHS.map((m, idx) => (
                     <tr key={m} className={`border-b border-gray-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                      <td className="py-2 px-4 font-medium">{m}</td>
-                      <td className="py-2 px-4 text-right text-dark-grey">
+                      <td className="py-2 px-4 font-medium text-gray-900">{m}</td>
+                      <td className="py-2 px-4 text-right text-gray-900 tabular-nums">
                         {summaryByMonth[m]
                           ? `$${(summaryByMonth[m] / 1000).toFixed(0)}K`
                           : "—"}

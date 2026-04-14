@@ -13,6 +13,17 @@ function authHeaders(): HeadersInit {
   };
 }
 
+async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
+  const res = await fetch(url, options);
+  if (res.status === 401) {
+    FC_AUTH.clear();
+    if (typeof window !== "undefined" && window.location.pathname !== "/forecasting") {
+      window.location.href = "/forecasting";
+    }
+  }
+  return res;
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export interface LoginResult {
@@ -28,7 +39,7 @@ export async function fcLogin(
   username: string,
   password: string,
 ): Promise<LoginResult> {
-  const res = await fetch(`${API_BASE}/forecasting/login`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -41,7 +52,7 @@ export async function fcChangePassword(
   oldPassword: string,
   newPassword: string,
 ): Promise<{ success: boolean; message?: string; error?: string }> {
-  const res = await fetch(`${API_BASE}/forecasting/change-password`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/change-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, oldPassword, newPassword }),
@@ -67,7 +78,7 @@ export async function fcFetchInvoices(
   fy: string,
   month: string,
 ): Promise<InvoiceRow[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/invoices?fy=${fy}&month=${month}`,
     { headers: authHeaders() },
   );
@@ -104,7 +115,7 @@ export async function fcFetchForecastSummary(
   fy: string,
   month: string,
 ): Promise<ForecastSummaryRow[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/forecasts/view?fy=${fy}&month=${month}`,
     { headers: authHeaders() },
   );
@@ -117,7 +128,7 @@ export async function fcFetchForecastWeekly(
   month: string,
   uploadWeek: number,
 ): Promise<ForecastSummaryRow[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/forecasts/weekly?fy=${fy}&month=${month}&uploadWeek=${uploadWeek}`,
     { headers: authHeaders() },
   );
@@ -131,7 +142,7 @@ export async function fcFetchForecastForRecruiter(
   month: string,
   weeksInMonth: { week: number; range: string }[],
 ): Promise<ForecastRow[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/forecasts/${encodeURIComponent(recruiterName)}?fy=${fy}&month=${month}`,
     { headers: authHeaders() },
   );
@@ -163,7 +174,7 @@ export async function fcUploadForecast(
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const name = FC_AUTH.getName() ?? "Unknown User";
   const enriched = rows.map((r) => ({ ...r, uploadUser: name }));
-  const res = await fetch(`${API_BASE}/forecasting/forecasts`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/forecasts`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({ forecasts: enriched }),
@@ -181,7 +192,7 @@ export interface TargetRow {
 }
 
 export async function fcFetchMonthlyTargets(fy: string): Promise<TargetRow[]> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/monthly-targets?fy=${fy}`,
     { headers: authHeaders() },
   );
@@ -195,7 +206,7 @@ export async function fcSubmitMonthlyTarget(params: {
   amount: number;
 }): Promise<{ success: boolean; message?: string; error?: string }> {
   const uploadUser = FC_AUTH.getName() ?? "Unknown User";
-  const res = await fetch(`${API_BASE}/forecasting/monthly-targets`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/monthly-targets`, {
     method: "POST",
     headers: authHeaders(),
     body: JSON.stringify({
@@ -225,7 +236,7 @@ export interface LegendsResponse {
 }
 
 export async function fcFetchLegends(fy: string): Promise<LegendsResponse> {
-  const res = await fetch(
+  const res = await apiFetch(
     `${API_BASE}/forecasting/legends?fy=${fy}`,
     { headers: authHeaders() },
   );
@@ -239,6 +250,8 @@ export interface Recruiter {
   id: string;
   name: string;
   area: string;
+  active?: boolean;
+  xeroTrackingName?: string;
 }
 
 export interface Area {
@@ -248,7 +261,7 @@ export interface Area {
 }
 
 export async function fcGetRecruiters(): Promise<Recruiter[]> {
-  const res = await fetch(`${API_BASE}/forecasting/recruiters`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/recruiters`, {
     headers: authHeaders(),
   });
   if (!res.ok) return [];
@@ -258,11 +271,12 @@ export async function fcGetRecruiters(): Promise<Recruiter[]> {
 export async function fcAddRecruiter(
   name: string,
   area: string,
+  xeroTrackingName: string = ""
 ): Promise<{ success: boolean; id?: string; error?: string }> {
-  const res = await fetch(`${API_BASE}/forecasting/recruiters`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/recruiters`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ name, area }),
+    body: JSON.stringify({ name, area, xeroTrackingName }),
   });
   return res.json();
 }
@@ -270,7 +284,7 @@ export async function fcAddRecruiter(
 export async function fcDeleteRecruiter(
   id: string,
 ): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_BASE}/forecasting/recruiters/${id}`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/recruiters/${id}`, {
     method: "DELETE",
     headers: authHeaders(),
   });
@@ -278,7 +292,7 @@ export async function fcDeleteRecruiter(
 }
 
 export async function fcGetAreas(): Promise<Area[]> {
-  const res = await fetch(`${API_BASE}/forecasting/areas`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/areas`, {
     headers: authHeaders(),
   });
   if (!res.ok) return [];
@@ -289,7 +303,7 @@ export async function fcUpdateHeadcount(
   id: string,
   headcount: number,
 ): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_BASE}/forecasting/areas/${id}`, {
+  const res = await apiFetch(`${API_BASE}/forecasting/areas/${id}`, {
     method: "PATCH",
     headers: authHeaders(),
     body: JSON.stringify({ headcount }),

@@ -527,7 +527,7 @@ def fc_legends():
 @fc_token_required
 def fc_get_recruiters():
     try:
-        docs = forecast_db.collection("recruiters").stream()
+        docs = forecast_db.collection("recruiters").where("active", "==", True).stream()
         return jsonify([{"id": d.id, **d.to_dict()} for d in docs])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -540,10 +540,12 @@ def fc_add_recruiter():
     data = request.get_json()
     name = data.get("name")
     area = data.get("area")
+    xero = data.get("xeroTrackingName", "")
     if not name or not area:
         return jsonify({"error": "Missing name or area"}), 400
     try:
-        ref = forecast_db.collection("recruiters").add({"name": name, "area": area})
+        doc = {"name": name, "area": area, "active": True, "xeroTrackingName": xero}
+        ref = forecast_db.collection("recruiters").add(doc)
         return jsonify({"success": True, "id": ref[1].id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -554,7 +556,7 @@ def fc_add_recruiter():
 @fc_admin_required
 def fc_delete_recruiter(doc_id):
     try:
-        forecast_db.collection("recruiters").document(doc_id).delete()
+        forecast_db.collection("recruiters").document(doc_id).update({"active": False})
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

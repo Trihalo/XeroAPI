@@ -47,7 +47,7 @@ export default function RevenuePage() {
     useCumulativeActuals(currentMonth, currentFY, weeks, allRecruiters, allAreas, invoices);
 
   const { forecastByAreaForWeek, cumulativeForecastsByRecruiter } =
-    useCumulativeForecasts(currentFY, currentMonth, summaryMapping);
+    useCumulativeForecasts(currentFY, currentMonth, recruiterToArea);
 
   const recruiterTogetherByWeek = useMemo(
     () =>
@@ -69,20 +69,20 @@ export default function RevenuePage() {
     () =>
       allAreas.map((area) => {
         const forecastThisWeek = forecastByAreaForWeek[area]?.[currentWeekIndex] || 0;
-        const actualThisWeek   = actualsByArea[area]?.[currentWeekIndex] || 0;
-        const mtdRevenue       = (cumulativeActuals[area]?.[currentWeekIndex] || 0) + actualThisWeek;
-        const forecastMTD      = mtdRevenueByGroup[area]?.[currentWeekIndex] || 0;
-        const headcount        = headcountByArea[area] || 0;
+        const actualThisWeek = actualsByArea[area]?.[currentWeekIndex] || 0;
+        const mtdRevenue = (cumulativeActuals[area]?.[currentWeekIndex] || 0) + actualThisWeek;
+        const forecastMTD = mtdRevenueByGroup[area]?.[currentWeekIndex] || 0;
+        const headcount = headcountByArea[area] || 0;
         return {
           area,
           forecastWeek: forecastThisWeek,
-          actualWeek:   actualThisWeek,
-          variance:     Math.round(actualThisWeek - forecastThisWeek),
+          actualWeek: actualThisWeek,
+          variance: Math.round(actualThisWeek - forecastThisWeek),
           mtdRevenue,
           forecastMTD,
           headcount,
           forecastPerHead: headcount > 0 ? forecastMTD / headcount : undefined,
-          actualPerHead:   headcount > 0 ? mtdRevenue / headcount : undefined,
+          actualPerHead: headcount > 0 ? mtdRevenue / headcount : undefined,
         };
       }),
     [allAreas, forecastByAreaForWeek, actualsByArea, cumulativeActuals, mtdRevenueByGroup, headcountByArea, currentWeekIndex],
@@ -93,19 +93,19 @@ export default function RevenuePage() {
       rows.reduce(
         (acc, r) => ({
           forecastWeek: acc.forecastWeek + r.forecastWeek,
-          actualWeek:   acc.actualWeek   + r.actualWeek,
-          variance:     acc.variance     + r.variance,
-          mtdRevenue:   acc.mtdRevenue   + r.mtdRevenue,
-          forecastMTD:  acc.forecastMTD  + r.forecastMTD,
-          headcount:    acc.headcount    + r.headcount,
+          actualWeek: acc.actualWeek + r.actualWeek,
+          variance: acc.variance + r.variance,
+          mtdRevenue: acc.mtdRevenue + r.mtdRevenue,
+          forecastMTD: acc.forecastMTD + r.forecastMTD,
+          headcount: acc.headcount + r.headcount,
         }),
         { forecastWeek: 0, actualWeek: 0, variance: 0, mtdRevenue: 0, forecastMTD: 0, headcount: 0 },
       ),
     [rows],
   );
 
-  const isLoading    = recruiterLoading || invoiceLoading;
-  const error        = recruiterError ?? invoiceError;
+  const isLoading = recruiterLoading || invoiceLoading;
+  const error = recruiterError ?? invoiceError;
   const lastModified = FC_AUTH.getLastModified();
 
   return (
@@ -172,29 +172,29 @@ export default function RevenuePage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.area} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-2.5 px-4 font-medium sticky left-0 bg-white">{r.area}</td>
-                    <td className="py-2.5 px-4 text-right text-dark-grey">{fmt(r.forecastWeek)}</td>
-                    <td className="py-2.5 px-4 text-right text-dark-grey">{fmt(r.actualWeek)}</td>
-                    <td className="py-2.5 px-4 text-right">{fmtVariance(r.variance)}</td>
-                    <td className="py-2.5 px-4 text-right">{fmt(r.mtdRevenue)}</td>
-                    <td className="py-2.5 px-4 text-right">{fmt(r.forecastMTD)}</td>
-                    <td className="py-2.5 px-4 text-right">{r.headcount || "-"}</td>
-                    <td className="py-2.5 px-4 text-right">{r.forecastPerHead !== undefined ? fmt(r.forecastPerHead) : "-"}</td>
-                    <td className="py-2.5 px-4 text-right">{r.actualPerHead !== undefined ? fmt(r.actualPerHead) : "-"}</td>
+                    <td className="py-2.5 px-4 font-medium text-gray-900 sticky left-0 bg-white">{r.area}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(r.forecastWeek)}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(r.actualWeek)}</td>
+                    <td className="py-2.5 px-4 text-right tabular-nums">{fmtVariance(r.variance)}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(r.mtdRevenue)}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(r.forecastMTD)}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900">{r.headcount || "-"}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{r.forecastPerHead !== undefined ? fmt(r.forecastPerHead) : "-"}</td>
+                    <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{r.actualPerHead !== undefined ? fmt(r.actualPerHead) : "-"}</td>
                   </tr>
                 ))}
                 <tr className="font-bold border-t border-gray-300 bg-gray-50">
-                  <td className="py-2.5 px-4 sticky left-0 bg-gray-50">Total</td>
-                  <td className="py-2.5 px-4 text-right">{fmt(totals.forecastWeek)}</td>
-                  <td className="py-2.5 px-4 text-right">{fmt(totals.actualWeek)}</td>
-                  <td className="py-2.5 px-4 text-right">{fmtVariance(Math.round(totals.actualWeek - totals.forecastWeek))}</td>
-                  <td className="py-2.5 px-4 text-right">{fmt(totals.mtdRevenue)}</td>
-                  <td className="py-2.5 px-4 text-right">{fmt(totals.forecastMTD)}</td>
-                  <td className="py-2.5 px-4 text-right">{totals.headcount.toFixed(1)}</td>
-                  <td className="py-2.5 px-4 text-right">
+                  <td className="py-2.5 px-4 text-navy sticky left-0 bg-gray-50">Total</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(totals.forecastWeek)}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(totals.actualWeek)}</td>
+                  <td className="py-2.5 px-4 text-right tabular-nums">{fmtVariance(Math.round(totals.actualWeek - totals.forecastWeek))}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(totals.mtdRevenue)}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">{fmt(totals.forecastMTD)}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900">{totals.headcount.toFixed(1)}</td>
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">
                     {totals.headcount > 0 ? fmt(totals.forecastMTD / totals.headcount) : "-"}
                   </td>
-                  <td className="py-2.5 px-4 text-right">
+                  <td className="py-2.5 px-4 text-right text-gray-900 tabular-nums">
                     {totals.headcount > 0 ? fmt(totals.mtdRevenue / totals.headcount) : "-"}
                   </td>
                 </tr>

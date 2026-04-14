@@ -21,21 +21,20 @@ import {
   fmtDollar,
 } from "@/lib/calcHelpers";
 import { fcFetchForecastSummary } from "@/lib/forecasting-api";
-import { FC_AUTH } from "@/lib/forecasting-cache";
 
 function getWeekToWeekMovement(
   data: Record<string, { area: string; weeks: Record<number, number> }>,
-  currentWeekIndex: number,
+  currentWeekIndex: number
 ): Record<string, string[]> {
   const movementByArea: Record<string, string[]> = {};
   Object.entries(data).forEach(([recruiter, { area, weeks }]) => {
     const current = weeks[currentWeekIndex] || 0;
-    const prev    = weeks[currentWeekIndex - 1] || 0;
-    const diff    = current - prev;
+    const prev = weeks[currentWeekIndex - 1] || 0;
+    const diff = current - prev;
     if (!movementByArea[area]) movementByArea[area] = [];
     const firstName = recruiter.split(" ")[0];
-    const sign      = diff >= 0 ? "+" : "-";
-    const value     = Math.round(Math.abs(diff) / 1000);
+    const sign = diff >= 0 ? "+" : "-";
+    const value = Math.round(Math.abs(diff) / 1000);
     if (value === 0) return;
     movementByArea[area].push(`${firstName} ${sign}${value}K`);
   });
@@ -46,15 +45,20 @@ export default function ForecastingPage() {
   const router = useRouter();
   const calInfo = useMemo(() => getCurrentMonthInfo(), []);
   const {
-    currentMonth, currentFY, weeksInMonth, currentWeekIndex,
-    nextMonth, nextMonthFY, nextMonthWeeks,
+    currentMonth,
+    currentFY,
+    weeksInMonth,
+    currentWeekIndex,
+    nextMonth,
+    nextMonthFY,
+    nextMonthWeeks,
   } = calInfo;
 
   const [viewNext, setViewNext] = useState(false);
 
-  const activeMonth     = viewNext ? nextMonth     : currentMonth;
-  const activeFY        = viewNext ? nextMonthFY   : currentFY;
-  const activeWeeks     = viewNext ? nextMonthWeeks : weeksInMonth;
+  const activeMonth = viewNext ? nextMonth : currentMonth;
+  const activeFY = viewNext ? nextMonthFY : currentFY;
+  const activeWeeks = viewNext ? nextMonthWeeks : weeksInMonth;
   // For next month, show all weeks in the summary (no data yet, but forecasts may exist).
   // For current month, only show up to today's week.
   const activeWeekIndex = viewNext
@@ -63,17 +67,45 @@ export default function ForecastingPage() {
 
   const weeks = useMemo(() => activeWeeks.map((w) => w.week), [activeWeeks]);
 
-  const { loading: recruiterLoading, error: recruiterError, allRecruiters, allAreas, summaryMapping, headcountByArea, recruiterToArea } =
-    useRecruiterData();
-  const { currentData: invoices, loading: invoiceLoading, error: invoiceError } = useInvoiceData();
-  const submitted = useSubmittedRecruiters(activeFY, activeMonth, activeWeekIndex);
+  const {
+    loading: recruiterLoading,
+    error: recruiterError,
+    allRecruiters,
+    allAreas,
+    summaryMapping,
+    headcountByArea,
+    recruiterToArea,
+  } = useRecruiterData();
+  const {
+    currentData: invoices,
+    loading: invoiceLoading,
+    error: invoiceError,
+  } = useInvoiceData();
+  const submitted = useSubmittedRecruiters(
+    activeFY,
+    activeMonth,
+    activeWeekIndex
+  );
   const targetByMonth = useMonthlyTargets(activeFY);
 
-  const { actualsByRecruiterWeek, cumulativeActuals, cumulativeActualsByRecruiter } =
-    useCumulativeActuals(activeMonth, activeFY, weeks, allRecruiters, allAreas, invoices);
+  const {
+    actualsByRecruiterWeek,
+    cumulativeActuals,
+    cumulativeActualsByRecruiter,
+  } = useCumulativeActuals(
+    activeMonth,
+    activeFY,
+    weeks,
+    allRecruiters,
+    allAreas,
+    invoices
+  );
 
-  const { rawForecastRows, cumulativeForecasts, cumulativeForecastsByRecruiter } =
-    useCumulativeForecasts(activeFY, activeMonth, summaryMapping);
+  const {
+    rawForecastRows,
+    cumulativeForecasts,
+    cumulativeForecastsByRecruiter,
+  } = useCumulativeForecasts(activeFY, activeMonth, recruiterToArea);
 
   const recruiterTogetherByWeek = useMemo(
     () =>
@@ -83,12 +115,17 @@ export default function ForecastingPage() {
         cumulativeActualsByRecruiter,
         cumulativeForecastsByRecruiter,
       }),
-    [allRecruiters, recruiterToArea, cumulativeActualsByRecruiter, cumulativeForecastsByRecruiter],
+    [
+      allRecruiters,
+      recruiterToArea,
+      cumulativeActualsByRecruiter,
+      cumulativeForecastsByRecruiter,
+    ]
   );
 
   const movement = useMemo(
     () => getWeekToWeekMovement(recruiterTogetherByWeek, activeWeekIndex),
-    [recruiterTogetherByWeek, activeWeekIndex],
+    [recruiterTogetherByWeek, activeWeekIndex]
   );
 
   // Aggregated forecasts for summary tab
@@ -97,9 +134,9 @@ export default function ForecastingPage() {
     allAreas.forEach((area) => {
       weeks.forEach((week) => {
         const forecast = cumulativeForecasts[area]?.[week] || 0;
-        const actual   = cumulativeActuals[area]?.[week] || 0;
-        const total    = forecast + actual;
-        map[area][week]     = total;
+        const actual = cumulativeActuals[area]?.[week] || 0;
+        const total = forecast + actual;
+        map[area][week] = total;
         map["Total"][week] += total;
       });
     });
@@ -108,10 +145,13 @@ export default function ForecastingPage() {
 
   // ── View tab data ─────────────────────────────────────────────────────────
   const [forecastData, setForecastData] = useState<
-    { title: string; data: { name: string; weeks: number[]; uploadWeek: number }[] }[]
+    {
+      title: string;
+      data: { name: string; weeks: number[]; uploadWeek: number }[];
+    }[]
   >([]);
   const [viewLoading, setViewLoading] = useState(false);
-  const [viewError, setViewError]     = useState<string | null>(null);
+  const [viewError, setViewError] = useState<string | null>(null);
   const hasFetchedView = useRef(false);
 
   async function fetchViewData() {
@@ -120,21 +160,35 @@ export default function ForecastingPage() {
     setViewError(null);
     try {
       const summary = await fcFetchForecastSummary(activeFY, activeMonth);
-      const structured = Object.entries(summaryMapping).map(([category, names]) => ({
-        title: category,
-        data: names.map((name) => {
-          const paddedWeeks = weeks.map((weekNum) => {
-            const match = summary.find((e) => e.name === name && Number(e.week) === weekNum);
-            return match ? Number(match.total_revenue) : 0;
-          });
-          const latestUpload = summary
-            .filter((e) => e.name === name)
-            .reduce((max, curr) => (Number(curr.uploadWeek) > Number(max.uploadWeek) ? curr : max), {
-              uploadWeek: 0,
-            } as { uploadWeek: number });
-          return { name, weeks: paddedWeeks, uploadWeek: latestUpload.uploadWeek };
-        }),
-      }));
+      const revenueMap: Record<string, Record<number, number>> = {};
+      const latestUploadMap: Record<string, number> = {};
+
+      for (const row of summary) {
+        const upWk = Number(row.uploadWeek);
+        if (!latestUploadMap[row.name] || upWk > latestUploadMap[row.name]) {
+          latestUploadMap[row.name] = upWk;
+        }
+      }
+      for (const row of summary) {
+        if (Number(row.uploadWeek) === latestUploadMap[row.name]) {
+          if (!revenueMap[row.name]) revenueMap[row.name] = {};
+          revenueMap[row.name][Number(row.week)] = Number(row.total_revenue);
+        }
+      }
+
+      const structured = Object.entries(summaryMapping).map(
+        ([category, names]) => ({
+          title: category,
+          data: names.map((name) => {
+            const paddedWeeks = weeks.map((weekNum) => revenueMap[name]?.[weekNum] || 0);
+            return {
+              name,
+              weeks: paddedWeeks,
+              uploadWeek: latestUploadMap[name] || 0,
+            };
+          }),
+        })
+      );
       setForecastData(structured);
       hasFetchedView.current = true;
     } catch {
@@ -145,30 +199,37 @@ export default function ForecastingPage() {
   }
 
   const forecastViewSections = useMemo(() => {
-    if (!forecastData.length || !activeWeeks.length || !rawForecastRows.length) return [];
+    if (!forecastData.length || !activeWeeks.length) return [];
+
     return forecastData.map((section) => {
-      const sectionRows = section.data.map(({ name }) => {
-        const allForecasts = rawForecastRows.filter((r) => r.name === name);
-        const maxUploadWeek = Math.max(...allForecasts.map((r) => Number(r.uploadWeek || 0)));
-        const latestRows    = allForecasts.filter((r) => Number(r.uploadWeek) === maxUploadWeek);
-        const paddedWeeks   = activeWeeks.map((w) => {
-          const match = latestRows.find((r) => Number(r.week) === w.week);
-          return match ? Number(match.total_revenue) : 0;
-        });
+      const sectionRows = section.data.map((rowData) => {
+        const paddedWeeks = rowData.weeks;
         const finalWeeks = paddedWeeks.map((amt, i) => {
           const weekNum = i + 1;
-          return weekNum < activeWeekIndex ? actualsByRecruiterWeek[name]?.[weekNum] || 0 : amt;
+          return weekNum < activeWeekIndex
+            ? actualsByRecruiterWeek[rowData.name]?.[weekNum] || 0
+            : amt;
         });
-        return { name, finalWeeks, rowTotal: finalWeeks.reduce((a, b) => a + b, 0) };
+        return {
+          name: rowData.name,
+          finalWeeks,
+          rowTotal: finalWeeks.reduce((a, b) => a + b, 0),
+        };
       });
-      const totals   = activeWeeks.map((_, i) => sectionRows.reduce((s, r) => s + (r.finalWeeks[i] || 0), 0));
+      const totals = activeWeeks.map((_, i) =>
+        sectionRows.reduce((s, r) => s + (r.finalWeeks[i] || 0), 0)
+      );
       const totalSum = totals.reduce((a, b) => a + b, 0);
       return { title: section.title, rows: sectionRows, totals, totalSum };
     });
-  }, [forecastData, rawForecastRows, activeWeeks, actualsByRecruiterWeek, activeWeekIndex]);
+  }, [
+    forecastData,
+    activeWeeks,
+    actualsByRecruiterWeek,
+    activeWeekIndex,
+  ]);
 
   const remainingRecruiters = allRecruiters.filter((r) => !submitted.has(r));
-  const isAdmin = FC_AUTH.getRole() === "admin";
 
   const isLoading = recruiterLoading || invoiceLoading;
 
@@ -188,10 +249,14 @@ export default function ForecastingPage() {
             return (
               <button
                 key={label}
-                onClick={() => { setViewNext(isNext); hasFetchedView.current = false; }}
-                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${
-                  active ? "bg-navy text-white" : "bg-gray-100 text-dark-grey hover:bg-gray-200"
-                }`}
+                onClick={() => {
+                  setViewNext(isNext);
+                  hasFetchedView.current = false;
+                }}
+                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${active
+                    ? "bg-navy text-white"
+                    : "bg-gray-100 text-dark-grey hover:bg-gray-200"
+                  }`}
               >
                 {label}
               </button>
@@ -213,18 +278,32 @@ export default function ForecastingPage() {
           if (tab === "view" && !hasFetchedView.current) fetchViewData();
         }}
       >
-        <TabsList className="mb-2">
-          <TabsTrigger value="input">Forecast Input</TabsTrigger>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="view">Detailed View</TabsTrigger>
-        </TabsList>
+        <div className="border-b border-gray-200 mb-4">
+          <TabsList className="bg-transparent p-0 rounded-none h-auto gap-0">
+            {(["Forecast Input", "Summary", "Detailed View"] as const).map((label) => {
+              const value = label === "Forecast Input" ? "input" : label === "Summary" ? "summary" : "view";
+              return (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-navy data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-navy px-4 py-2 text-sm font-medium text-dark-grey hover:text-navy transition-colors"
+                >
+                  {label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
 
         {/* ── INPUT TAB ─────────────────────────────────────────────────── */}
         <TabsContent value="input">
           <div className="space-y-4">
             {remainingRecruiters.length > 0 && (
               <p className="text-sm text-dark-grey">
-                <span className="font-semibold text-salmon">{remainingRecruiters.length}</span> recruiter
+                <span className="font-semibold text-salmon">
+                  {remainingRecruiters.length}
+                </span>{" "}
+                recruiter
                 {remainingRecruiters.length !== 1 ? "s" : ""} yet to submit (
                 {remainingRecruiters.map((n) => n.split(" ")[0]).join(", ")})
               </p>
@@ -236,7 +315,9 @@ export default function ForecastingPage() {
                   <div key={i} className="space-y-3">
                     <Skeleton className="h-5 w-40" />
                     <div className="flex flex-wrap gap-2">
-                      {[1, 2, 3].map((j) => <Skeleton key={j} className="h-8 w-24 rounded-full" />)}
+                      {[1, 2, 3].map((j) => (
+                        <Skeleton key={j} className="h-8 w-24 rounded-full" />
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -247,7 +328,10 @@ export default function ForecastingPage() {
                   const allSubmitted = names.every((n) => submitted.has(n));
                   const someSubmitted = names.some((n) => submitted.has(n));
                   return (
-                    <div key={area} className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                    <div
+                      key={area}
+                      className="rounded-xl border border-gray-200 bg-white overflow-hidden"
+                    >
                       {/* Area header — clicking opens the area upload page */}
                       <button
                         onClick={() => {
@@ -255,20 +339,32 @@ export default function ForecastingPage() {
                             area,
                             month: activeMonth,
                             fy: activeFY,
-                            weekIndex: viewNext ? "1" : String(currentWeekIndex),
+                            weekIndex: viewNext
+                              ? "1"
+                              : String(currentWeekIndex),
                           });
-                          router.push(`/forecasting/upload?${params.toString()}`);
+                          router.push(
+                            `/forecasting/upload?${params.toString()}`
+                          );
                         }}
                         className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100 hover:bg-navy/5 transition-colors group"
                       >
                         <span className="text-sm font-semibold text-navy group-hover:text-navy">
                           {area}
                         </span>
-                        <span className={`text-xs font-medium ${allSubmitted ? "text-salmon" : someSubmitted ? "text-dark-grey" : "text-dark-grey"}`}>
+                        <span
+                          className={`text-xs font-medium ${allSubmitted
+                              ? "text-salmon"
+                              : someSubmitted
+                                ? "text-dark-grey"
+                                : "text-dark-grey"
+                            }`}
+                        >
                           {allSubmitted
                             ? "All submitted ✓"
                             : someSubmitted
-                              ? `${names.filter((n) => submitted.has(n)).length}/${names.length} submitted`
+                              ? `${names.filter((n) => submitted.has(n)).length
+                              }/${names.length} submitted`
                               : "Open →"}
                         </span>
                       </button>
@@ -276,12 +372,23 @@ export default function ForecastingPage() {
                       {/* Recruiter list — non-clickable, shows submitted status */}
                       <ul className="px-4 py-3 space-y-1.5">
                         {names.map((name) => (
-                          <li key={name} className="flex items-center justify-between text-sm">
-                            <span className={submitted.has(name) ? "text-navy font-medium" : "text-dark-grey"}>
+                          <li
+                            key={name}
+                            className="flex items-center justify-between text-sm"
+                          >
+                            <span
+                              className={
+                                submitted.has(name)
+                                  ? "text-navy font-medium"
+                                  : "text-dark-grey"
+                              }
+                            >
                               {name}
                             </span>
                             {submitted.has(name) && (
-                              <span className="text-xs font-bold text-salmon">✓</span>
+                              <span className="text-xs font-bold text-salmon">
+                                ✓
+                              </span>
                             )}
                           </li>
                         ))}
@@ -292,38 +399,6 @@ export default function ForecastingPage() {
               </div>
             )}
 
-            {isAdmin && (
-              <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => router.push("/forecasting/revenue")}
-                  className="text-sm text-navy font-medium underline underline-offset-2"
-                >
-                  Revenue Dashboard
-                </button>
-                <button
-                  onClick={() => router.push("/forecasting/admin")}
-                  className="text-sm text-navy font-medium underline underline-offset-2"
-                >
-                  Admin Panel
-                </button>
-                <button
-                  onClick={() => router.push("/forecasting/legends")}
-                  className="text-sm text-navy font-medium underline underline-offset-2"
-                >
-                  Legends Table
-                </button>
-              </div>
-            )}
-            {!isAdmin && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => router.push("/forecasting/legends")}
-                  className="text-sm text-navy font-medium underline underline-offset-2"
-                >
-                  Legends Table
-                </button>
-              </div>
-            )}
           </div>
         </TabsContent>
 
@@ -335,14 +410,20 @@ export default function ForecastingPage() {
                 <span>
                   Target:{" "}
                   <b className="text-navy">
-                    ${Math.round(targetByMonth[currentMonth] / 1000).toLocaleString("en-AU")}K
+                    $
+                    {Math.round(
+                      targetByMonth[currentMonth] / 1000
+                    ).toLocaleString("en-AU")}
+                    K
                   </b>
                 </span>
               )}
               {remainingRecruiters.length > 0 && (
                 <span>
                   Missing:{" "}
-                  <b className="text-salmon">{remainingRecruiters.length} recruiters</b>
+                  <b className="text-salmon">
+                    {remainingRecruiters.length} recruiters
+                  </b>
                 </span>
               )}
             </div>
@@ -354,66 +435,93 @@ export default function ForecastingPage() {
                 ))}
               </div>
             ) : (
-              <ScrollArea className="w-full rounded-lg border border-gray-200">
-                <div className="min-w-[700px]">
-                  <table className="w-full text-sm text-left">
+              <ScrollArea className="w-full overflow-x-auto">
+                <div className="inline-block rounded-lg border border-gray-200 overflow-hidden">
+                  <table className="w-auto text-sm text-left table-fixed">
+                    <colgroup>
+                      <col className="w-56" />{/* Area */}
+                      {activeWeeks.map((w) => <col key={w.week} className="w-[100px]" />)}
+                      <col className="w-[120px]" />{/* MTD */}
+                      <col className="w-[70px]" />{/* HC */}
+                      <col className="w-[100px]" />{/* Prod. */}
+                      <col className="w-40" />{/* w2w */}
+                    </colgroup>
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr className="divide-x divide-gray-200">
-                        <th className="text-left py-3 px-4 font-semibold text-navy sticky left-0 bg-gray-50">
+                        <th className="text-left py-2.5 px-4 font-semibold text-navy whitespace-nowrap sticky left-0 bg-gray-50">
                           Area
                         </th>
                         {activeWeeks.map((w) => (
-                          <th key={w.week} className="text-right py-3 px-4 font-semibold text-navy whitespace-nowrap">
+                          <th key={w.week} className="text-right py-2.5 px-4 font-semibold text-navy whitespace-nowrap">
                             Wk {w.week}
                           </th>
                         ))}
-                        <th className="text-right py-3 px-4 font-semibold text-navy">MTD</th>
-                        <th className="text-right py-3 px-4 font-semibold text-navy">HC</th>
-                        <th className="text-right py-3 px-4 font-semibold text-navy">Prod.</th>
-                        <th className="text-right py-3 px-4 font-semibold text-navy">w2w</th>
+                        <th className="text-right py-2.5 px-4 font-semibold text-navy whitespace-nowrap">
+                          MTD
+                        </th>
+                        <th className="text-right py-2.5 px-4 font-semibold text-navy whitespace-nowrap">
+                          HC
+                        </th>
+                        <th className="text-right py-2.5 px-4 font-semibold text-navy whitespace-nowrap">
+                          Prod.
+                        </th>
+                        <th className="text-right py-2.5 px-4 font-semibold text-navy whitespace-nowrap">
+                          w2w
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {Object.entries(summaryMapping).map(([area]) => {
-                        const weekMap  = aggregatedForecasts[area] || {};
+                        const weekMap = aggregatedForecasts[area] || {};
                         const headcount = headcountByArea[area] ?? 0;
-                        const mtd       = cumulativeActuals?.[area]?.[activeWeekIndex] || 0;
-                        const prod      = headcount > 0
-                          ? Math.round(weekMap[activeWeekIndex] / (1000 * headcount)).toLocaleString("en-AU")
-                          : "-";
+                        const mtd = cumulativeActuals?.[area]?.[activeWeekIndex] || 0;
+                        const prod =
+                          headcount > 0
+                            ? Math.round(weekMap[activeWeekIndex] / (1000 * headcount)).toLocaleString("en-AU")
+                            : "-";
                         return (
-                          <tr key={area} className="border-b border-gray-200 hover:bg-gray-50 divide-x divide-gray-200">
-                            <td className="py-2.5 px-4 text-sm font-medium sticky left-0 bg-white">{area}</td>
+                          <tr key={area} className="border-b border-gray-100 hover:bg-gray-50 divide-x divide-gray-200">
+                            <td className="py-2.5 px-4 text-sm font-medium text-gray-900 truncate sticky left-0 bg-white">
+                              {area}
+                            </td>
                             {activeWeeks.map((w) => (
-                              <td key={w.week} className="py-2.5 px-4 text-right text-sm text-dark-grey">
+                              <td key={w.week} className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
                                 {w.week <= activeWeekIndex ? fmtK(weekMap[w.week] || 0) : "-"}
                               </td>
                             ))}
-                            <td className="py-2.5 px-4 text-right text-sm">{fmtK(mtd)}</td>
-                            <td className="py-2.5 px-4 text-right text-sm">{headcount || "-"}</td>
-                            <td className="py-2.5 px-4 text-right text-sm">{prod}</td>
+                            <td className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
+                              {fmtK(mtd)}
+                            </td>
+                            <td className="py-2.5 px-4 text-right text-sm text-gray-900">
+                              {headcount || "-"}
+                            </td>
+                            <td className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
+                              {prod}
+                            </td>
                             <td className="py-2.5 px-4 text-right text-xs text-dark-grey">
                               {movement[area]?.join(", ") || ""}
                             </td>
                           </tr>
                         );
                       })}
-                      <tr className="font-bold border-t border-gray-300 bg-gray-50 divide-x divide-gray-200">
-                        <td className="py-2.5 px-4 text-sm sticky left-0 bg-gray-50">Total</td>
+                      <tr className="font-semibold bg-gray-100 border-t-2 border-gray-300 divide-x divide-gray-200">
+                        <td className="py-2.5 px-4 text-sm text-navy sticky left-0 bg-gray-100">
+                          Total
+                        </td>
                         {activeWeeks.map((w) => (
-                          <td key={w.week} className="py-2.5 px-4 text-right text-sm">
+                          <td key={w.week} className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
                             {w.week <= activeWeekIndex
                               ? Math.round((aggregatedForecasts["Total"]?.[w.week] || 0) / 1000).toLocaleString("en-AU")
                               : "-"}
                           </td>
                         ))}
-                        <td className="py-2.5 px-4 text-right text-sm">
+                        <td className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
                           {Math.round((cumulativeActuals["Total"]?.[activeWeekIndex] || 0) / 1000).toLocaleString("en-AU")}
                         </td>
-                        <td className="py-2.5 px-4 text-right text-sm">
+                        <td className="py-2.5 px-4 text-right text-sm text-gray-900">
                           {Object.values(headcountByArea).reduce((a, b) => a + b, 0).toFixed(1)}
                         </td>
-                        <td className="py-2.5 px-4 text-right text-sm">
+                        <td className="py-2.5 px-4 text-right text-sm text-gray-900 tabular-nums">
                           {(() => {
                             const hc = Object.values(headcountByArea).reduce((a, b) => a + b, 0);
                             const total = aggregatedForecasts["Total"]?.[activeWeekIndex] || 0;
@@ -436,7 +544,8 @@ export default function ForecastingPage() {
           <div className="space-y-6">
             <p className="text-xs text-dark-grey">
               Cells highlighted in{" "}
-              <span className="font-semibold text-salmon">salmon</span> represent actual invoiced revenue.
+              <span className="font-semibold text-salmon">salmon</span>{" "}
+              represent actual invoiced revenue.
             </p>
 
             {viewError && (
@@ -444,7 +553,9 @@ export default function ForecastingPage() {
                 <AlertCircle className="w-4 h-4" />
                 <AlertDescription>
                   {viewError}{" "}
-                  <button onClick={fetchViewData} className="underline ml-1">Retry</button>
+                  <button onClick={fetchViewData} className="underline ml-1">
+                    Retry
+                  </button>
                 </AlertDescription>
               </Alert>
             )}
@@ -454,57 +565,90 @@ export default function ForecastingPage() {
                 {[1, 2].map((i) => (
                   <div key={i} className="space-y-2">
                     <Skeleton className="h-5 w-48" />
-                    {[1, 2, 3, 4].map((j) => <Skeleton key={j} className="h-9 w-full" />)}
+                    {[1, 2, 3, 4].map((j) => (
+                      <Skeleton key={j} className="h-9 w-full" />
+                    ))}
                   </div>
                 ))}
               </div>
             ) : forecastViewSections.length === 0 ? (
-              <p className="text-sm text-dark-grey">No forecast data available.</p>
+              <p className="text-sm text-dark-grey">
+                No forecast data available.
+              </p>
             ) : (
               forecastViewSections.map(({ title, rows, totals, totalSum }) => (
                 <div key={title}>
-                  <h3 className="text-sm font-semibold text-navy mb-2">{title}</h3>
-                  <ScrollArea className="w-full rounded-lg border border-gray-200">
-                    <div className="min-w-[600px]">
-                      <table className="w-full text-sm text-left">
+                  <h3 className="text-sm font-semibold text-navy mb-2">
+                    {title}
+                  </h3>
+                  <ScrollArea className="w-full overflow-x-auto">
+                    <div className="inline-block rounded-lg border border-gray-200 overflow-hidden">
+                      <table className="w-auto text-sm text-left table-fixed">
+                        <colgroup>
+                          <col className="w-[400px]" />{/* Name */}
+                          {activeWeeks.map((w) => (
+                            <col key={w.week} className="w-[140px]" />
+                          ))}
+                          <col className="w-40" />{/* Total */}
+                        </colgroup>
                         <thead className="bg-gray-50 border-b border-gray-200">
-                          <tr>
-                            <th className="py-2.5 px-4 font-semibold text-navy sticky left-0 bg-gray-50">
+                          <tr className="divide-x divide-gray-200">
+                            <th className="py-2.5 px-4 font-semibold text-navy whitespace-nowrap sticky left-0 bg-gray-50">
                               Name
                             </th>
                             {activeWeeks.map((w) => (
-                              <th key={w.week} className="py-2.5 px-4 font-semibold text-navy text-right">
+                              <th
+                                key={w.week}
+                                className="py-2.5 px-4 font-semibold text-navy text-right whitespace-nowrap"
+                              >
                                 Wk {w.week}
                               </th>
                             ))}
-                            <th className="py-2.5 px-4 font-semibold text-navy text-right">Total</th>
+                            <th className="py-2.5 px-4 font-semibold text-navy text-right whitespace-nowrap border-l-2 border-gray-300 bg-navy/5">
+                              Total
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {rows.map(({ name, finalWeeks, rowTotal }) => (
-                            <tr key={name} className="border-b border-gray-100">
-                              <td className="py-2 px-4 sticky left-0 bg-white">{name}</td>
+                            <tr
+                              key={name}
+                              className="border-b border-gray-100 divide-x divide-gray-200"
+                            >
+                              <td className="py-2 px-4 font-medium text-gray-900 truncate sticky left-0 bg-white">
+                                {name}
+                              </td>
                               {finalWeeks.map((amt, i) => (
                                 <td
                                   key={i}
-                                  className={`py-2 px-4 text-right ${
-                                    i + 1 < activeWeekIndex
+                                  className={`py-2 px-4 text-right tabular-nums ${i + 1 < activeWeekIndex
                                       ? "bg-salmon/10 text-salmon font-medium"
-                                      : ""
-                                  }`}
+                                      : "text-gray-900"
+                                    }`}
                                 >
                                   {fmtDollar(amt)}
                                 </td>
                               ))}
-                              <td className="py-2 px-4 text-right font-medium">{fmtDollar(rowTotal)}</td>
+                              <td className="py-2 px-4 text-right font-semibold text-gray-900 tabular-nums border-l-2 border-gray-300 bg-navy/5">
+                                {fmtDollar(rowTotal)}
+                              </td>
                             </tr>
                           ))}
-                          <tr className="font-semibold bg-gray-50 border-t border-gray-200">
-                            <td className="py-2 px-4 sticky left-0 bg-gray-50">Total</td>
+                          <tr className="font-semibold bg-gray-100 border-t-2 border-gray-300 divide-x divide-gray-200">
+                            <td className="py-2 px-4 text-navy sticky left-0 bg-gray-100">
+                              Total
+                            </td>
                             {totals.map((amt, i) => (
-                              <td key={i} className="py-2 px-4 text-right">{fmtDollar(amt)}</td>
+                              <td
+                                key={i}
+                                className="py-2 px-4 text-right text-gray-900 tabular-nums"
+                              >
+                                {fmtDollar(amt)}
+                              </td>
                             ))}
-                            <td className="py-2 px-4 text-right font-bold">{fmtDollar(totalSum)}</td>
+                            <td className="py-2 px-4 text-right font-bold text-navy tabular-nums border-l-2 border-gray-300 bg-navy/10">
+                              {fmtDollar(totalSum)}
+                            </td>
                           </tr>
                         </tbody>
                       </table>

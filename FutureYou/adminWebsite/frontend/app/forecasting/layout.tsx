@@ -14,7 +14,7 @@ import { FC_AUTH } from "@/lib/forecasting-cache";
 const ADMIN_ONLY_PATHS = ["/forecasting/revenue", "/forecasting/admin"];
 
 export default function ForecastingLayout({ children }: { children: React.ReactNode }) {
-  const router   = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
 
   const [authState, setAuthState] = useState<"loading" | "unauthenticated" | "authenticated">(
@@ -87,7 +87,10 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
   // ── Login gate ────────────────────────────────────────────────────────────
   if (authState === "unauthenticated") {
     return (
-      <div className="flex h-full items-center justify-center p-6 bg-gray-50">
+      <div className="flex flex-col h-full items-center justify-center p-6 bg-gray-50">
+        <div className="w-full max-w-sm mb-6 bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-lg text-center font-medium text-sm shadow-sm">
+          🚧 Undergoing testing at the moment, Please don't use.
+        </div>
         <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm overflow-hidden">
           {/* Header */}
           <div className="bg-navy px-6 py-5 flex items-center gap-3">
@@ -133,15 +136,7 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
             )}
 
             <div className="flex gap-3 justify-between pt-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-dark-grey text-xs"
-                onClick={() => router.push("/forecasting/password")}
-              >
-                Change password
-              </Button>
+              <div className="flex-1" />
               <Button
                 type="submit"
                 disabled={!username || !password || loggingIn}
@@ -156,22 +151,58 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
             </div>
           </form>
         </div>
+        <div className="absolute bottom-6 text-center text-xs text-dark-grey">
+          For any support issues or forgotten passwords, please contact{" "}
+          <a href="mailto:leoshi@future-you.com.au" className="text-navy hover:underline font-semibold">
+            leoshi@future-you.com.au
+          </a>
+        </div>
       </div>
     );
   }
 
   // ── Authenticated ─────────────────────────────────────────────────────────
+  const isAdmin = FC_AUTH.getRole() === "admin";
+
+  const navLinks = [
+    { href: "/forecasting", label: "Forecasts", adminOnly: false },
+    { href: "/forecasting/revenue", label: "Revenue Dashboard", adminOnly: true },
+    { href: "/forecasting/admin", label: "Admin Panel", adminOnly: true },
+    { href: "/forecasting/legends", label: "Legends Table", adminOnly: false },
+  ].filter((l) => !l.adminOnly || isAdmin);
+
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
       <div className="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white shrink-0">
-        <div className="flex items-center gap-2 text-sm text-dark-grey">
-          <span className="font-semibold text-navy">{FC_AUTH.getName()}</span>
-          {FC_AUTH.getRole() === "admin" && (
-            <span className="text-xs bg-salmon/10 text-salmon font-semibold px-2 py-0.5 rounded-full">
-              Admin
-            </span>
-          )}
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold text-navy">{FC_AUTH.getName()}</span>
+            {isAdmin && (
+              <span className="text-xs bg-salmon/10 text-salmon font-semibold px-2 py-0.5 rounded-full">
+                Admin
+              </span>
+            )}
+          </div>
+          <nav className="flex items-center gap-0.5 border-l border-gray-200 pl-5">
+            {navLinks.map(({ href, label }) => {
+              const active = href === "/forecasting"
+                ? pathname === "/forecasting"
+                : pathname.startsWith(href);
+              return (
+                <a
+                  key={href}
+                  href={href}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${active
+                    ? "bg-navy text-white"
+                    : "text-dark-grey hover:bg-gray-100 hover:text-navy"
+                    }`}
+                >
+                  {label}
+                </a>
+              );
+            })}
+          </nav>
         </div>
         <div className="flex items-center gap-3">
           {FC_AUTH.getLastModified() && (
@@ -179,6 +210,14 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
               Data updated: <b>{FC_AUTH.getLastModified()}</b>
             </span>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/forecasting/password")}
+            className="text-dark-grey hover:text-navy"
+          >
+            Change password
+          </Button>
           <Button
             variant="ghost"
             size="sm"
