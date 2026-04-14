@@ -1,5 +1,5 @@
 # --- Area Mapping ---
-consultant_area_mapping = {
+consultant_area_mapping  = {
     "SMC003 Neha Jain": "Accounting & Finance",
     "SMB002 Kate Stephenson": "Accounting & Finance",
     "SMC005 Bianca Hirschowitz": "Accounting & Finance",

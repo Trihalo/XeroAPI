@@ -7,5 +7,7 @@ openpyxl
 python-docx
 gunicorn
 google-cloud-bigquery
+google-cloud-firestore
 google-auth
 pytz
+PyJWT

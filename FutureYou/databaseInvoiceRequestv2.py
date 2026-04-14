@@ -10,9 +10,25 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import pandas_gbq
 from manualJournalRequest import get_manual_journal_data
-from databaseMappings import account_code_mapping, consultant_area_mapping
+from databaseMappings import account_code_mapping
 from dotenv import load_dotenv
 load_dotenv()
+
+from google.cloud import firestore
+try:
+    _db = firestore.Client.from_service_account_json(
+        os.getenv("FUTUREYOU_FIRESTOREACCESS"), 
+        project="futureyou-458212", 
+        database="futureyou"
+    )
+    consultant_area_mapping = {
+        d.to_dict().get("xeroTrackingName", ""): d.to_dict().get("area", "")
+        for d in _db.collection("recruiters").stream()
+        if d.to_dict().get("xeroTrackingName")
+    }
+except Exception as e:
+    print(f"Warning: Failed to load consultant mappings from Firestore: {e}")
+    consultant_area_mapping = {}
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 

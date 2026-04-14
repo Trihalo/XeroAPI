@@ -31,6 +31,8 @@ jobs:
         run: |
           echo '${{ secrets.BQACCESS }}' > /tmp/key.json
           echo "FUTUREYOU_BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+          echo '${{ secrets.FUTUREYOU_FIRESTOREACCESS }}' > /tmp/firestore.json
+          echo "FUTUREYOU_FIRESTOREACCESS=/tmp/firestore.json" >> $GITHUB_ENV
         shell: bash
 
       - name: Run FutureYou Revenue BigQuery upload
