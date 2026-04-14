@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Lock, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -190,7 +191,7 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
                 ? pathname === "/forecasting"
                 : pathname.startsWith(href);
               return (
-                <a
+                <Link
                   key={href}
                   href={href}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${active
@@ -199,7 +200,7 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
                     }`}
                 >
                   {label}
-                </a>
+                </Link>
               );
             })}
           </nav>
