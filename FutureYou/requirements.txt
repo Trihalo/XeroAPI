@@ -7,5 +7,6 @@ dotenv
 python-dotenv
 numpy
 google-cloud-bigquery
+google-cloud-firestore
 google-auth
 pandas-gbq
