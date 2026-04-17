@@ -7,6 +7,7 @@ import hmac
 import hashlib
 import base64
 import requests
+from urllib.parse import quote
 from datetime import datetime, timezone
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -159,11 +160,12 @@ def queryUnleashedSalesOrder(orderNumber, apiId, apiKey):
         logging.warning(f"Unleashed credentials not set, skipping query for {orderNumber}.")
         return None
     query_string = f"orderNumber={orderNumber}"
+    encoded_query = f"orderNumber={quote(orderNumber, safe='')}"
     signature = base64.b64encode(
         hmac.new(apiKey.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).digest()
     ).decode("utf-8")
 
-    url = f"https://api.unleashedsoftware.com/SalesOrders?{query_string}"
+    url = f"https://api.unleashedsoftware.com/SalesOrders?{encoded_query}"
     headers = {
         "api-auth-id": apiId,
         "api-auth-signature": signature,
@@ -202,11 +204,12 @@ def queryUnleashedPurchaseOrder(orderNumber, apiId, apiKey):
         logging.warning(f"Unleashed credentials not set, skipping query for {orderNumber}.")
         return None
     query_string = f"orderNumber={orderNumber}"
+    encoded_query = f"orderNumber={quote(orderNumber, safe='')}"
     signature = base64.b64encode(
         hmac.new(apiKey.encode("utf-8"), query_string.encode("utf-8"), hashlib.sha256).digest()
     ).decode("utf-8")
 
-    url = f"https://api.unleashedsoftware.com/PurchaseOrders?{query_string}"
+    url = f"https://api.unleashedsoftware.com/PurchaseOrders?{encoded_query}"
     headers = {
         "api-auth-id": apiId,
         "api-auth-signature": signature,
@@ -318,6 +321,32 @@ def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
     return results
 
 
+def processCNJournals(bills, accessToken, xeroTenantId):
+    """Credit Note Journals (Journal-CN-*): set BAS Excluded, approve."""
+    results = []
+    for bill in bills:
+        inv_number = bill.get("InvoiceNumber", "")
+        if not inv_number.startswith("Journal-CN-"):
+            continue
+
+        bill["Status"] = "AUTHORISED"
+        for line in bill.get("LineItems", []):
+            line["TaxType"] = "BASEXCLUDED"
+            line.pop("TaxAmount", None)
+
+        time.sleep(1)
+        print(f"Approving CN journal: {inv_number}")
+        response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+        if response:
+            print(f"CN journal {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
+        else:
+            print(f"CN journal {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
+        print("--------------------------------------------------")
+    return results
+
+
 def processRecostJournals(bills, accessToken, xeroTenantId):
     """Recost Journals (Journal - PO-*[ReCost]): set BAS Excluded + account 5020, approve."""
     results = []
@@ -348,7 +377,7 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
     return results
 
 
-def write_github_summary(invoice_results, sa_results, recost_results, po_results):
+def write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results):
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_file:
         return
@@ -375,6 +404,11 @@ def write_github_summary(invoice_results, sa_results, recost_results, po_results
         f.write(section(
             "Stock Adjustment Journals",
             sa_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "CN Journals",
+            cn_results,
             ["Journal", "Result"],
         ))
         f.write(section(
@@ -514,10 +548,11 @@ def main():
                 invoice_results.append((invNumber, "Invoice", "⚠️ Skipped (no matching bills)"))
 
     sa_results = processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
+    cn_results = processCNJournals(draftBills, accessToken, xeroTenantId)
     recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
     po_results = processPOBills(draftBills, accessToken, xeroTenantId, unleashed_api_id, unleashed_api_key)
 
-    write_github_summary(invoice_results, sa_results, recost_results, po_results)
+    write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results)
 
 if __name__ == "__main__":
     main()
