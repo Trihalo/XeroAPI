@@ -12,15 +12,6 @@ UNLEASHED_BASE = "https://api.unleashedsoftware.com"
 FOB_WAREHOUSE = "FOB"
 SUNROAD_CUSTOMER_NAME = "Sun Road Food & Beverage"
 
-# Persistent stock held permanently in the FOB warehouse — not available for SO allocation.
-# Deducted from FOB batch totals before the quantity check.
-FOB_PERSISTENT_STOCK = {
-    "9339655002437": 1000,  # 2L pure
-    "H2C042EXP": 20,
-    "H2J041": 347,
-}
-
-
 # ---------------------------------------------------------------------------
 # Unleashed API helpers
 # ---------------------------------------------------------------------------
@@ -157,8 +148,8 @@ def check_quantities(so_lines: list, api_id: str, api_key: str) -> tuple[bool, d
     all_match = True
     fob_batches_by_product = {}
 
-    print(f"\n{'Product Code':<25} {'SO Qty':>10} {'FOB Raw':>10} {'Persistent':>12} {'Available':>10} {'Status':>10}")
-    print("-" * 82)
+    print(f"\n{'Product Code':<25} {'SO Qty':>10} {'FOB Qty':>10} {'Status':>10}")
+    print("-" * 58)
 
     for line in so_lines:
         product_code = line.get("Product", {}).get("ProductCode", "")
@@ -166,17 +157,14 @@ def check_quantities(so_lines: list, api_id: str, api_key: str) -> tuple[bool, d
 
         batches = get_fob_batches_for_product(product_code, api_id, api_key)
         fob_batches_by_product[product_code] = batches
-        fob_raw = sum(float(b.get("Quantity", 0)) for b in batches)
+        fob_qty = sum(float(b.get("Quantity", 0)) for b in batches)
 
-        persistent = float(FOB_PERSISTENT_STOCK.get(product_code, 0))
-        fob_available = fob_raw - persistent
-
-        match = fob_available == so_qty
+        match = fob_qty == so_qty
         if not match:
             all_match = False
 
         status = "OK" if match else "MISMATCH"
-        print(f"{product_code:<25} {so_qty:>10.2f} {fob_raw:>10.2f} {persistent:>12.2f} {fob_available:>10.2f} {status:>10}")
+        print(f"{product_code:<25} {so_qty:>10.2f} {fob_qty:>10.2f} {status:>10}")
 
     return all_match, fob_batches_by_product
 
