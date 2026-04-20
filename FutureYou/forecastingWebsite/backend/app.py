@@ -600,7 +600,7 @@ def get_consultant_margins():
 @token_required
 def get_recruiters():
     try:
-        docs = db.collection("recruiters").stream()
+        docs = db.collection("recruiters").where("active", "==", True).stream()
         return jsonify([
             {"id": doc.id, **doc.to_dict()} for doc in docs
         ])
@@ -619,7 +619,7 @@ def add_recruiter():
         return jsonify({"error": "Missing name or area"}), 400
 
     try:
-        doc_ref = db.collection("recruiters").add({"name": name, "area": area})
+        doc_ref = db.collection("recruiters").add({"name": name, "area": area, "active": True})
         return jsonify({"success": True, "id": doc_ref[1].id})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -629,7 +629,7 @@ def add_recruiter():
 @admin_required
 def delete_recruiter(id):
     try:
-        db.collection("recruiters").document(id).delete()
+        db.collection("recruiters").document(id).update({"active": False})
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
