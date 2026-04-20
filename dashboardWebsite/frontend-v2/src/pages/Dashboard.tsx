@@ -122,6 +122,16 @@ const CLIENTS: ClientConfig[] = [
         requiresFileUpload: false,
         icon: FileCheck,
       },
+      {
+        name: "Sun Road Invoice Approver",
+        description:
+          "Processes DRAFT Sun Road invoices, updates Xero, allocates deposits, and handles CDS invoices via Unleashed.",
+        workflowKey: "h2coco-sunroad-invoicing",
+        workflowFile: "h2cocoSunRoadInvoicing.yml",
+        estimatedTime: 120,
+        requiresFileUpload: false,
+        icon: FileText,
+      },
     ],
   },
   {
@@ -575,9 +585,9 @@ export default function Dashboard() {
                 <DialogDescription>
                   {runStatus
                     ? trackingLabel(
-                        runStatus.status,
-                        runStatus.conclusion ?? null,
-                      )
+                      runStatus.status,
+                      runStatus.conclusion ?? null,
+                    )
                     : "Dispatching workflow to GitHub…"}
                 </DialogDescription>
               </DialogHeader>
