@@ -714,7 +714,7 @@ function KpiStrip({
                 fontVariantNumeric: "tabular-nums",
               }}
             >
-              prior YTD {fmt(c.prev)}
+              prior {p} {fmt(c.prev)}
             </div>
           )}
           {c.hideDelta && (
