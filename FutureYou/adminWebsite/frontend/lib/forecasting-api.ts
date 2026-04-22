@@ -222,17 +222,20 @@ export async function fcSubmitMonthlyTarget(params: {
 
 // ── Legends ───────────────────────────────────────────────────────────────────
 
+export interface LegendsMonthRow {
+  Consultant: string;
+  Area: string;
+  Type: string;
+  TotalMargin: number;
+  Quarter: string;
+  MonthName: string;
+  Month: number;
+}
+
 export interface LegendsResponse {
   consultantTotals: { Consultant: string; Area: string; TotalMargin: number; Quarter: string }[];
-  consultantTypeTotals: {
-    Consultant: string;
-    Area: string;
-    Type: string;
-    TotalMargin: number;
-    Quarter: string;
-    MonthName: string;
-    Month: number;
-  }[];
+  consultantTypeTotals: LegendsMonthRow[];
+  priorConsultantTypeTotals: LegendsMonthRow[];
 }
 
 export async function fcFetchLegends(fy: string): Promise<LegendsResponse> {
@@ -240,8 +243,9 @@ export async function fcFetchLegends(fy: string): Promise<LegendsResponse> {
     `${API_BASE}/forecasting/legends?fy=${fy}`,
     { headers: authHeaders() },
   );
-  if (!res.ok) return { consultantTotals: [], consultantTypeTotals: [] };
-  return res.json();
+  if (!res.ok) return { consultantTotals: [], consultantTypeTotals: [], priorConsultantTypeTotals: [] };
+  const data = await res.json();
+  return { priorConsultantTypeTotals: [], ...data };
 }
 
 // ── Firestore ─────────────────────────────────────────────────────────────────

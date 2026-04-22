@@ -111,7 +111,7 @@ export default function RevenuePage() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-navy">Revenue Dashboard</h1>
           <p className="text-dark-grey text-sm mt-0.5">

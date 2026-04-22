@@ -149,14 +149,13 @@ export default function AdminPage() {
           {/* Add recruiter */}
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-navy">Add Recruiter</h3>
-            <div className="flex flex-wrap gap-3 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs text-dark-grey">Name</Label>
                 <Input
                   placeholder="Full Name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  className="w-48"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -165,14 +164,13 @@ export default function AdminPage() {
                   placeholder="e.g. SCB013 Sharon Callaghan"
                   value={newTracking}
                   onChange={(e) => setNewTracking(e.target.value)}
-                  className="w-56"
                 />
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label className="text-xs text-dark-grey">Area</Label>
                 <div>
                   <Select value={newArea} onValueChange={(v) => v && setNewArea(v)}>
-                    <SelectTrigger className="w-52">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select area" />
                     </SelectTrigger>
                     <SelectContent>
@@ -237,13 +235,13 @@ export default function AdminPage() {
                 {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-80" />)}
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-2 max-w-lg">
                 {areas.map((a) => (
-                  <li key={a.id} className="flex items-center gap-4">
-                    <span className="text-sm text-navy w-52">{a.name}</span>
+                  <li key={a.id} className="flex items-center gap-3">
+                    <span className="text-sm text-navy flex-1 min-w-0 truncate">{a.name}</span>
                     <Input
                       type="number"
-                      className="w-24"
+                      className="w-20 shrink-0"
                       value={areaEdits[a.id] ?? a.headcount}
                       onChange={(e) => setAreaEdits((prev) => ({ ...prev, [a.id]: e.target.value }))}
                     />
@@ -251,7 +249,7 @@ export default function AdminPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleSaveHeadcount(a.id, a.name)}
-                      className="gap-1.5"
+                      className="gap-1.5 shrink-0"
                     >
                       <Save className="w-3.5 h-3.5" /> Save
                     </Button>
