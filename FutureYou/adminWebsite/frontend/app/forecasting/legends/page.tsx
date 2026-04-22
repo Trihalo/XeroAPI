@@ -59,6 +59,7 @@ type YTD = { monthIdx: number; dayOfMonth: number };
 type DeltaMode = "pct" | "dollar";
 type ViewMode = "Consultant" | "Area";
 type SortKey = "total" | "yoyAbs" | "yoyPct" | "name";
+type PeriodMode = "YTD" | "Q1" | "Q2" | "Q3" | "Q4" | "QTD";
 
 // ── FY / date helpers ─────────────────────────────────────────────────────────
 
@@ -79,6 +80,47 @@ function fmtYTD(ytd: YTD): string {
 
 function monthNameToFyIdx(name: string): number {
   return (MONTHS as readonly string[]).indexOf(name);
+}
+
+const QUARTER_MONTHS: Record<"Q1" | "Q2" | "Q3" | "Q4", [number, number]> = {
+  Q1: [0, 2],
+  Q2: [3, 5],
+  Q3: [6, 8],
+  Q4: [9, 11],
+};
+
+function getQuarterForMonth(monthIdx: number): "Q1" | "Q2" | "Q3" | "Q4" {
+  if (monthIdx <= 2) return "Q1";
+  if (monthIdx <= 5) return "Q2";
+  if (monthIdx <= 8) return "Q3";
+  return "Q4";
+}
+
+function getPeriodRange(periodMode: PeriodMode, ytd: YTD): { start: number; end: number } {
+  if (periodMode === "YTD") return { start: 0, end: ytd.monthIdx };
+  if (periodMode === "QTD") {
+    const q = getQuarterForMonth(ytd.monthIdx);
+    return { start: QUARTER_MONTHS[q][0], end: ytd.monthIdx };
+  }
+  const [start, end] = QUARTER_MONTHS[periodMode];
+  return { start, end };
+}
+
+function fmtPeriodBadge(periodMode: PeriodMode, ytd: YTD): string {
+  if (periodMode === "YTD") {
+    const d = toDayOfFY(ytd.monthIdx, ytd.dayOfMonth);
+    return `YTD · 1 Jul – ${fmtYTD(ytd)} (${d} ${d === 1 ? "day" : "days"})`;
+  }
+  if (periodMode === "QTD") {
+    const q = getQuarterForMonth(ytd.monthIdx);
+    return `QTD · ${MONTHS[QUARTER_MONTHS[q][0]]} – ${fmtYTD(ytd)}`;
+  }
+  const [s, e] = QUARTER_MONTHS[periodMode];
+  return `${periodMode} · ${MONTHS[s]} – ${MONTHS[e]}`;
+}
+
+function periodShortLabel(periodMode: PeriodMode): string {
+  return periodMode; // "YTD", "Q1", "Q2", "Q3", "Q4", "QTD"
 }
 
 // ── Number formatters ─────────────────────────────────────────────────────────
@@ -120,7 +162,8 @@ function buildConsultantData(
   curRows: LegendsMonthRow[],
   prevRows: LegendsMonthRow[],
   ytd: YTD,
-  recruiterNames: string[]
+  recruiterNames: string[],
+  periodMode: PeriodMode,
 ): ConsultantRow[] {
   const map = new Map<
     string,
@@ -167,20 +210,20 @@ function buildConsultantData(
   }
 
   return Array.from(map.values()).map((e) => {
-    const cur = computeYTDTotals(e.fy26Monthly, ytd.monthIdx, ytd.dayOfMonth);
-    const prev = computeYTDTotals(e.fy25Monthly, ytd.monthIdx, ytd.dayOfMonth);
+    const cur  = computePeriodTotals(e.fy26Monthly, periodMode, ytd);
+    const prev = computePeriodTotals(e.fy25Monthly, periodMode, ytd);
     return { ...e, cur, prev };
   });
 }
 
-function computeYTDTotals(
+function computePeriodTotals(
   monthly: MonthlyEntry[],
-  monthIdx: number,
-  _dayOfMonth: number
+  periodMode: PeriodMode,
+  ytd: YTD,
 ): { perm: number; temp: number; total: number } {
-  let perm = 0,
-    temp = 0;
-  for (let i = 0; i <= monthIdx && i < 12; i++) {
+  const { start, end } = getPeriodRange(periodMode, ytd);
+  let perm = 0, temp = 0;
+  for (let i = start; i <= end && i < 12; i++) {
     perm += monthly[i].perm;
     temp += monthly[i].temp;
   }
@@ -556,10 +599,12 @@ function KpiStrip({
   rows,
   numAreas,
   deltaMode,
+  periodMode,
 }: {
   rows: ConsultantRow[];
   numAreas: number;
   deltaMode: DeltaMode;
+  periodMode: PeriodMode;
 }) {
   const totals = rows.reduce(
     (acc, r) => {
@@ -577,23 +622,24 @@ function KpiStrip({
     }
   );
 
+  const p = periodShortLabel(periodMode);
   const cards = [
     {
-      label: "Total revenue YTD",
+      label: `Total revenue ${p}`,
       cur: totals.cur.total,
       prev: totals.prev.total,
       accent: true,
       hideDelta: false,
     },
     {
-      label: "Perm YTD",
+      label: `Perm ${p}`,
       cur: totals.cur.perm,
       prev: totals.prev.perm,
       accent: false,
       hideDelta: false,
     },
     {
-      label: "Temp YTD",
+      label: `Temp ${p}`,
       cur: totals.cur.temp,
       prev: totals.prev.temp,
       accent: false,
@@ -730,6 +776,7 @@ function LegendsTable({
   onOpenDetail,
   sortKey,
   deltaMode,
+  periodMode,
 }: {
   rows: ConsultantRow[];
   viewMode: ViewMode;
@@ -737,6 +784,7 @@ function LegendsTable({
   onOpenDetail: (name: string) => void;
   sortKey: SortKey;
   deltaMode: DeltaMode;
+  periodMode: PeriodMode;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -1001,10 +1049,10 @@ function LegendsTable({
       >
         <div>{viewMode === "Consultant" ? "Consultant" : "Area"}</div>
         <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
-          Perm YTD
+          Perm {periodShortLabel(periodMode)}
         </div>
         <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
-          Temp YTD
+          Temp {periodShortLabel(periodMode)}
         </div>
         <div
           style={{
@@ -1020,7 +1068,7 @@ function LegendsTable({
             borderLeft: "2px solid #e5e7eb",
           }}
         >
-          Total YTD
+          Total {periodShortLabel(periodMode)}
         </div>
       </div>
 
@@ -1122,12 +1170,14 @@ function Drawer({
   entity,
   ytd,
   deltaMode,
+  periodMode,
 }: {
   open: boolean;
   onClose: () => void;
   entity: ConsultantRow | null;
   ytd: YTD;
   deltaMode: DeltaMode;
+  periodMode: PeriodMode;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1153,6 +1203,10 @@ function Drawer({
 
   const pctOfPrior =
     full25Total > 0 ? Math.round((entity.cur.total / full25Total) * 100) : 0;
+
+  const { start: periodStart, end: periodEnd } = getPeriodRange(periodMode, ytd);
+  const p = periodShortLabel(periodMode);
+  const showThroughIndicator = (periodMode === "YTD" || periodMode === "QTD");
 
   return (
     <>
@@ -1253,19 +1307,19 @@ function Drawer({
             {(
               [
                 {
-                  label: "Perm YTD",
+                  label: `Perm ${p}`,
                   cur: entity.cur.perm,
                   prev: entity.prev.perm,
                   bold: false,
                 },
                 {
-                  label: "Temp YTD",
+                  label: `Temp ${p}`,
                   cur: entity.cur.temp,
                   prev: entity.prev.temp,
                   bold: false,
                 },
                 {
-                  label: "Total YTD",
+                  label: `Total ${p}`,
                   cur: entity.cur.total,
                   prev: entity.prev.total,
                   bold: true,
@@ -1477,9 +1531,9 @@ function Drawer({
             </thead>
             <tbody>
               {monthBreakdown.map((m, i) => {
-                const inYTD = i < ytd.monthIdx;
-                const isCurrent = i === ytd.monthIdx;
-                const opacity = inYTD || isCurrent ? 1 : 0.4;
+                const inPeriod  = i >= periodStart && i < periodEnd;
+                const isCurrent = i === periodEnd;
+                const opacity   = inPeriod || isCurrent ? 1 : 0.4;
                 return (
                   <tr
                     key={i}
@@ -1493,7 +1547,7 @@ function Drawer({
                       }}
                     >
                       {MONTHS[i]}
-                      {isCurrent && (
+                      {isCurrent && showThroughIndicator && (
                         <span
                           style={{
                             color: "#F25A57",
@@ -1535,7 +1589,7 @@ function Drawer({
                       {fmt(m.cur)}
                     </td>
                     <td style={{ padding: "5px 8px", textAlign: "right" }}>
-                      {inYTD ? (
+                      {inPeriod ? (
                         <Delta
                           cur={m.cur}
                           prev={m.prev}
@@ -1553,7 +1607,7 @@ function Drawer({
               })}
               <tr style={{ background: "#f1f3f5", fontWeight: 700 }}>
                 <td style={{ padding: "7px 8px", color: "#003464" }}>
-                  YTD Total
+                  {p} Total
                 </td>
                 <td
                   style={{
@@ -1635,6 +1689,7 @@ export default function LegendsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [ytd, setYtd] = useState<YTD>(TODAY_YTD);
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("YTD");
   const [deltaMode, setDeltaMode] = useState<DeltaMode>("pct");
   const [viewMode, setViewMode] = useState<ViewMode>("Consultant");
   const [sortKey, setSortKey] = useState<SortKey>("total");
@@ -1656,12 +1711,11 @@ export default function LegendsPage() {
   }, []);
 
   const rows = useMemo(
-    () => buildConsultantData(curRows, prevRows, ytd, allRecruiters),
-    [curRows, prevRows, ytd, allRecruiters]
+    () => buildConsultantData(curRows, prevRows, ytd, allRecruiters, periodMode),
+    [curRows, prevRows, ytd, allRecruiters, periodMode]
   );
 
   const numAreas = useMemo(() => new Set(rows.map((r) => r.area)).size, [rows]);
-  const dayOfFY = toDayOfFY(ytd.monthIdx, ytd.dayOfMonth);
 
   const detailEntity = useMemo(
     () => (detailName ? rows.find((r) => r.name === detailName) ?? null : null),
@@ -1711,8 +1765,7 @@ export default function LegendsPage() {
               fontWeight: 500,
             }}
           >
-            YTD · 1 Jul – {fmtYTD(ytd)} ({dayOfFY}{" "}
-            {dayOfFY === 1 ? "day" : "days"})
+            {fmtPeriodBadge(periodMode, ytd)}
           </span>
         </div>
         <p
@@ -1776,7 +1829,7 @@ export default function LegendsPage() {
         </div>
       ) : (
         <>
-          <KpiStrip rows={rows} numAreas={numAreas} deltaMode={deltaMode} />
+          <KpiStrip rows={rows} numAreas={numAreas} deltaMode={deltaMode} periodMode={periodMode} />
 
           {/* Controls bar */}
           <div
@@ -1791,7 +1844,33 @@ export default function LegendsPage() {
               gap: 14,
             }}
           >
-            <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  color: "#6b6c6e",
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
+                  textTransform: "uppercase",
+                }}
+              >
+                Period
+              </span>
+              <div style={{ display: "flex", gap: 4 }}>
+                {(["YTD", "Q1", "Q2", "Q3", "Q4", "QTD"] as PeriodMode[]).map((pm) => (
+                  <TabBtn key={pm} active={periodMode === pm} onClick={() => setPeriodMode(pm)} size="xs">
+                    {pm}
+                  </TabBtn>
+                ))}
+              </div>
+            </div>
+
+            {(periodMode === "YTD" || periodMode === "QTD") && (
+              <>
+                <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }} />
+                <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
+              </>
+            )}
 
             <div
               style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }}
@@ -1954,6 +2033,7 @@ export default function LegendsPage() {
             sortKey={sortKey}
             onOpenDetail={setDetailName}
             deltaMode={deltaMode}
+            periodMode={periodMode}
           />
 
           <div
@@ -1964,8 +2044,8 @@ export default function LegendsPage() {
               padding: "4px 0 12px",
             }}
           >
-            Comparing <b>{CURRENT_FY}</b> (1 Jul – {fmtYTD(ytd)}) against the
-            same elapsed period in {PRIOR_FY}. Click any consultant for monthly
+            Comparing <b>{CURRENT_FY}</b> ({fmtPeriodBadge(periodMode, ytd)}) against the
+            same period in {PRIOR_FY}. Click any consultant for monthly
             breakdown. Press{" "}
             <kbd
               style={{
@@ -1990,6 +2070,7 @@ export default function LegendsPage() {
         entity={detailEntity}
         ytd={ytd}
         deltaMode={deltaMode}
+        periodMode={periodMode}
       />
     </div>
   );
