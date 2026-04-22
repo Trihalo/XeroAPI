@@ -458,20 +458,20 @@ function UploadContent() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div className="flex items-baseline gap-4">
-        <h1 className="text-2xl font-bold text-navy">
-          {activeFY} {activeMonth} — Forecast Upload
-        </h1>
+      <div>
         <button
           onClick={() => router.back()}
-          className="text-sm text-dark-grey hover:text-navy flex items-center gap-1"
+          className="text-sm text-dark-grey hover:text-navy flex items-center gap-1 mb-1"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
+        <h1 className="text-xl sm:text-2xl font-bold text-navy">
+          {activeFY} {activeMonth} — Forecast Upload
+        </h1>
+        <p className="text-sm text-dark-grey mt-0.5">
+          Area: <span className="font-semibold text-navy">{area}</span>
+        </p>
       </div>
-      <p className="text-sm text-dark-grey -mt-4">
-        Area: <span className="font-semibold text-navy">{area}</span>
-      </p>
 
       {fetchError && (
         <Alert variant="destructive">

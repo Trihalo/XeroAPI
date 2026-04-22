@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Lock, LogOut, RefreshCw } from "lucide-react";
+import { Lock, LogOut, RefreshCw, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +27,7 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
   const [password, setPassword] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const token = FC_AUTH.getToken();
@@ -175,17 +176,80 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
   return (
     <div className="flex flex-col h-full">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-8 py-3 border-b border-gray-200 bg-white shrink-0">
-        <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-navy">{FC_AUTH.getName()}</span>
-            {isAdmin && (
-              <span className="text-xs bg-salmon/10 text-salmon font-semibold px-2 py-0.5 rounded-full">
-                Admin
+      <div className="border-b border-gray-200 bg-white shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-8 py-3">
+          {/* Left: name + desktop nav */}
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex items-center gap-2 text-sm shrink-0">
+              <span className="font-semibold text-navy">{FC_AUTH.getName()}</span>
+              {isAdmin && (
+                <span className="text-xs bg-salmon/10 text-salmon font-semibold px-2 py-0.5 rounded-full">
+                  Admin
+                </span>
+              )}
+            </div>
+            {/* Desktop nav — hidden on mobile */}
+            <nav className="hidden lg:flex items-center gap-0.5 border-l border-gray-200 pl-4">
+              {navLinks.map(({ href, label }) => {
+                const active = href === "/forecasting"
+                  ? pathname === "/forecasting"
+                  : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${active
+                      ? "bg-navy text-white"
+                      : "text-dark-grey hover:bg-gray-100 hover:text-navy"
+                    }`}
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right: desktop actions + mobile hamburger */}
+          <div className="flex items-center gap-2">
+            {/* Desktop-only: last modified + action buttons */}
+            {FC_AUTH.getLastModified() && (
+              <span className="text-xs text-dark-grey hidden lg:block">
+                Data updated: <b>{FC_AUTH.getLastModified()}</b>
               </span>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/forecasting/password")}
+              className="text-dark-grey hover:text-navy hidden lg:flex"
+            >
+              Change password
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-dark-grey hover:text-navy gap-1.5 hidden lg:flex"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign out
+            </Button>
+
+            {/* Mobile hamburger — shown below md */}
+            <button
+              onClick={() => setMobileMenuOpen(o => !o)}
+              className="lg:hidden p-2 rounded-md text-dark-grey hover:bg-gray-100 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-          <nav className="flex items-center gap-0.5 border-l border-gray-200 pl-5">
+        </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 px-4 py-3 flex flex-col gap-1">
             {navLinks.map(({ href, label }) => {
               const active = href === "/forecasting"
                 ? pathname === "/forecasting"
@@ -194,41 +258,38 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
                 <Link
                   key={href}
                   href={href}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${active
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${active
                     ? "bg-navy text-white"
                     : "text-dark-grey hover:bg-gray-100 hover:text-navy"
-                    }`}
+                  }`}
                 >
                   {label}
                 </Link>
               );
             })}
-          </nav>
-        </div>
-        <div className="flex items-center gap-3">
-          {FC_AUTH.getLastModified() && (
-            <span className="text-xs text-dark-grey hidden sm:block">
-              Data updated: <b>{FC_AUTH.getLastModified()}</b>
-            </span>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push("/forecasting/password")}
-            className="text-dark-grey hover:text-navy"
-          >
-            Change password
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-dark-grey hover:text-navy gap-1.5"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Sign out
-          </Button>
-        </div>
+            <div className="border-t border-gray-100 mt-1 pt-2 flex flex-col gap-1">
+              {FC_AUTH.getLastModified() && (
+                <p className="text-xs text-dark-grey px-3 py-1">
+                  Data updated: <b>{FC_AUTH.getLastModified()}</b>
+                </p>
+              )}
+              <button
+                onClick={() => { setMobileMenuOpen(false); router.push("/forecasting/password"); }}
+                className="text-left px-3 py-2.5 text-sm font-medium rounded-md text-dark-grey hover:bg-gray-100 hover:text-navy transition-colors"
+              >
+                Change password
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-md text-dark-grey hover:bg-gray-100 hover:text-navy transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Page content */}

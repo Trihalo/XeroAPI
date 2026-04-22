@@ -507,15 +507,25 @@ def fc_legends():
         GROUP BY Consultant, Area, Type, Quarter, MonthName, Month
         ORDER BY Consultant, Type, Quarter, Month
     """
+    prior_fy = f"FY{int(fy[2:]) - 1}" if fy.startswith("FY") and fy[2:].isdigit() else None
+
     cfg = bigquery.QueryJobConfig(query_parameters=[
         bigquery.ScalarQueryParameter("fy", "STRING", fy),
     ])
     try:
         r1 = forecast_bq.query(sql1, job_config=cfg).result()
         r2 = forecast_bq.query(sql2, job_config=cfg).result()
+        prior_rows = []
+        if prior_fy:
+            cfg_prior = bigquery.QueryJobConfig(query_parameters=[
+                bigquery.ScalarQueryParameter("fy", "STRING", prior_fy),
+            ])
+            r3 = forecast_bq.query(sql2, job_config=cfg_prior).result()
+            prior_rows = [dict(r) for r in r3]
         return jsonify({
-            "consultantTotals":    [dict(r) for r in r1],
-            "consultantTypeTotals": [dict(r) for r in r2],
+            "consultantTotals":          [dict(r) for r in r1],
+            "consultantTypeTotals":      [dict(r) for r in r2],
+            "priorConsultantTypeTotals": prior_rows,
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
