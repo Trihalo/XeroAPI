@@ -14,13 +14,17 @@ import { FC_AUTH } from "@/lib/forecasting-cache";
 // Pages that don't need the admin role
 const ADMIN_ONLY_PATHS = ["/forecasting/revenue", "/forecasting/admin"];
 
-export default function ForecastingLayout({ children }: { children: React.ReactNode }) {
+export default function ForecastingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [authState, setAuthState] = useState<"loading" | "unauthenticated" | "authenticated">(
-    "loading",
-  );
+  const [authState, setAuthState] = useState<
+    "loading" | "unauthenticated" | "authenticated"
+  >("loading");
 
   // Form state
   const [username, setUsername] = useState("");
@@ -37,7 +41,10 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
     }
     // Check admin-only pages
     const role = FC_AUTH.getRole();
-    if (ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p)) && role !== "admin") {
+    if (
+      ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p)) &&
+      role !== "admin"
+    ) {
       router.replace("/forecasting");
       return;
     }
@@ -55,7 +62,7 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
           result.token,
           result.role,
           result.name,
-          result.revenue_table_last_modified_time ?? "",
+          result.revenue_table_last_modified_time ?? ""
         );
         toast.success(`Welcome, ${result.name}`);
         setAuthState("authenticated");
@@ -90,37 +97,48 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
   if (authState === "unauthenticated") {
     return (
       <div className="flex flex-col h-full items-center justify-center p-6 bg-gray-50">
-        <div className="w-full max-w-sm mb-6 bg-pink-50 border border-pink-200 text-pink-700 px-4 py-3 rounded-lg text-center font-medium text-sm shadow-sm">
-          🚧 Undergoing testing at the moment, Please don't use.
-        </div>
         <div className="bg-white rounded-2xl shadow-lg w-full max-w-sm overflow-hidden">
           {/* Header */}
           <div className="bg-navy px-6 py-5 flex items-center gap-3">
             <Lock className="w-4 h-4 text-salmon" />
-            <span className="text-white font-semibold text-sm">Forecasting Login</span>
+            <span className="text-white font-semibold text-sm">
+              Forecasting Login
+            </span>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="px-6 py-6 flex flex-col gap-4">
+          <form
+            onSubmit={handleLogin}
+            className="px-6 py-6 flex flex-col gap-4"
+          >
             <p className="text-dark-grey text-sm">
               Sign in with your forecasting credentials to continue.
             </p>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="fc-username" className="text-navy text-sm font-semibold">
+              <Label
+                htmlFor="fc-username"
+                className="text-navy text-sm font-semibold"
+              >
                 Username
               </Label>
               <Input
                 id="fc-username"
                 autoComplete="username"
                 value={username}
-                onChange={(e) => { setUsername(e.target.value); setLoginError(""); }}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setLoginError("");
+                }}
                 placeholder="Enter username"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="fc-password" className="text-navy text-sm font-semibold">
+              <Label
+                htmlFor="fc-password"
+                className="text-navy text-sm font-semibold"
+              >
                 Password
               </Label>
               <Input
@@ -128,14 +146,15 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
                 type="password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => { setPassword(e.target.value); setLoginError(""); }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setLoginError("");
+                }}
                 placeholder="Enter password"
               />
             </div>
 
-            {loginError && (
-              <p className="text-sm text-salmon">{loginError}</p>
-            )}
+            {loginError && <p className="text-sm text-salmon">{loginError}</p>}
 
             <div className="flex gap-3 justify-between pt-1">
               <div className="flex-1" />
@@ -155,7 +174,10 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
         </div>
         <div className="absolute bottom-6 text-center text-xs text-dark-grey">
           For any support issues or forgotten passwords, please contact{" "}
-          <a href="mailto:leoshi@future-you.com.au" className="text-navy hover:underline font-semibold">
+          <a
+            href="mailto:leoshi@future-you.com.au"
+            className="text-navy hover:underline font-semibold"
+          >
             leoshi@future-you.com.au
           </a>
         </div>
@@ -168,7 +190,11 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
 
   const navLinks = [
     { href: "/forecasting", label: "Forecasts", adminOnly: false },
-    { href: "/forecasting/revenue", label: "Revenue Dashboard", adminOnly: true },
+    {
+      href: "/forecasting/revenue",
+      label: "Revenue Dashboard",
+      adminOnly: true,
+    },
     { href: "/forecasting/admin", label: "Admin Panel", adminOnly: true },
     { href: "/forecasting/legends", label: "Legends Table", adminOnly: false },
   ].filter((l) => !l.adminOnly || isAdmin);
@@ -181,7 +207,9 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
           {/* Left: name + desktop nav */}
           <div className="flex items-center gap-4 min-w-0">
             <div className="flex items-center gap-2 text-sm shrink-0">
-              <span className="font-semibold text-navy">{FC_AUTH.getName()}</span>
+              <span className="font-semibold text-navy">
+                {FC_AUTH.getName()}
+              </span>
               {isAdmin && (
                 <span className="text-xs bg-salmon/10 text-salmon font-semibold px-2 py-0.5 rounded-full">
                   Admin
@@ -191,16 +219,18 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
             {/* Desktop nav — hidden on mobile */}
             <nav className="hidden lg:flex items-center gap-0.5 border-l border-gray-200 pl-4">
               {navLinks.map(({ href, label }) => {
-                const active = href === "/forecasting"
-                  ? pathname === "/forecasting"
-                  : pathname.startsWith(href);
+                const active =
+                  href === "/forecasting"
+                    ? pathname === "/forecasting"
+                    : pathname.startsWith(href);
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${active
-                      ? "bg-navy text-white"
-                      : "text-dark-grey hover:bg-gray-100 hover:text-navy"
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      active
+                        ? "bg-navy text-white"
+                        : "text-dark-grey hover:bg-gray-100 hover:text-navy"
                     }`}
                   >
                     {label}
@@ -238,11 +268,15 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
 
             {/* Mobile hamburger — shown below md */}
             <button
-              onClick={() => setMobileMenuOpen(o => !o)}
+              onClick={() => setMobileMenuOpen((o) => !o)}
               className="lg:hidden p-2 rounded-md text-dark-grey hover:bg-gray-100 transition-colors"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -251,17 +285,19 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-gray-200 px-4 py-3 flex flex-col gap-1">
             {navLinks.map(({ href, label }) => {
-              const active = href === "/forecasting"
-                ? pathname === "/forecasting"
-                : pathname.startsWith(href);
+              const active =
+                href === "/forecasting"
+                  ? pathname === "/forecasting"
+                  : pathname.startsWith(href);
               return (
                 <Link
                   key={href}
                   href={href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${active
-                    ? "bg-navy text-white"
-                    : "text-dark-grey hover:bg-gray-100 hover:text-navy"
+                  className={`px-3 py-2.5 text-sm font-medium rounded-md transition-colors ${
+                    active
+                      ? "bg-navy text-white"
+                      : "text-dark-grey hover:bg-gray-100 hover:text-navy"
                   }`}
                 >
                   {label}
@@ -275,13 +311,19 @@ export default function ForecastingLayout({ children }: { children: React.ReactN
                 </p>
               )}
               <button
-                onClick={() => { setMobileMenuOpen(false); router.push("/forecasting/password"); }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push("/forecasting/password");
+                }}
                 className="text-left px-3 py-2.5 text-sm font-medium rounded-md text-dark-grey hover:bg-gray-100 hover:text-navy transition-colors"
               >
                 Change password
               </button>
               <button
-                onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
                 className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium rounded-md text-dark-grey hover:bg-gray-100 hover:text-navy transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
