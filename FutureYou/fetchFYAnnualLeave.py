@@ -11,7 +11,7 @@ from datetime import date, timedelta
 from dotenv import load_dotenv
 load_dotenv()
 
-EXCLUDED_EMPLOYEES = {"Alison Kleuver", "Sarah Thompson", "Emily Wilson", "Samaira Bhojani"}
+EXCLUDED_EMPLOYEES = {"Alison Kleuver", "Sarah Thompson", "Samaira Bhojani"}
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -192,8 +192,8 @@ def build_leave_email(annual_leave_df, leave_applications_df):
     )
     df = al_df.merge(scheduled, on='EmployeeID', how='left')
     df['ScheduledHours'] = df['ScheduledHours'].fillna(0)
-    df['ALNow'] = df['AnnualLeaveBalance']
-    df['ALIncScheduled'] = df['ALNow'] - df['ScheduledHours']
+    df['ALNow'] = df['AnnualLeaveBalance'] + df['ScheduledHours']
+    df['ALIncScheduled'] = df['AnnualLeaveBalance']
     df = df.sort_values('EmployeeName').reset_index(drop=True)
 
     # --- Balances table ---

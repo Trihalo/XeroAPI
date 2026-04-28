@@ -1,51 +1,35 @@
 [
   {
-    "LeaveApplicationID": "5227901c-49f7-43b0-8658-0255c55e8444",
-    "EmployeeName": "Chloe Crewdson",
-    "Title": "Uncles 60th birthday Noosa ",
-    "StartDate": "2026-03-26",
-    "EndDate": "2026-03-30",
+    "LeaveApplicationID": "a7ca62d0-15fd-4e98-a172-5b661be7b670",
+    "EmployeeName": "Tarryn Kaufmann",
+    "Title": "Tarryn Q4 Wellbeing Day ",
+    "StartDate": "2026-05-15",
+    "EndDate": "2026-05-15",
     "NumberofUnits": 8.0
   },
   {
-    "LeaveApplicationID": "2e32f402-700e-46ba-9860-78695bde2c29",
-    "EmployeeName": "Emma McGuigan",
-    "Title": "Day off",
-    "StartDate": "2026-04-02",
-    "EndDate": "2026-04-02",
-    "NumberofUnits": 8.0
-  },
-  {
-    "LeaveApplicationID": "71a86b0e-63d7-433b-8f6d-5fbb570852ed",
-    "EmployeeName": "Ashley Duffy",
-    "Title": "Birthday Leave",
-    "StartDate": "2026-04-07",
-    "EndDate": "2026-04-07",
-    "NumberofUnits": 8.0
-  },
-  {
-    "LeaveApplicationID": "f86d90a6-8940-4de6-96ff-b1d279d9a932",
-    "EmployeeName": "Corin Roberts",
-    "Title": "AL",
-    "StartDate": "2026-04-08",
-    "EndDate": "2026-04-10",
-    "NumberofUnits": 16.0
-  },
-  {
-    "LeaveApplicationID": "ac61d85d-c425-4c6f-86da-ab6fe1da597c",
-    "EmployeeName": "Natalie Gibbins",
-    "Title": "Birthday leave",
-    "StartDate": "2026-04-20",
-    "EndDate": "2026-04-20",
-    "NumberofUnits": 8.0
+    "LeaveApplicationID": "a15b9895-c713-4c28-bc56-46e5e4491a79",
+    "EmployeeName": "Tamsin Clark",
+    "Title": "Taking leave while Zico is away at Hajj",
+    "StartDate": "2026-06-01",
+    "EndDate": "2026-06-12",
+    "NumberofUnits": 40.0
   },
   {
     "LeaveApplicationID": "83a7c4fd-4118-4d02-babb-197800bf9cd6",
     "EmployeeName": "Emma McGuigan",
     "Title": "Annual leave ",
-    "StartDate": "2026-06-03",
+    "StartDate": "2026-06-02",
     "EndDate": "2026-06-05",
-    "NumberofUnits": 24.0
+    "NumberofUnits": 32.0
+  },
+  {
+    "LeaveApplicationID": "3f47823f-f3ad-4a44-bbb8-8a2b4add06ac",
+    "EmployeeName": "Lisa Chesterman",
+    "Title": "Berry",
+    "StartDate": "2026-06-05",
+    "EndDate": "2026-06-05",
+    "NumberofUnits": 8.0
   },
   {
     "LeaveApplicationID": "b76f7a0d-b696-44b0-9092-d14fd17847b7",
@@ -62,6 +46,14 @@
     "StartDate": "2026-06-15",
     "EndDate": "2026-06-16",
     "NumberofUnits": 16.0
+  },
+  {
+    "LeaveApplicationID": "b597e0c4-10e1-40f6-a5d6-5a76f1813599",
+    "EmployeeName": "Suzette  Large",
+    "Title": "Uk trip to see the family ",
+    "StartDate": "2026-06-26",
+    "EndDate": "2026-07-17",
+    "NumberofUnits": 48.0
   },
   {
     "LeaveApplicationID": "64f9c37f-899d-4081-b6b3-0918fd6771b4",
