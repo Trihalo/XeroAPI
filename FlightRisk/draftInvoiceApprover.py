@@ -24,7 +24,7 @@ def xeroAPIUpdateBill(invoice, accessToken, xeroTenantId):
     }
 
     update_fields = [
-        "Type", "Date", "DueDate", "Status", "LineItems", "InvoiceNumber",
+        "Type", "Date", "DueDate", "Status", "LineItems", "InvoiceNumber", "CurrencyRate",
     ]
 
     payload = {k: v for k, v in invoice.items() if k in update_fields and v is not None}
@@ -256,9 +256,14 @@ def processPOBills(bills, accessToken, xeroTenantId, unleashedApiId, unleashedAp
             if order_status in ("Completed", "Complete"):
                 completed_date = parseUnleashedDate(order.get("CompletedDate"))
                 if completed_date:
+                    original_rate = bill.get("CurrencyRate")
                     bill["Date"] = completed_date
                     bill["DueDate"] = completed_date
-                    print(f"Date updated from Unleashed: {completed_date}")
+                    if original_rate is not None:
+                        bill["CurrencyRate"] = original_rate
+                        print(f"Date updated from Unleashed: {completed_date} (exchange rate preserved: {original_rate})")
+                    else:
+                        print(f"Date updated from Unleashed: {completed_date}")
             else:
                 print(f"Unleashed: {full_po} not completed (status: {order_status}), date not updated.")
         else:
