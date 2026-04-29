@@ -116,6 +116,43 @@ const MANAGED_FILES: ManagedFile[] = [
       "One row per Trade Finance payment. Must match a Xero bill by PO number.",
   },
   {
+    label: "Sun Road Deposits",
+    description:
+      "A list of Sun Road deposit payments. This list is necessary for the Sun Road Invoice Approver to allocate deposit payments accurately.",
+    repoPath: "H2coco/SR.xlsx",
+    filename: "SR.xlsx",
+    client: "H2coco",
+    clientColor: "bg-cyan-100 text-cyan-700",
+    templateColumns: [
+      {
+        name: "Date",
+        example: "29/12/2025",
+        description: "Deposit Date",
+      },
+      {
+        name: "H2coco PO",
+        example: "1234",
+        description: "H2coco Purchase Order Number",
+      },
+      {
+        name: "Sun Road PO",
+        example: "987654",
+        description: "Sun Road Purchase Order Number",
+      },
+      {
+        name: "DP Amount (USD)",
+        example: "1000.00",
+        description: "Deposit Amount in USD",
+      },
+      {
+        name: "DP Amount (AUD)",
+        example: "1500.00",
+        description: "Deposit Amount in AUD",
+      },
+    ],
+    templateNote: "One row per Sun Road deposit.",
+  },
+  {
     label: "Customer Prepayments",
     description:
       "Flight Risk customers pay upfront for their orders. The Customer Prepayment account stores these payments. Use this tool to automatically allocate to AR invoices.",
@@ -514,11 +551,10 @@ function FileCard({ managed }: { managed: ManagedFile }) {
 
           {/* Drop zone / upload button */}
           <div
-            className={`border-2 border-dashed rounded-lg px-4 py-5 text-center cursor-pointer transition-colors ${
-              dragOver
+            className={`border-2 border-dashed rounded-lg px-4 py-5 text-center cursor-pointer transition-colors ${dragOver
                 ? "border-current bg-accent"
                 : "border-border hover:border-muted-foreground/40 hover:bg-muted/40"
-            }`}
+              }`}
             style={dragOver ? { borderColor: "#38bdf8" } : undefined}
             onClick={() => inputRef.current?.click()}
           >
