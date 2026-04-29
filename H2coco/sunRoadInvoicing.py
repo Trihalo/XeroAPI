@@ -226,7 +226,7 @@ def process_invoice(inv, sr_row, access_token, tenant_id, api_id, api_key, cds_c
         usd_amount    = float(sr_row["DP Amount (USD)"])
         aud_amount    = float(sr_row["DP Amount (AUD)"])
         sunroad_po    = int(sr_row["Sun Road PO"])
-        currency_rate = round(aud_amount / usd_amount, 6)
+        currency_rate = round(usd_amount / aud_amount, 6)
         print(f"Deposit : PO{po_number} / PO{sunroad_po}  USD {usd_amount}  AUD {aud_amount}  rate {currency_rate}")
         payment_ref = f"{inv_number} PO{po_number} PO{sunroad_po} USD {usd_amount}"
         xero_create_payment(
