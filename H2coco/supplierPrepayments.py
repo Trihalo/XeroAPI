@@ -1,14 +1,13 @@
 import sys
 import os
+import re
 import json
 import pandas as pd
 import requests
 from datetime import datetime
 from google.cloud import bigquery
 from google.oauth2 import service_account
-import pandas_gbq
 from dotenv import load_dotenv
-import pytz
 
 load_dotenv()
 
@@ -19,6 +18,81 @@ from helpers.fetchInvoicesForClient import fetchInvoicesForClient
 if not os.path.exists('logs'): os.makedirs('logs')
 log_filename = datetime.now().strftime('logs/payment_%Y%m%d_%H%M%S.log')
 
+SP_TABLE = "h2dataservices.finance.supplierPrepayments"
+
+
+def read_env_json(var_name):
+    """Read a (potentially multiline) JSON value from the nearest .env file."""
+    d = os.path.dirname(os.path.abspath(__file__))
+    env_path = None
+    for _ in range(4):
+        candidate = os.path.join(d, ".env")
+        if os.path.exists(candidate):
+            env_path = candidate
+            break
+        d = os.path.dirname(d)
+
+    if env_path:
+        with open(env_path) as f:
+            content = f.read()
+        match = re.search(rf'^{var_name}=(.*)', content, re.MULTILINE)
+        if match:
+            start = match.start(1)
+            fragment = content[start:]
+            if fragment.strip().startswith("{"):
+                depth = end = 0
+                for i, ch in enumerate(fragment):
+                    if ch == "{":
+                        depth += 1
+                    elif ch == "}":
+                        depth -= 1
+                        if depth == 0:
+                            end = i + 1
+                            break
+                return fragment[:end]
+            return fragment.split("\n")[0].strip()
+
+    return os.getenv(var_name)
+
+
+def get_bq_client():
+    val = read_env_json("H2DATASERVICES_BQACCESS").strip().strip('"').strip("'")
+    if val.startswith("{"):
+        credentials = service_account.Credentials.from_service_account_info(json.loads(val))
+    else:
+        credentials = service_account.Credentials.from_service_account_file(val)
+    return bigquery.Client(credentials=credentials, project="h2dataservices")
+
+
+def fetch_pending_pos(client):
+    query = f"""
+        SELECT poNumber, date, currencyRate, usdAmount
+        FROM `{SP_TABLE}`
+        WHERE parseStatus = 'OK'
+          AND transactionType = 'SPEND'
+          AND allocatedDate IS NULL
+          AND poNumber IS NOT NULL
+        ORDER BY date ASC
+    """
+    rows = list(client.query(query).result())
+    return (
+        [int(r.poNumber) for r in rows],
+        [r.date.strftime("%Y-%m-%d") for r in rows],
+        [r.currencyRate for r in rows],
+        [r.usdAmount for r in rows],
+    )
+
+
+def mark_po_allocated(client, po_number, allocated_date):
+    query = f"""
+        UPDATE `{SP_TABLE}`
+        SET allocatedDate = '{allocated_date}'
+        WHERE poNumber = '{po_number}'
+          AND allocatedDate IS NULL
+    """
+    client.query(query).result()
+
+
 def export_to_bigquery(paid_po_records):
     key_path = os.getenv("H2COCO_BQACCESS")
     project_id = "h2coco"
@@ -26,41 +100,19 @@ def export_to_bigquery(paid_po_records):
     table_id = "SupplierPrepaymentPayments"
     table_ref = f"{project_id}.{dataset_id}.{table_id}"
 
-    # Build DataFrame from list of dicts
     df = pd.DataFrame(paid_po_records)
-    df["date"] = pd.to_datetime(df["date"]) 
+    df["date"] = pd.to_datetime(df["date"])
 
-    # Create BigQuery client
     credentials = service_account.Credentials.from_service_account_file(key_path)
     client = bigquery.Client(credentials=credentials, project=project_id)
 
-    # Load data to BigQuery (APPEND mode)
     job = client.load_table_from_dataframe(
         dataframe=df,
         destination=table_ref,
-        job_config=bigquery.LoadJobConfig(
-            write_disposition="WRITE_APPEND"
-        )
+        job_config=bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
     )
     job.result()
     print(f"Uploaded {len(df)} paid PO records to BigQuery.")
-
-
-def fetch_paid_po_records():
-    key_path = os.getenv("H2COCO_BQACCESS")
-    project_id = "h2coco"
-    dataset_id = "FinancialData"
-    table_id = "SupplierPrepaymentPayments"
-
-    client = bigquery.Client.from_service_account_json(key_path)
-    query = f"""
-        SELECT poNumber
-        FROM `{project_id}.{dataset_id}.{table_id}`
-        ORDER BY date DESC
-    """
-    
-    df = pandas_gbq.read_gbq(query, project_id=project_id, credentials=client._credentials)
-    return df["poNumber"].astype(int).tolist()
 
     
 def write_github_summary(paid, skipped, failed):
@@ -99,6 +151,30 @@ def write_github_summary(paid, skipped, failed):
         ))
 
 
+def create_xero_overpayment(access_token, tenant_id, contact_id, date_str, currency_rate, overpayment_usd, po_number):
+    url = "https://api.xero.com/api.xro/2.0/Overpayments"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "Xero-tenant-id": tenant_id,
+    }
+    payload = {
+        "Overpayments": [{
+            "Type": "SPEND-OVERPAYMENT",
+            "Contact": {"ContactID": contact_id},
+            "Date": date_str,
+            "CurrencyCode": "USD",
+            "CurrencyRate": currency_rate,
+            "LineAmountTypes": "EXCLUSIVE",
+            "LineItems": [{
+                "Description": f"Overpayment PO{po_number} USD {overpayment_usd:.2f}",
+                "UnitAmount": overpayment_usd,
+            }]
+        }]
+    }
+    return requests.post(url, headers=headers, data=json.dumps(payload))
+
+
 def main():
     client = "H2COCO"
     invoiceStatus = "AUTHORISED"
@@ -123,15 +199,8 @@ def main():
         if isinstance(invoice, dict) and invoice.get("Type") == "ACCPAY"
     ]
 
-    # Ask for the file path
-    filePath = './PO.xlsx'
-
-    # Read the Excel file to get the PO numbers, dates, currency rates, and amounts
-    df = pd.read_excel(filePath)
-    poNumbers = df['PO'].tolist()
-    dates = df['Date'].dt.strftime('%Y-%m-%d').tolist()  # Convert dates to string format
-    currencyRates = df['CurrencyRate'].tolist()
-    amounts = df['Amount'].tolist()
+    bq_client = get_bq_client()
+    poNumbers, dates, currencyRates, amounts = fetch_pending_pos(bq_client)
 
     poInvoiceDict = {}
     for poNumber in poNumbers:
@@ -149,6 +218,7 @@ def main():
                 break
         poInvoiceDict[poNumber] = {
             "InvoiceID": invoiceId,
+            "ContactID": invoice.get("Contact", {}).get("ContactID") if invoiceId else None,
             "supplierInvNumber": supplierInvNumber,
             "InvoiceDate": invoice.get("DateString", "").split('T')[0] if invoice.get("DateString", "") else "",
             "AmountPaid": invoice.get("AmountPaid", 0),
@@ -160,9 +230,6 @@ def main():
     skipped_results = [] # (poNumber, reason)
     failed_results = []  # (poNumber, reason)
 
-    # Fetch previously paid PO records from BigQuery
-    paid_po_records = fetch_paid_po_records()
-
     # Create and send individual payment requests
     for poNumber, date, currencyRate, amount in zip(poNumbers, dates, currencyRates, amounts):
 
@@ -173,10 +240,11 @@ def main():
         dateObj = datetime.strptime(date, "%Y-%m-%d")
         paymentDate = invoiceDate if dateObj < invoiceDate else dateObj
 
-        if poNumber in paid_po_records:
-            skipped_results.append((poNumber, "Already processed (in BigQuery)"))
-            continue
-        elif invoiceData and invoiceData["supplierInvNumber"] and (invoiceData["AmountPaid"] == 0.0 or invoiceData["AmountDue"] == amount):
+        if invoiceData and invoiceData["supplierInvNumber"] and invoiceData["AmountPaid"] == 0.0:
+            invoice_due = invoiceData["AmountDue"]
+            overpayment_usd = round(amount - invoice_due, 2) if amount > invoice_due else 0.0
+            pay_amount = invoice_due if overpayment_usd > 0 else amount
+
             payment = {
                 "Invoice": {
                     "InvoiceID": invoiceData["InvoiceID"]
@@ -186,8 +254,8 @@ def main():
                 },
                 "Date": paymentDate.strftime("%Y-%m-%d"),
                 "CurrencyRate": currencyRate,
-                "Amount": amount,
-                "Reference": f"PO{poNumber} {invoiceData['supplierInvNumber']} USD {amount}"
+                "Amount": pay_amount,
+                "Reference": f"PO{poNumber} {invoiceData['supplierInvNumber']} USD {pay_amount}"
             }
 
             paymentPayload = {
@@ -204,19 +272,35 @@ def main():
 
             response = requests.post(url, headers=headers, data=json.dumps(paymentPayload))
             if response.status_code in [200, 201]:
-                print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${amount} at exchange rate of {currencyRate} allocated on {paymentDate.strftime('%Y-%m-%d')}.")
+                allocated_date_str = paymentDate.strftime("%Y-%m-%d")
+                if overpayment_usd > 0:
+                    print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${pay_amount} allocated on {allocated_date_str}. Creating overpayment of ${overpayment_usd:.2f}.")
+                    op_response = create_xero_overpayment(
+                        accessToken, xeroTenantId,
+                        invoiceData["ContactID"],
+                        allocated_date_str,
+                        currencyRate,
+                        overpayment_usd,
+                        poNumber,
+                    )
+                    if op_response.status_code in [200, 201]:
+                        print(f"  Overpayment of ${overpayment_usd:.2f} USD created for PO {poNumber}.")
+                    else:
+                        print(f"  Overpayment creation failed: {op_response.status_code} - {op_response.text[:200]}")
+                else:
+                    print(f"Payment for PO {poNumber} ({invoiceData['supplierInvNumber']}) of ${pay_amount} at exchange rate of {currencyRate} allocated on {allocated_date_str}.")
                 paidPOs.append({
                     "poNumber": str(poNumber),
                     "xeroInvNumber": invoiceData["supplierInvNumber"],
-                    "date": paymentDate.strftime("%Y-%m-%d"),
+                    "date": allocated_date_str,
                     "usdAmount": amount,
                 })
-                paid_results.append((poNumber, invoiceData["supplierInvNumber"], f"${amount:,.2f}", paymentDate.strftime("%Y-%m-%d")))
+                mark_po_allocated(bq_client, str(poNumber), allocated_date_str)
+                paid_results.append((poNumber, invoiceData["supplierInvNumber"], f"${amount:,.2f}", allocated_date_str))
             else:
                 try:
                     error_data = response.json()
                     messages = []
-                    # Handle Xero Validation Errors
                     if "Elements" in error_data:
                         for element in error_data.get("Elements", []):
                             for error in element.get("ValidationErrors", []):
@@ -232,7 +316,6 @@ def main():
                         cleaned_text = json.dumps(error_data, indent=2)
 
                 except ValueError:
-                    # Truncate likely HTML response
                     text = response.text
                     if len(text) > 300:
                         cleaned_text = f"Non-JSON Response (truncated): {text[:300]}..."

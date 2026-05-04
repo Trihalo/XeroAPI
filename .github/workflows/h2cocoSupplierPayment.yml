@@ -29,9 +29,22 @@ jobs:
 
       - name: Set up Google Cloud credentials
         run: |
-          echo '${{ secrets.H2COCO_BQACCESS }}' > /tmp/key.json
-          echo "H2COCO_BQACCESS=/tmp/key.json" >> $GITHUB_ENV
+          echo '${{ secrets.H2COCO_BQACCESS }}' > /tmp/h2coco_key.json
+          echo "H2COCO_BQACCESS=/tmp/h2coco_key.json" >> $GITHUB_ENV
+          echo '${{ secrets.H2DATASERVICES_BQACCESS }}' > /tmp/h2dataservices_key.json
+          echo "H2DATASERVICES_BQACCESS=/tmp/h2dataservices_key.json" >> $GITHUB_ENV
         shell: bash
+
+      - name: Sync PO data from Xero to BigQuery
+        continue-on-error: true
+        working-directory: H2coco
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          H2COCO_CLIENT_ID: ${{ secrets.H2COCO_CLIENT_ID }}
+          H2COCO_CLIENT_SECRET: ${{ secrets.H2COCO_CLIENT_SECRET }}
+          XERO_REFRESH_TOKEN_H2COCO: ${{ vars.XERO_REFRESH_TOKEN_H2COCO }}
+        run: |
+          python syncPO.py
 
       - name: Run H2coco Supplier Payment Allocation
         working-directory: H2coco

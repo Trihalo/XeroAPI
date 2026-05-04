@@ -28,7 +28,14 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//Users/leo/Github/XeroAPI/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "WebSearch",
+      "Bash(python3)",
+      "WebFetch(domain:developer.xero.com)",
+      "Bash(python3 *)",
+      "Bash(python syncPO.py)",
+      "Bash(wait)",
+      "Bash(kill 36649)"
     ]
   }
 }
