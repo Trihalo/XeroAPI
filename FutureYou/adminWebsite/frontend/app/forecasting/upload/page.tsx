@@ -58,7 +58,7 @@ function InvoicePanel({
           onClick={() => setShowPrev((v) => !v)}
           className="text-xs h-7"
         >
-          {showPrev ? "Show Current Month" : "Show Previous Month"}
+          {showPrev ? `Show ${currentMonth}` : `Show ${previousMonth}`}
         </Button>
       </div>
 
@@ -367,6 +367,24 @@ function UploadContent() {
       : calInfo.weeksInMonth;
   const previousMonth = calInfo.previousMonth;
 
+  const viewNext =
+    activeFY === calInfo.nextMonthFY && activeMonth === calInfo.nextMonth;
+
+  function switchMonth(toNext: boolean) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("area", area);
+    if (toNext) {
+      params.set("month", calInfo.nextMonth);
+      params.set("fy", calInfo.nextMonthFY);
+      params.set("weekIndex", "1");
+    } else {
+      params.set("month", calInfo.currentMonth);
+      params.set("fy", calInfo.currentFY);
+      params.set("weekIndex", String(calInfo.currentWeekIndex));
+    }
+    router.replace(`/forecasting/upload?${params.toString()}`);
+  }
+
   const { summaryMapping, loading: recruiterLoading } = useRecruiterData();
   const { currentData, prevData, loading: invoiceLoading, error: invoiceError } = useInvoiceData();
 
@@ -458,19 +476,39 @@ function UploadContent() {
   return (
     <div className="p-6 md:p-8 space-y-6">
       {/* Header */}
-      <div>
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-dark-grey hover:text-navy flex items-center gap-1 mb-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
-        </button>
-        <h1 className="text-xl sm:text-2xl font-bold text-navy">
-          {activeFY} {activeMonth} — Forecast Upload
-        </h1>
-        <p className="text-sm text-dark-grey mt-0.5">
-          Area: <span className="font-semibold text-navy">{area}</span>
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <button
+            onClick={() => router.back()}
+            className="text-sm text-dark-grey hover:text-navy flex items-center gap-1 mb-1"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
+          <h1 className="text-xl sm:text-2xl font-bold text-navy">
+            {activeFY} {activeMonth} — Forecast Upload
+          </h1>
+          <p className="text-sm text-dark-grey mt-0.5">
+            Area: <span className="font-semibold text-navy">{area}</span>
+          </p>
+        </div>
+        <div className="flex gap-1 mt-1">
+          {(["Current Month", "Next Month"] as const).map((label) => {
+            const isNext = label === "Next Month";
+            const active = viewNext === isNext;
+            return (
+              <button
+                key={label}
+                onClick={() => switchMonth(isNext)}
+                className={`px-3 py-1.5 text-sm rounded-md font-medium transition-colors ${active
+                    ? "bg-navy text-white"
+                    : "bg-gray-100 text-dark-grey hover:bg-gray-200"
+                  }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {fetchError && (
@@ -504,9 +542,9 @@ function UploadContent() {
               rows={allRows[name] ?? []}
               currentWeekIndex={activeWeekIndex}
               currentMonth={activeMonth}
-              currentData={currentData}
-              prevData={prevData}
-              previousMonth={previousMonth}
+              currentData={viewNext ? [] : currentData}
+              prevData={viewNext ? currentData : prevData}
+              previousMonth={viewNext ? calInfo.currentMonth : previousMonth}
               invoiceLoading={invoiceLoading}
               invoiceError={invoiceError}
               isSubmitting={submitting.has(name)}
