@@ -297,7 +297,7 @@ def processPOBills(bills, accessToken, xeroTenantId, unleashedApiId, unleashedAp
 
 
 def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
-    """Stock Adjustment Journals (Journal-SA-*): set BAS Excluded + account 5010, approve."""
+    """Stock Adjustment Journals (Journal-SA-*): set BAS Excluded + account 5500, approve."""
     results = []
     for bill in bills:
         if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
@@ -310,7 +310,7 @@ def processStockAdjustmentJournals(bills, accessToken, xeroTenantId):
         for line in bill.get("LineItems", []):
             line["TaxType"] = "BASEXCLUDED"
             if line.get("AccountCode") == "5000":
-                line["AccountCode"] = "5010"
+                line["AccountCode"] = "5500"
             line.pop("TaxAmount", None)
 
         time.sleep(1)
