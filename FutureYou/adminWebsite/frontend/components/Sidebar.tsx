@@ -17,7 +17,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 shrink-0 flex flex-col bg-navy text-white min-h-screen">
       {/* Logo */}
-      <div className="px-5 pt-7 pb-6 border-b border-white/10">
+      <Link href="/" className="block px-5 pt-7 pb-6 border-b border-white/10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/fy.png"
@@ -25,7 +25,7 @@ export default function Sidebar() {
           className="w-36 object-contain brightness-0 invert"
         />
         <p className="text-[11px] font-semibold tracking-widest uppercase text-white/40 mt-3">Admin</p>
-      </div>
+      </Link>
 
       <nav className="flex-1 px-3 py-5 space-y-0.5">
         {NAV.map(({ href, label, icon: Icon }) => {
