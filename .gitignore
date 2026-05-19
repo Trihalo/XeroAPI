@@ -13,6 +13,10 @@ H2coco/*.json
 H2coco/*.csv
 H2coco/logs
 H2coco/PO_Payment_Status
+H2coco/mondiale/invoices/
+H2coco/mondiale/warehouse_invoices
+H2coco/mondiale/contact.json
+H2coco/mondiale/*.csv
 helpers/__pycache__/
 FutureYou/__pycache__/
 dashboardWebsite/frontend/node_modules

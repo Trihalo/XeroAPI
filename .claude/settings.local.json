@@ -28,7 +28,11 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//Users/leo/Github/XeroAPI/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(python mondiale_to_csv.py)",
+      "Bash(python3 mondiale_to_csv.py)",
+      "Bash(python3 *)",
+      "Bash(grep -E \"\\\\.py$\")"
     ]
   }
 }
