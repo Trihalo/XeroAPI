@@ -154,6 +154,78 @@ def approveInvoiceAndBills(inv, related_bills, accessToken, xeroTenantId):
     return results
 
 
+MINOR_ADJUSTMENTS_ACCOUNT = "2105"
+WRITE_OFF_THRESHOLD = 1.00
+
+
+def fetchAuthorisedACCRECInvoices(accessToken, xeroTenantId):
+    url = "https://api.xero.com/api.xro/2.0/Invoices"
+    headers = {
+        "Authorization": f"Bearer {accessToken}",
+        "Xero-tenant-id": xeroTenantId,
+        "Accept": "application/json",
+    }
+    all_invoices = []
+    page = 1
+    while True:
+        params = {"Type": "ACCREC", "Statuses": "AUTHORISED", "page": page}
+        response = requests.get(url, headers=headers, params=params)
+        if response.status_code != 200:
+            print(f"Failed to fetch authorised invoices (page {page}): {response.status_code} {response.text}")
+            break
+        batch = response.json().get("Invoices", [])
+        all_invoices.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+        time.sleep(0.5)
+    return all_invoices
+
+
+def createPayment(invoice_id, amount, account_code, date, accessToken, xeroTenantId):
+    url = "https://api.xero.com/api.xro/2.0/Payments"
+    headers = {
+        "Authorization": f"Bearer {accessToken}",
+        "Xero-tenant-id": xeroTenantId,
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "Invoice": {"InvoiceID": invoice_id},
+        "Account": {"Code": account_code},
+        "Amount": round(float(amount), 2),
+        "Date": date,
+    }
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code in [200, 201]:
+        return response.json()
+    print(f"Failed to create payment: {response.status_code} {response.text}")
+    return None
+
+
+def processSmallBalanceWriteOffs(invoices, accessToken, xeroTenantId):
+    results = []
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    print(f"  Total authorised invoices fetched: {len(invoices)}")
+    for invoice in invoices:
+        amount_due = round(float(invoice.get("AmountDue", 0)), 2)
+        if not (0 < amount_due < WRITE_OFF_THRESHOLD):
+            continue
+        inv_number = invoice.get("InvoiceNumber", "Unknown")
+        invoice_id = invoice.get("InvoiceID")
+        time.sleep(1)
+        print(f"Writing off ${amount_due} on {inv_number} → account {MINOR_ADJUSTMENTS_ACCOUNT}")
+        response = createPayment(invoice_id, amount_due, MINOR_ADJUSTMENTS_ACCOUNT, today, accessToken, xeroTenantId)
+        if response:
+            print(f"  [✓] Write-off successful")
+            results.append((inv_number, f"${amount_due:.2f}", "✅ Written off"))
+        else:
+            print(f"  [X] Write-off failed")
+            results.append((inv_number, f"${amount_due:.2f}", "❌ Failed"))
+        print("--------------------------------------------------")
+    return results
+
+
 def queryUnleashedSalesOrder(orderNumber, apiId, apiKey):
     """Query Unleashed for a sales order by order number. Returns the order dict or None."""
     if not apiId or not apiKey:
@@ -382,7 +454,7 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
     return results
 
 
-def write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results):
+def write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results, writeoff_results):
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_file:
         return
@@ -425,6 +497,11 @@ def write_github_summary(invoice_results, sa_results, cn_results, recost_results
             "PO Bills",
             po_results,
             ["Original", "Renamed", "Result"],
+        ))
+        f.write(section(
+            "Small Balance Write-offs (<$1)",
+            writeoff_results,
+            ["Invoice", "Amount", "Result"],
         ))
 
 
@@ -557,7 +634,12 @@ def main():
     recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
     po_results = processPOBills(draftBills, accessToken, xeroTenantId, unleashed_api_id, unleashed_api_key)
 
-    write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results)
+    print(f"\n{'='*60}")
+    print("WRITE-OFFS: Fetching all authorised invoices with balance < $1...")
+    authorised_invoices = fetchAuthorisedACCRECInvoices(accessToken, xeroTenantId)
+    writeoff_results = processSmallBalanceWriteOffs(authorised_invoices, accessToken, xeroTenantId)
+
+    write_github_summary(invoice_results, sa_results, cn_results, recost_results, po_results, writeoff_results)
 
 if __name__ == "__main__":
     main()
