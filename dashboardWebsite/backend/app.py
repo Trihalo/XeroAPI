@@ -53,6 +53,7 @@ WORKFLOWS = {
     "flight-risk-prepayment-allocator":  "flightRiskPrepaymentAllocator.yml",
     "flight-risk-atb":                   "flightRiskAtb.yml",
     "h2coco-sunroad-invoicing":          "h2cocoSunRoadInvoicing.yml",
+    "h2coco-sales-revenue":              "h2cocoSalesRevenue.yml",
 }
 
 # Workflows that pass name/email as inputs to GitHub Actions

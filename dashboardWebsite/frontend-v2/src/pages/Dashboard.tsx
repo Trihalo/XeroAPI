@@ -132,6 +132,16 @@ const CLIENTS: ClientConfig[] = [
         requiresFileUpload: false,
         icon: FileText,
       },
+      {
+        name: "Update Sales Revenue Database",
+        description:
+          "Syncs Xero invoices, credit notes, and manual journals to the BigQuery sales revenue table. Runs incrementally by default.",
+        workflowKey: "h2coco-sales-revenue",
+        workflowFile: "h2cocoSalesRevenue.yml",
+        estimatedTime: 120,
+        requiresFileUpload: false,
+        icon: Database,
+      },
     ],
   },
   {
