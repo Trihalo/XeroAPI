@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRecruiterData } from "@/hooks/forecasting/useRecruiterData";
-import { fcFetchLegends, type LegendsMonthRow } from "@/lib/forecasting-api";
-import { FC_AUTH } from "@/lib/forecasting-cache";
+import { fcFetchLegends, fcGetRecruiters, type LegendsMonthRow, type LegendsResponse } from "@/lib/forecasting-api";
+import { getCached, setCache, LEGENDS_CACHE_KEY } from "@/lib/forecasting-cache";
+import calendar, { getCurrentMonthInfo } from "@/lib/calendar";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -27,10 +27,6 @@ const MONTHS = [
   "Jun",
 ] as const;
 const DAYS_IN_MONTH = [31, 31, 30, 31, 30, 31, 31, 28, 31, 30, 31, 30] as const;
-const CUM_DAYS = DAYS_IN_MONTH.reduce<number[]>((a, d, i) => {
-  a.push((a[i - 1] ?? 0) + d);
-  return a;
-}, []);
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -59,23 +55,28 @@ type YTD = { monthIdx: number; dayOfMonth: number };
 type DeltaMode = "pct" | "dollar";
 type ViewMode = "Consultant" | "Area";
 type SortKey = "total" | "yoyAbs" | "yoyPct" | "name";
-type PeriodMode = "YTD" | "Q1" | "Q2" | "Q3" | "Q4" | "QTD";
+type PeriodMode = "YTD" | "Q1" | "Q2" | "Q3" | "Q4";
 
 // ── FY / date helpers ─────────────────────────────────────────────────────────
 
 function getTodayYTD(): YTD {
-  const today = new Date();
-  const m = today.getMonth(); // 0=Jan..11=Dec
-  const fyMonthIdx = m >= 6 ? m - 6 : m + 6;
-  return { monthIdx: fyMonthIdx, dayOfMonth: today.getDate() };
+  const info = getCurrentMonthInfo();
+  const monthIdx = (MONTHS as readonly string[]).indexOf(info.currentMonth);
+  return { monthIdx: monthIdx >= 0 ? monthIdx : 11, dayOfMonth: new Date().getDate() };
 }
 
-function toDayOfFY(monthIdx: number, dayOfMonth: number): number {
-  return (monthIdx === 0 ? 0 : CUM_DAYS[monthIdx - 1]) + dayOfMonth;
+function getFyDaysElapsed(fy: string, today = new Date()): number {
+  const firstEntry = calendar.find((e) => e.fy === fy);
+  if (!firstEntry) return 1;
+  const [d, m, y] = firstEntry.range.split(" - ")[0].split("/").map(Number);
+  const start = new Date(y < 100 ? y + 2000 : y, m - 1, d);
+  start.setHours(0, 0, 0, 0);
+  const t = new Date(today); t.setHours(0, 0, 0, 0);
+  return Math.max(1, Math.floor((t.getTime() - start.getTime()) / 86400000) + 1);
 }
 
 function fmtYTD(ytd: YTD): string {
-  return `${ytd.dayOfMonth} ${MONTHS[ytd.monthIdx]}`;
+  return MONTHS[ytd.monthIdx];
 }
 
 function monthNameToFyIdx(name: string): number {
@@ -89,38 +90,23 @@ const QUARTER_MONTHS: Record<"Q1" | "Q2" | "Q3" | "Q4", [number, number]> = {
   Q4: [9, 11],
 };
 
-function getQuarterForMonth(monthIdx: number): "Q1" | "Q2" | "Q3" | "Q4" {
-  if (monthIdx <= 2) return "Q1";
-  if (monthIdx <= 5) return "Q2";
-  if (monthIdx <= 8) return "Q3";
-  return "Q4";
-}
-
 function getPeriodRange(periodMode: PeriodMode, ytd: YTD): { start: number; end: number } {
   if (periodMode === "YTD") return { start: 0, end: ytd.monthIdx };
-  if (periodMode === "QTD") {
-    const q = getQuarterForMonth(ytd.monthIdx);
-    return { start: QUARTER_MONTHS[q][0], end: ytd.monthIdx };
-  }
   const [start, end] = QUARTER_MONTHS[periodMode];
   return { start, end };
 }
 
 function fmtPeriodBadge(periodMode: PeriodMode, ytd: YTD): string {
   if (periodMode === "YTD") {
-    const d = toDayOfFY(ytd.monthIdx, ytd.dayOfMonth);
+    const d = getFyDaysElapsed(CURRENT_FY);
     return `YTD · 1 Jul – ${fmtYTD(ytd)} (${d} ${d === 1 ? "day" : "days"})`;
-  }
-  if (periodMode === "QTD") {
-    const q = getQuarterForMonth(ytd.monthIdx);
-    return `QTD · ${MONTHS[QUARTER_MONTHS[q][0]]} – ${fmtYTD(ytd)}`;
   }
   const [s, e] = QUARTER_MONTHS[periodMode];
   return `${periodMode} · ${MONTHS[s]} – ${MONTHS[e]}`;
 }
 
 function periodShortLabel(periodMode: PeriodMode): string {
-  return periodMode; // "YTD", "Q1", "Q2", "Q3", "Q4", "QTD"
+  return periodMode; // "YTD", "Q1", "Q2", "Q3", "Q4"
 }
 
 // ── Number formatters ─────────────────────────────────────────────────────────
@@ -777,6 +763,7 @@ function LegendsTable({
   sortKey,
   deltaMode,
   periodMode,
+  isMobile,
 }: {
   rows: ConsultantRow[];
   viewMode: ViewMode;
@@ -785,6 +772,7 @@ function LegendsTable({
   sortKey: SortKey;
   deltaMode: DeltaMode;
   periodMode: PeriodMode;
+  isMobile: boolean;
 }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
@@ -864,7 +852,7 @@ function LegendsTable({
   const rowPad = "10px 14px";
   const nameCol =
     viewMode === "Area" ? "minmax(220px, 1.3fr)" : "minmax(200px, 1fr)";
-  const gridCols = `${nameCol} 1fr 1fr 1.1fr`;
+  const gridCols = isMobile ? "1fr auto" : `${nameCol} 1fr 1fr 1.1fr`;
 
   // ── Render a single data row ──
   const renderRow = (
@@ -974,23 +962,27 @@ function LegendsTable({
           </div>
         </div>
 
-        <DataCell
-          cur={entity.cur.perm}
-          prev={entity.prev.perm}
-          deltaMode={deltaMode}
-        />
-        <DataCell
-          cur={entity.cur.temp}
-          prev={entity.prev.temp}
-          deltaMode={deltaMode}
-        />
+        {!isMobile && (
+          <>
+            <DataCell
+              cur={entity.cur.perm}
+              prev={entity.prev.perm}
+              deltaMode={deltaMode}
+            />
+            <DataCell
+              cur={entity.cur.temp}
+              prev={entity.prev.temp}
+              deltaMode={deltaMode}
+            />
+          </>
+        )}
 
         <div
           style={{
             background: "rgba(0,52,100,0.04)",
             marginRight: -14,
-            paddingRight: 22,
-            paddingLeft: 18,
+            paddingRight: isMobile ? 14 : 22,
+            paddingLeft: isMobile ? 10 : 18,
             marginTop: -10,
             paddingTop: 10,
             marginBottom: -10,
@@ -1048,19 +1040,23 @@ function LegendsTable({
         }}
       >
         <div>{viewMode === "Consultant" ? "Consultant" : "Area"}</div>
-        <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
-          Perm {periodShortLabel(periodMode)}
-        </div>
-        <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
-          Temp {periodShortLabel(periodMode)}
-        </div>
+        {!isMobile && (
+          <>
+            <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
+              Perm {periodShortLabel(periodMode)}
+            </div>
+            <div style={{ textAlign: "right", paddingRight: 18, paddingLeft: 18 }}>
+              Temp {periodShortLabel(periodMode)}
+            </div>
+          </>
+        )}
         <div
           style={{
             textAlign: "right",
             background: "rgba(0,52,100,0.04)",
             marginRight: -14,
-            paddingRight: 22,
-            paddingLeft: 18,
+            paddingRight: isMobile ? 14 : 22,
+            paddingLeft: isMobile ? 10 : 18,
             marginTop: -8,
             paddingTop: 8,
             marginBottom: -8,
@@ -1113,22 +1109,26 @@ function LegendsTable({
         }}
       >
         <div style={{ color: "#003464", fontSize: 13 }}>Total</div>
-        <DataCell
-          cur={totals.cur.perm}
-          prev={totals.prev.perm}
-          deltaMode={deltaMode}
-        />
-        <DataCell
-          cur={totals.cur.temp}
-          prev={totals.prev.temp}
-          deltaMode={deltaMode}
-        />
+        {!isMobile && (
+          <>
+            <DataCell
+              cur={totals.cur.perm}
+              prev={totals.prev.perm}
+              deltaMode={deltaMode}
+            />
+            <DataCell
+              cur={totals.cur.temp}
+              prev={totals.prev.temp}
+              deltaMode={deltaMode}
+            />
+          </>
+        )}
         <div
           style={{
             background: "rgba(0,52,100,0.09)",
             marginRight: -14,
-            paddingRight: 22,
-            paddingLeft: 18,
+            paddingRight: isMobile ? 14 : 22,
+            paddingLeft: isMobile ? 10 : 18,
             marginTop: -10,
             paddingTop: 10,
             marginBottom: -10,
@@ -1171,12 +1171,16 @@ function Drawer({
   ytd,
   deltaMode,
   periodMode,
+  todayFyMonthIdx,
+  todayFyWeek,
 }: {
   open: boolean;
   onClose: () => void;
   entity: ConsultantRow | null;
   ytd: YTD;
   deltaMode: DeltaMode;
+  todayFyMonthIdx: number;
+  todayFyWeek: number;
   periodMode: PeriodMode;
 }) {
   useEffect(() => {
@@ -1206,7 +1210,7 @@ function Drawer({
 
   const { start: periodStart, end: periodEnd } = getPeriodRange(periodMode, ytd);
   const p = periodShortLabel(periodMode);
-  const showThroughIndicator = (periodMode === "YTD" || periodMode === "QTD");
+  const showThroughIndicator = periodMode === "YTD";
 
   return (
     <>
@@ -1302,6 +1306,7 @@ function Drawer({
               gridTemplateColumns: "repeat(3, 1fr)",
               gap: 10,
               marginBottom: 18,
+              minWidth: 0,
             }}
           >
             {(
@@ -1555,7 +1560,7 @@ function Drawer({
                             fontSize: 10,
                           }}
                         >
-                          ● thru {ytd.dayOfMonth}
+                          ● thru {MONTHS[ytd.monthIdx]}{ytd.monthIdx === todayFyMonthIdx ? ` wk ${todayFyWeek}` : ""}
                         </span>
                       )}
                     </td>
@@ -1682,10 +1687,14 @@ function Drawer({
 
 export default function LegendsPage() {
   const TODAY_YTD = useMemo(() => getTodayYTD(), []);
+  const todayFyInfo = useMemo(() => getCurrentMonthInfo(), []);
+  const todayFyMonthIdx = (MONTHS as readonly string[]).indexOf(todayFyInfo.currentMonth);
+  const todayFyWeek = todayFyInfo.currentWeekIndex;
 
   const [curRows, setCurRows] = useState<LegendsMonthRow[]>([]);
   const [prevRows, setPrevRows] = useState<LegendsMonthRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [firstLoad, setFirstLoad] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [ytd, setYtd] = useState<YTD>(TODAY_YTD);
@@ -1695,24 +1704,48 @@ export default function LegendsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("total");
   const [search, setSearch] = useState("");
   const [detailName, setDetailName] = useState<string | null>(null);
-
-  const { allRecruiters, loading: recruiterLoading } = useRecruiterData();
-  const lastModified = FC_AUTH.getLastModified();
+  const [activeRecruiterNames, setActiveRecruiterNames] = useState<string[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    fcGetRecruiters().then((recruiters) => {
+      const names = recruiters
+        .filter((r) => r.active !== false)
+        .map((r) => r.name);
+      setActiveRecruiterNames(names);
+    });
+  }, []);
+
+  useEffect(() => {
+    const cached = getCached<LegendsResponse>(LEGENDS_CACHE_KEY);
+    if (cached) {
+      setCurRows(cached.consultantTypeTotals);
+      setPrevRows(cached.priorConsultantTypeTotals);
+      setLoading(false);
+      return;
+    }
+    setFirstLoad(true);
     setLoading(true);
     fcFetchLegends(CURRENT_FY)
       .then((data) => {
         setCurRows(data.consultantTypeTotals);
         setPrevRows(data.priorConsultantTypeTotals);
+        setCache(LEGENDS_CACHE_KEY, data);
       })
       .catch(() => setError("Failed to load legends data."))
       .finally(() => setLoading(false));
   }, []);
 
   const rows = useMemo(
-    () => buildConsultantData(curRows, prevRows, ytd, allRecruiters, periodMode),
-    [curRows, prevRows, ytd, allRecruiters, periodMode]
+    () => buildConsultantData(curRows, prevRows, ytd, activeRecruiterNames, periodMode),
+    [curRows, prevRows, ytd, activeRecruiterNames, periodMode]
   );
 
   const numAreas = useMemo(() => new Set(rows.map((r) => r.area)).size, [rows]);
@@ -1722,7 +1755,7 @@ export default function LegendsPage() {
     [detailName, rows]
   );
 
-  const isLoading = loading || recruiterLoading;
+  const isLoading = loading;
 
   return (
     <div
@@ -1791,18 +1824,6 @@ export default function LegendsPage() {
           may apply minor adjustments to some invoices. Recruiters who have left
           the business are not shown.
         </p>
-        {lastModified && (
-          <p
-            style={{
-              fontSize: 11,
-              color: "#6b6c6e",
-              marginTop: 4,
-              marginBottom: 0,
-            }}
-          >
-            Data last updated: <b>{lastModified}</b>
-          </p>
-        )}
       </div>
 
       {error && (
@@ -1812,9 +1833,31 @@ export default function LegendsPage() {
         </Alert>
       )}
 
+      {isLoading && firstLoad && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: 8,
+            padding: "10px 14px",
+            fontSize: 13,
+            color: "#1d4ed8",
+          }}
+        >
+          <span style={{ fontSize: 16 }}>ℹ️</span>
+          <span>
+            Loading data for the first time — this may take a few seconds.
+            Subsequent visits will load instantly from cache.
+          </span>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
               <Skeleton key={i} className="h-20 w-full" />
             ))}
@@ -1839,156 +1882,104 @@ export default function LegendsPage() {
               borderRadius: 8,
               padding: "10px 14px",
               display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 14,
+              flexDirection: isMobile ? "column" : "row",
+              flexWrap: isMobile ? undefined : "wrap",
+              alignItems: isMobile ? "stretch" : "center",
+              gap: isMobile ? 10 : 14,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#6b6c6e",
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  textTransform: "uppercase",
-                }}
-              >
-                Period
-              </span>
-              <div style={{ display: "flex", gap: 4 }}>
-                {(["YTD", "Q1", "Q2", "Q3", "Q4", "QTD"] as PeriodMode[]).map((pm) => (
-                  <TabBtn key={pm} active={periodMode === pm} onClick={() => setPeriodMode(pm)} size="xs">
-                    {pm}
-                  </TabBtn>
-                ))}
-              </div>
-            </div>
-
-            {(periodMode === "YTD" || periodMode === "QTD") && (
-              <>
-                <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }} />
-                <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
-              </>
-            )}
-
+            {/* Scrollable button row on mobile */}
             <div
-              style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }}
-            />
-
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#6b6c6e",
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  textTransform: "uppercase",
-                }}
-              >
-                Compare
-              </span>
-              <div style={{ display: "flex", gap: 4 }}>
-                <TabBtn
-                  active={deltaMode === "pct"}
-                  onClick={() => setDeltaMode("pct")}
-                >
-                  %
-                </TabBtn>
-                <TabBtn
-                  active={deltaMode === "dollar"}
-                  onClick={() => setDeltaMode("dollar")}
-                >
-                  $
-                </TabBtn>
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: isMobile ? 6 : 14,
+                overflowX: isMobile ? "auto" : undefined,
+                flexShrink: 0,
+                paddingBottom: isMobile ? 2 : 0,
+              }}
+            >
+              {/* Period */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                {!isMobile && (
+                  <span style={{ fontSize: 11, color: "#6b6c6e", fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    Period
+                  </span>
+                )}
+                <div style={{ display: "flex", gap: 3 }}>
+                  {(["YTD", "Q1", "Q2", "Q3", "Q4"] as PeriodMode[]).map((pm) => (
+                    <TabBtn key={pm} active={periodMode === pm} onClick={() => setPeriodMode(pm)} size="xs">
+                      {pm}
+                    </TabBtn>
+                  ))}
+                </div>
               </div>
+
+              {periodMode === "YTD" && (
+                <>
+                  <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
+                  <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
+                </>
+              )}
+
+              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
+
+              {/* Compare */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                {!isMobile && (
+                  <span style={{ fontSize: 11, color: "#6b6c6e", fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    Compare
+                  </span>
+                )}
+                <div style={{ display: "flex", gap: 3 }}>
+                  <TabBtn active={deltaMode === "pct"} onClick={() => setDeltaMode("pct")}>%</TabBtn>
+                  <TabBtn active={deltaMode === "dollar"} onClick={() => setDeltaMode("dollar")}>$</TabBtn>
+                </div>
+              </div>
+
+              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
+
+              {/* Group */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                {!isMobile && (
+                  <span style={{ fontSize: 11, color: "#6b6c6e", fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    Group
+                  </span>
+                )}
+                <div style={{ display: "flex", gap: 3 }}>
+                  <TabBtn active={viewMode === "Consultant"} onClick={() => setViewMode("Consultant")}>Consultant</TabBtn>
+                  <TabBtn active={viewMode === "Area"} onClick={() => setViewMode("Area")}>Area</TabBtn>
+                </div>
+              </div>
+
+              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
+
+              {/* Sort */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                {!isMobile && (
+                  <span style={{ fontSize: 11, color: "#6b6c6e", fontWeight: 600, letterSpacing: 0.3, textTransform: "uppercase" }}>
+                    Sort
+                  </span>
+                )}
+                <div style={{ display: "flex", gap: 3 }}>
+                  <TabBtn active={sortKey === "total"} onClick={() => setSortKey("total")}>Total</TabBtn>
+                  <TabBtn active={sortKey === "yoyAbs"} onClick={() => setSortKey("yoyAbs")}>YoY $</TabBtn>
+                  <TabBtn active={sortKey === "yoyPct"} onClick={() => setSortKey("yoyPct")}>YoY %</TabBtn>
+                  <TabBtn active={sortKey === "name"} onClick={() => setSortKey("name")}>A–Z</TabBtn>
+                </div>
+              </div>
+
+              {!isMobile && <div style={{ flex: 1 }} />}
             </div>
 
-            <div
-              style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }}
-            />
-
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#6b6c6e",
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  textTransform: "uppercase",
-                }}
-              >
-                Group
-              </span>
-              <div style={{ display: "flex", gap: 4 }}>
-                <TabBtn
-                  active={viewMode === "Consultant"}
-                  onClick={() => setViewMode("Consultant")}
-                >
-                  Consultant
-                </TabBtn>
-                <TabBtn
-                  active={viewMode === "Area"}
-                  onClick={() => setViewMode("Area")}
-                >
-                  Area
-                </TabBtn>
-              </div>
-            </div>
-
-            <div
-              style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch" }}
-            />
-
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#6b6c6e",
-                  fontWeight: 600,
-                  letterSpacing: 0.3,
-                  textTransform: "uppercase",
-                }}
-              >
-                Sort
-              </span>
-              <div style={{ display: "flex", gap: 4 }}>
-                <TabBtn
-                  active={sortKey === "total"}
-                  onClick={() => setSortKey("total")}
-                >
-                  Total
-                </TabBtn>
-                <TabBtn
-                  active={sortKey === "yoyAbs"}
-                  onClick={() => setSortKey("yoyAbs")}
-                >
-                  YoY $
-                </TabBtn>
-                <TabBtn
-                  active={sortKey === "yoyPct"}
-                  onClick={() => setSortKey("yoyPct")}
-                >
-                  YoY %
-                </TabBtn>
-                <TabBtn
-                  active={sortKey === "name"}
-                  onClick={() => setSortKey("name")}
-                >
-                  A–Z
-                </TabBtn>
-              </div>
-            </div>
-
-            <div style={{ flex: 1 }} />
-
-            {/* Search */}
+            {/* Search — inline on desktop, full-width below on mobile */}
             <div
               style={{
                 position: "relative",
-                flex: 1,
-                minWidth: 160,
-                maxWidth: 220,
+                flex: isMobile ? undefined : 1,
+                width: isMobile ? "100%" : undefined,
+                minWidth: isMobile ? undefined : 160,
+                maxWidth: isMobile ? undefined : 220,
               }}
             >
               <input
@@ -2004,23 +1995,10 @@ export default function LegendsPage() {
                   fontFamily: "inherit",
                   outline: "none",
                 }}
-                onFocus={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = "#003464";
-                }}
-                onBlur={(e) => {
-                  (e.target as HTMLInputElement).style.borderColor = "#e5e7eb";
-                }}
+                onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = "#003464"; }}
+                onBlur={(e) => { (e.target as HTMLInputElement).style.borderColor = "#e5e7eb"; }}
               />
-              <span
-                style={{
-                  position: "absolute",
-                  left: 9,
-                  top: 6,
-                  fontSize: 12,
-                  color: "#6b6c6e",
-                  pointerEvents: "none",
-                }}
-              >
+              <span style={{ position: "absolute", left: 9, top: 6, fontSize: 12, color: "#6b6c6e", pointerEvents: "none" }}>
                 ⌕
               </span>
             </div>
@@ -2034,33 +2012,26 @@ export default function LegendsPage() {
             onOpenDetail={setDetailName}
             deltaMode={deltaMode}
             periodMode={periodMode}
+            isMobile={isMobile}
           />
 
-          <div
-            style={{
-              fontSize: 11,
-              color: "#6b6c6e",
-              textAlign: "center",
-              padding: "4px 0 12px",
-            }}
-          >
-            Comparing <b>{CURRENT_FY}</b> ({fmtPeriodBadge(periodMode, ytd)}) against the
-            same period in {PRIOR_FY}. Click any consultant for monthly
-            breakdown. Press{" "}
-            <kbd
+          {!isMobile && (
+            <div
               style={{
-                fontSize: 10,
-                background: "#f1f3f5",
-                padding: "1px 4px",
-                border: "1px solid #e5e7eb",
-                borderRadius: 3,
-                fontFamily: "monospace",
+                fontSize: 11,
+                color: "#6b6c6e",
+                textAlign: "center",
+                padding: "4px 0 12px",
               }}
             >
-              Esc
-            </kbd>{" "}
-            to close.
-          </div>
+              Comparing <b>{CURRENT_FY}</b> ({fmtPeriodBadge(periodMode, ytd)}) against the
+              same period in {PRIOR_FY}. Click any consultant for monthly breakdown. Press{" "}
+              <kbd style={{ fontSize: 10, background: "#f1f3f5", padding: "1px 4px", border: "1px solid #e5e7eb", borderRadius: 3, fontFamily: "monospace" }}>
+                Esc
+              </kbd>{" "}
+              to close.
+            </div>
+          )}
         </>
       )}
 
@@ -2071,6 +2042,8 @@ export default function LegendsPage() {
         ytd={ytd}
         deltaMode={deltaMode}
         periodMode={periodMode}
+        todayFyMonthIdx={todayFyMonthIdx}
+        todayFyWeek={todayFyWeek}
       />
     </div>
   );

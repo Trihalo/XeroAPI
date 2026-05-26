@@ -28,7 +28,18 @@
       "Bash(for f:*)",
       "Bash(do echo:*)",
       "Read(//Users/leo/Github/XeroAPI/**)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(ls /Users/leo/.claude/projects/-Users-leo-Github-XeroAPI/memory/ 2>/dev/null || echo \"empty\")",
+      "Read(//Users/leo/.claude/projects/-Users-leo-Github-XeroAPI/memory/**)",
+      "Bash(cat /Users/leo/Github/XeroAPI/FutureYou/adminWebsite/backend/.env 2>/dev/null || grep -r \"FUTUREYOU_FIRESTOREACCESS\" /Users/leo/.env* 2>/dev/null || echo \"no .env found\")",
+      "Read(//Users/leo/**)",
+      "Bash(python FutureYou/adminWebsite/backend/seed_users.py)",
+      "Bash(python3 FutureYou/adminWebsite/backend/seed_users.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(gh pr *)",
+      "Bash(rm /Users/leo/Github/XeroAPI/FutureYou/adminWebsite/frontend/app/forecasting/legends/page.tsx)",
+      "Bash(rmdir /Users/leo/Github/XeroAPI/FutureYou/adminWebsite/frontend/app/forecasting/legends/)",
+      "Bash(git rm *)"
     ]
   }
 }

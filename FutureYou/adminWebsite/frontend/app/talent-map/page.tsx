@@ -68,7 +68,7 @@ export default function TalentMapPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-4xl">
       <h1 className="text-2xl font-bold text-navy mb-1">
         Talent Map Generator
       </h1>

@@ -2,6 +2,7 @@ import sys
 import os
 import tempfile
 import importlib.util
+import time as _time
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from functools import wraps
@@ -12,6 +13,7 @@ from flask import Flask, jsonify, request, send_file, after_this_request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from google.cloud import bigquery, firestore
+from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
 
@@ -27,6 +29,10 @@ for p in [REPO_ROOT, FUTUREYOU_DIR, TALENT_MAP_DIR]:
 # ── Flask setup ──────────────────────────────────────────────────────────────
 app = Flask(__name__)
 CORS(app)
+
+# ── Legends in-memory cache (keyed by fy) ─────────────────────────────────────
+_legends_cache: dict = {}
+_LEGENDS_CACHE_TTL = 3600  # 1 hour
 
 # ── Forecasting — FutureYou GCP project ──────────────────────────────────────
 FORECAST_PROJECT_ID = "futureyou-458212"
@@ -80,14 +86,31 @@ def fc_token_required(f):
 
 
 def fc_admin_required(f):
+    """Requires finance or admin role (both can manage recruiters/targets)."""
     @wraps(f)
     def decorated(*args, **kwargs):
         auth = request.headers.get("Authorization", "")
         token = auth.removeprefix("Bearer ").strip()
         try:
             data = jwt.decode(token, FORECAST_SECRET_KEY, algorithms=["HS256"])
-            if data.get("role") != "admin":
-                return jsonify({"error": "Admins only"}), 403
+            if data.get("role") not in ("admin", "finance"):
+                return jsonify({"error": "Insufficient permissions"}), 403
+        except Exception:
+            return jsonify({"error": "Invalid or missing token"}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+
+def fc_finance_required(f):
+    """Requires finance role only."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.headers.get("Authorization", "")
+        token = auth.removeprefix("Bearer ").strip()
+        try:
+            data = jwt.decode(token, FORECAST_SECRET_KEY, algorithms=["HS256"])
+            if data.get("role") != "finance":
+                return jsonify({"error": "Insufficient permissions"}), 403
         except Exception:
             return jsonify({"error": "Invalid or missing token"}), 401
         return f(*args, **kwargs)
@@ -96,6 +119,8 @@ def fc_admin_required(f):
 
 # ── Annual Leave ─────────────────────────────────────────────────────────────
 @app.route("/annual-leave/generate", methods=["POST"])
+@fc_token_required
+@fc_admin_required
 def generate_annual_leave():
     try:
         from xeroAuthHelper import getXeroAccessToken
@@ -126,6 +151,7 @@ def generate_annual_leave():
 
 # ── Talent Map ────────────────────────────────────────────────────────────────
 @app.route("/talent-map/generate", methods=["POST"])
+@fc_token_required
 def generate_talent_map():
     try:
         from generateTalentMapWord import read_excel, build_word
@@ -223,10 +249,29 @@ def fc_login():
     try:
         users    = forecast_db.collection("users").where("username", "==", username).limit(1).stream()
         user_doc = next(users, None)
-        if user_doc is None or user_doc.to_dict().get("password") != password:
+        if user_doc is None:
             return jsonify({"success": False, "error": "Invalid username or password."}), 401
 
-        user = user_doc.to_dict()
+        user           = user_doc.to_dict()
+        stored_password = user.get("password", "")
+        is_hashed      = stored_password.startswith(("scrypt:", "pbkdf2:"))
+
+        if is_hashed:
+            if not check_password_hash(stored_password, password):
+                return jsonify({"success": False, "error": "Invalid username or password."}), 401
+        else:
+            # Plaintext comparison — auto-hash on match and flag for password change
+            if stored_password != password:
+                return jsonify({"success": False, "error": "Invalid username or password."}), 401
+            hashed = generate_password_hash(password)
+            forecast_db.collection("users").document(user_doc.id).update({
+                "password": hashed,
+                "must_change_password": True,
+            })
+            user["must_change_password"] = True
+
+        must_change = user.get("must_change_password", False)
+
         payload = {
             "username": username,
             "role": user.get("role"),
@@ -239,6 +284,7 @@ def fc_login():
             "token": token,
             "role": user.get("role"),
             "name": user.get("name"),
+            "must_change_password": must_change,
             "revenue_table_last_modified_time": fmt_time,
         })
     except Exception as e:
@@ -246,9 +292,10 @@ def fc_login():
 
 
 @app.route("/forecasting/change-password", methods=["POST"])
+@fc_token_required
 def fc_change_password():
     data         = request.get_json()
-    username     = data.get("username")
+    username     = request.fc_user.get("username")
     old_password = data.get("oldPassword")
     new_password = data.get("newPassword")
 
@@ -260,9 +307,21 @@ def fc_change_password():
         user_doc = next(users, None)
         if user_doc is None:
             return jsonify({"success": False, "error": "User not found."}), 404
-        if user_doc.to_dict().get("password") != old_password:
-            return jsonify({"success": False, "error": "Old password is incorrect."}), 403
-        forecast_db.collection("users").document(user_doc.id).update({"password": new_password})
+
+        stored = user_doc.to_dict().get("password", "")
+        is_hashed = stored.startswith(("scrypt:", "pbkdf2:"))
+
+        if is_hashed:
+            if not check_password_hash(stored, old_password):
+                return jsonify({"success": False, "error": "Old password is incorrect."}), 403
+        else:
+            if stored != old_password:
+                return jsonify({"success": False, "error": "Old password is incorrect."}), 403
+
+        forecast_db.collection("users").document(user_doc.id).update({
+            "password": generate_password_hash(new_password),
+            "must_change_password": False,
+        })
         return jsonify({"success": True, "message": "Password changed successfully."})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -454,7 +513,7 @@ def fc_get_targets():
 
 @app.route("/forecasting/monthly-targets", methods=["POST"])
 @fc_token_required
-@fc_admin_required
+@fc_finance_required
 def fc_submit_target():
     data       = request.get_json()
     fy         = data.get("FinancialYear")
@@ -489,6 +548,10 @@ def fc_legends():
     if not fy:
         return jsonify({"error": "Missing 'fy'"}), 400
 
+    cached = _legends_cache.get(fy)
+    if cached and _time.time() - cached["fetched_at"] < _LEGENDS_CACHE_TTL:
+        return jsonify(cached["data"])
+
     sql1 = """
         SELECT Consultant, Area, SUM(Margin) AS TotalMargin, Quarter
         FROM `futureyou-458212.InvoiceData.InvoiceEnquiry`
@@ -522,11 +585,13 @@ def fc_legends():
             ])
             r3 = forecast_bq.query(sql2, job_config=cfg_prior).result()
             prior_rows = [dict(r) for r in r3]
-        return jsonify({
+        result = {
             "consultantTotals":          [dict(r) for r in r1],
             "consultantTypeTotals":      [dict(r) for r in r2],
             "priorConsultantTypeTotals": prior_rows,
-        })
+        }
+        _legends_cache[fy] = {"data": result, "fetched_at": _time.time()}
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -545,7 +610,7 @@ def fc_get_recruiters():
 
 @app.route("/forecasting/recruiters", methods=["POST"])
 @fc_token_required
-@fc_admin_required
+@fc_finance_required
 def fc_add_recruiter():
     data = request.get_json()
     name = data.get("name")
@@ -563,7 +628,7 @@ def fc_add_recruiter():
 
 @app.route("/forecasting/recruiters/<doc_id>", methods=["DELETE"])
 @fc_token_required
-@fc_admin_required
+@fc_finance_required
 def fc_delete_recruiter(doc_id):
     try:
         forecast_db.collection("recruiters").document(doc_id).update({"active": False})
@@ -584,7 +649,7 @@ def fc_get_areas():
 
 @app.route("/forecasting/areas/<doc_id>", methods=["PATCH"])
 @fc_token_required
-@fc_admin_required
+@fc_finance_required
 def fc_update_area(doc_id):
     data      = request.get_json()
     headcount = data.get("headcount")

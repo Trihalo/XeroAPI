@@ -19,6 +19,7 @@ dashboardWebsite/frontend/node_modules
 node_modules/
 dashboardWebsite/backend/service-account.json
 FutureYou/forecastingWebsite/backend/*.json
+FutureYou/adminWebsite/backend/leave_applications.json
 dashboardWebsite/.DS_Store
 dashboardWebsite/backend/.DS_Store
 dashboardWebsite/backend/uploads/*.xlsx
