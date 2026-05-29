@@ -10,8 +10,8 @@ import calendar, { getCurrentMonthInfo } from "@/lib/calendar";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const CURRENT_FY = "FY26";
-const PRIOR_FY = "FY25";
+const { currentFY: CURRENT_FY } = getCurrentMonthInfo();
+const PRIOR_FY = `FY${parseInt(CURRENT_FY.slice(2)) - 1}`;
 const MONTHS = [
   "Jul",
   "Aug",

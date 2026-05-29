@@ -277,7 +277,7 @@ export async function fcAddRecruiter(
   name: string,
   area: string,
   xeroTrackingName: string = ""
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: string; username?: string; error?: string }> {
   const res = await apiFetch(`${API_BASE}/forecasting/recruiters`, {
     method: "POST",
     headers: authHeaders(),

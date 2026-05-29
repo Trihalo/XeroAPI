@@ -608,6 +608,20 @@ def fc_get_recruiters():
         return jsonify({"error": str(e)}), 500
 
 
+def _derive_username(full_name: str) -> str:
+    """Generate username from name, appending last initial if first name is taken."""
+    parts = full_name.strip().split()
+    first = parts[0].lower()
+    existing = {
+        d.to_dict().get("username", "")
+        for d in forecast_db.collection("users").stream()
+    }
+    if first not in existing:
+        return first
+    last_initial = parts[-1][0].lower() if len(parts) > 1 else ""
+    return f"{first}.{last_initial}" if last_initial else first
+
+
 @app.route("/forecasting/recruiters", methods=["POST"])
 @fc_token_required
 @fc_finance_required
@@ -619,9 +633,17 @@ def fc_add_recruiter():
     if not name or not area:
         return jsonify({"error": "Missing name or area"}), 400
     try:
-        doc = {"name": name, "area": area, "active": True, "xeroTrackingName": xero}
-        ref = forecast_db.collection("recruiters").add(doc)
-        return jsonify({"success": True, "id": ref[1].id})
+        username = _derive_username(name)
+        recruiter_doc = {"name": name, "area": area, "active": True, "xeroTrackingName": xero, "username": username}
+        ref = forecast_db.collection("recruiters").add(recruiter_doc)
+        forecast_db.collection("users").add({
+            "username": username,
+            "password": username,  # plaintext — auto-hashed and flagged on first login
+            "role": "recruiter",
+            "name": name,
+            "must_change_password": True,
+        })
+        return jsonify({"success": True, "id": ref[1].id, "username": username})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -631,7 +653,18 @@ def fc_add_recruiter():
 @fc_finance_required
 def fc_delete_recruiter(doc_id):
     try:
-        forecast_db.collection("recruiters").document(doc_id).update({"active": False})
+        recruiter_ref = forecast_db.collection("recruiters").document(doc_id)
+        recruiter = recruiter_ref.get()
+        if recruiter.exists:
+            username = recruiter.to_dict().get("username")
+            if username:
+                user_docs = forecast_db.collection("users").where(
+                    filter=FieldFilter("username", "==", username)
+                ).limit(1).stream()
+                user_doc = next(user_docs, None)
+                if user_doc:
+                    forecast_db.collection("users").document(user_doc.id).delete()
+        recruiter_ref.update({"active": False})
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

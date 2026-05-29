@@ -21,6 +21,7 @@ import {
   type TargetRow,
 } from "@/lib/forecasting-api";
 import { FC_AUTH } from "@/lib/forecasting-cache";
+import { getCurrentMonthInfo } from "@/lib/calendar";
 
 const MONTHS = ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"] as const;
 
@@ -41,7 +42,7 @@ export default function AdminPage() {
   const [areaEdits, setAreaEdits] = useState<Record<string, string>>({});
 
   // Monthly targets
-  const [fy, setFy] = useState("FY26");
+  const [fy, setFy] = useState(() => getCurrentMonthInfo().currentFY);
   const [month, setMonth] = useState<string>("Jul");
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -67,7 +68,11 @@ export default function AdminPage() {
     ask(`Add ${newName} to ${newArea}?`, async () => {
       const result = await fcAddRecruiter(newName, newArea, newTracking);
       if (result.success) {
-        toast.success("Recruiter added.");
+        toast.success(
+          result.username
+            ? `Recruiter added. Login: ${result.username} / ${result.username}`
+            : "Recruiter added."
+        );
         setNewName("");
         setNewArea("");
         setNewTracking("");
@@ -272,8 +277,12 @@ export default function AdminPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="FY25">FY25</SelectItem>
-                    <SelectItem value="FY26">FY26</SelectItem>
+                    {(() => {
+                      const currentFYNum = parseInt(getCurrentMonthInfo().currentFY.slice(2));
+                      return [currentFYNum - 1, currentFYNum, currentFYNum + 1].map((n) => (
+                        <SelectItem key={n} value={`FY${n}`}>{`FY${n}`}</SelectItem>
+                      ));
+                    })()}
                   </SelectContent>
                 </Select>
               </div>
