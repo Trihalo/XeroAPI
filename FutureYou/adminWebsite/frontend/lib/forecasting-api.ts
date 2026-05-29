@@ -40,7 +40,8 @@ export async function fcLogin(
   username: string,
   password: string,
 ): Promise<LoginResult> {
-  const res = await apiFetch(`${API_BASE}/forecasting/login`, {
+  // Use raw fetch — apiFetch redirects on 401, which would swallow credential errors
+  const res = await fetch(`${API_BASE}/forecasting/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),

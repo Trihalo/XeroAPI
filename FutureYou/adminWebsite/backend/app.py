@@ -13,6 +13,7 @@ from flask import Flask, jsonify, request, send_file, after_this_request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from google.cloud import bigquery, firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
 from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv()
@@ -232,22 +233,15 @@ def generate_talent_map():
 
 @app.route("/forecasting/login", methods=["POST"])
 def fc_login():
-    try:
-        rev_table = forecast_bq.get_table(FC_REVENUE)
-        last_mod  = rev_table.modified.astimezone(AEST)
-        fmt_time  = last_mod.strftime("%d/%m/%Y %-I:%M%p").lower()
-    except Exception as e:
-        return jsonify({"success": False, "error": f"BigQuery error: {str(e)}"}), 500
-
     data     = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
+    username = data.get("username") if data else None
+    password = data.get("password") if data else None
 
     if not username or not password:
         return jsonify({"success": False, "error": "Username and password are required."}), 400
 
     try:
-        users    = forecast_db.collection("users").where("username", "==", username).limit(1).stream()
+        users    = forecast_db.collection("users").where(filter=FieldFilter("username", "==", username)).limit(1).stream()
         user_doc = next(users, None)
         if user_doc is None:
             return jsonify({"success": False, "error": "Invalid username or password."}), 401
@@ -271,6 +265,16 @@ def fc_login():
             user["must_change_password"] = True
 
         must_change = user.get("must_change_password", False)
+
+        # Fetch BQ table metadata after auth — non-blocking so BQ issues never break login
+        fmt_time = ""
+        try:
+            rev_table = forecast_bq.get_table(FC_REVENUE)
+            last_mod  = rev_table.modified
+            if last_mod:
+                fmt_time = last_mod.astimezone(AEST).strftime("%d/%m/%Y %-I:%M%p").lower()
+        except Exception:
+            pass
 
         payload = {
             "username": username,
@@ -303,7 +307,7 @@ def fc_change_password():
         return jsonify({"success": False, "error": "All fields are required."}), 400
 
     try:
-        users    = forecast_db.collection("users").where("username", "==", username).limit(1).stream()
+        users    = forecast_db.collection("users").where(filter=FieldFilter("username", "==", username)).limit(1).stream()
         user_doc = next(users, None)
         if user_doc is None:
             return jsonify({"success": False, "error": "User not found."}), 404
@@ -602,7 +606,7 @@ def fc_legends():
 @fc_token_required
 def fc_get_recruiters():
     try:
-        docs = forecast_db.collection("recruiters").where("active", "==", True).stream()
+        docs = forecast_db.collection("recruiters").where(filter=FieldFilter("active", "==", True)).stream()
         return jsonify([{"id": d.id, **d.to_dict()} for d in docs])
     except Exception as e:
         return jsonify({"error": str(e)}), 500
