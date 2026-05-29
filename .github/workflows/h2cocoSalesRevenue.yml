@@ -36,8 +36,10 @@ jobs:
           pip install -r H2coco/requirements.txt
 
       - name: Set up Google Cloud credentials
+        env:
+          H2DATASERVICES_KEY: ${{ secrets.H2DATASERVICES_BQACCESS }}
         run: |
-          echo '${{ secrets.H2DATASERVICES_BQACCESS }}' > /tmp/h2ds_key.json
+          printf '%s' "$H2DATASERVICES_KEY" > /tmp/h2ds_key.json
           echo "H2DATASERVICES_BQACCESS=/tmp/h2ds_key.json" >> $GITHUB_ENV
         shell: bash
 

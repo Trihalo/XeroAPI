@@ -1,63 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { RefreshCw, Lock, X, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { RefreshCw, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { generateAnnualLeave } from "@/lib/api";
-
-const EXPECTED_HASH =
-  "a3e85fbf564f088d43342d16a9ef83121bdb43109a115442aac046925dec1c3d";
-
-async function sha256(text: string): Promise<string> {
-  const encoded = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", encoded);
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
 
 export default function AnnualLeavePage() {
   const [loading, setLoading] = useState(false);
   const [html, setHtml] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [password, setPassword] = useState("");
-  const [pwError, setPwError] = useState(false);
-  const [checking, setChecking] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  function openModal() {
-    setPassword("");
-    setPwError(false);
-    setModalOpen(true);
-    // focus input after paint
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }
-
-  function closeModal() {
-    setModalOpen(false);
-    setPassword("");
-    setPwError(false);
-  }
-
-  async function handleSubmitPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setChecking(true);
-    const hash = await sha256(password);
-    setChecking(false);
-    if (hash !== EXPECTED_HASH) {
-      setPwError(true);
-      setPassword("");
-      inputRef.current?.focus();
-      return;
-    }
-    closeModal();
-    runGenerate();
-  }
-
-  async function runGenerate() {
+  async function handleGenerate() {
     setLoading(true);
     setHtml(null);
     try {
@@ -71,8 +25,8 @@ export default function AnnualLeavePage() {
   }
 
   return (
-    <div className="p-8 flex flex-col gap-6 h-full">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 md:p-8 flex flex-col gap-6 h-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-navy">Annual Leave Report</h1>
           <p className="text-dark-grey text-sm mt-0.5">
@@ -80,9 +34,9 @@ export default function AnnualLeavePage() {
           </p>
         </div>
         <Button
-          onClick={openModal}
+          onClick={handleGenerate}
           disabled={loading}
-          className="bg-navy hover:bg-navy/90 text-white shadow-sm"
+          className="bg-navy hover:bg-navy/90 text-white shadow-sm self-start sm:self-auto"
         >
           {loading ? (
             <>
@@ -95,7 +49,7 @@ export default function AnnualLeavePage() {
         </Button>
       </div>
 
-      {/* ── Instructions panel (only shown after report is generated) ── */}
+      {/* Instructions panel (only shown after report is generated) */}
       {html && !loading && (
         <div>
           <button
@@ -123,7 +77,6 @@ export default function AnnualLeavePage() {
             </span>
           </div>
           <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-dark-grey">
-            {/* Section 1 */}
             <div className="flex flex-col gap-2">
               <h3 className="font-semibold text-navy text-sm">
                 Report sections
@@ -157,7 +110,6 @@ export default function AnnualLeavePage() {
               </ul>
             </div>
 
-            {/* Section 2 */}
             <div className="flex flex-col gap-2">
               <h3 className="font-semibold text-navy text-sm">Column guide</h3>
               <div className="flex flex-col gap-2 mt-1">
@@ -191,7 +143,6 @@ export default function AnnualLeavePage() {
               </div>
             </div>
 
-            {/* Section 3 */}
             <div className="flex flex-col gap-2">
               <h3 className="font-semibold text-navy text-sm">
                 Highlight feature
@@ -210,89 +161,6 @@ export default function AnnualLeavePage() {
                 will go into negative leave if the bookings proceed.
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Password modal ── */}
-      {modalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closeModal();
-          }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
-            {/* Header */}
-            <div className="bg-navy px-6 py-5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Lock className="w-4 h-4 text-salmon" />
-                <span className="text-white font-semibold text-sm">
-                  Access Required
-                </span>
-              </div>
-              <button
-                onClick={closeModal}
-                className="text-white/50 hover:text-white transition-colors"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <form
-              onSubmit={handleSubmitPassword}
-              className="px-6 py-6 flex flex-col gap-4"
-            >
-              <p className="text-dark-grey text-sm">
-                Enter the password to generate the annual leave report.
-              </p>
-
-              <div className="flex flex-col gap-1.5">
-                <Input
-                  ref={inputRef}
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setPwError(false);
-                  }}
-                  className={
-                    pwError ? "border-salmon focus-visible:ring-salmon/40" : ""
-                  }
-                  autoComplete="current-password"
-                />
-                {pwError && (
-                  <p className="text-salmon text-xs">
-                    Incorrect password. Please try again.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 justify-end pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={closeModal}
-                  className="text-dark-grey"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={!password || checking}
-                  className="bg-navy hover:bg-navy/90 text-white"
-                >
-                  {checking ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    "Confirm"
-                  )}
-                </Button>
-              </div>
-            </form>
           </div>
         </div>
       )}

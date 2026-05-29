@@ -32,6 +32,7 @@ export interface LoginResult {
   role?: string;
   name?: string;
   revenue_table_last_modified_time?: string;
+  must_change_password?: boolean;
   error?: string;
 }
 
@@ -48,14 +49,13 @@ export async function fcLogin(
 }
 
 export async function fcChangePassword(
-  username: string,
   oldPassword: string,
   newPassword: string,
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const res = await apiFetch(`${API_BASE}/forecasting/change-password`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, oldPassword, newPassword }),
+    headers: authHeaders(),
+    body: JSON.stringify({ oldPassword, newPassword }),
   });
   return res.json();
 }
@@ -247,6 +247,7 @@ export async function fcFetchLegends(fy: string): Promise<LegendsResponse> {
   const data = await res.json();
   return { priorConsultantTypeTotals: [], ...data };
 }
+
 
 // ── Firestore ─────────────────────────────────────────────────────────────────
 

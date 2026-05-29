@@ -48,21 +48,51 @@ export const FC_AUTH = {
     typeof window !== "undefined" ? localStorage.getItem("fc_name") : null,
   getLastModified: (): string | null =>
     typeof window !== "undefined" ? localStorage.getItem("fc_last_modified") : null,
-  setAuth: (token: string, role: string, name: string, lastModified: string): void => {
+  getUsername: (): string | null =>
+    typeof window !== "undefined" ? localStorage.getItem("fc_username") : null,
+  getMustChangePassword: (): boolean =>
+    typeof window !== "undefined"
+      ? localStorage.getItem("fc_must_change_password") === "true"
+      : false,
+  setAuth: (
+    token: string,
+    role: string,
+    name: string,
+    lastModified: string,
+    mustChangePassword = false,
+    username = "",
+  ): void => {
     if (typeof window === "undefined") return;
     localStorage.setItem("fc_token", token);
     localStorage.setItem("fc_role", role);
     localStorage.setItem("fc_name", name);
     localStorage.setItem("fc_last_modified", lastModified);
+    localStorage.setItem("fc_username", username);
+    localStorage.setItem(
+      "fc_must_change_password",
+      mustChangePassword ? "true" : "false",
+    );
+  },
+  clearMustChangePassword: (): void => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("fc_must_change_password", "false");
   },
   clear: (): void => {
     if (typeof window === "undefined") return;
-    ["fc_token", "fc_role", "fc_name", "fc_last_modified"].forEach((k) =>
-      localStorage.removeItem(k),
-    );
+    [
+      "fc_token",
+      "fc_role",
+      "fc_name",
+      "fc_last_modified",
+      "fc_must_change_password",
+      "fc_username",
+    ].forEach((k) => localStorage.removeItem(k));
   },
 };
 
 // Invoice cache keys
 export const INVOICE_CACHE_KEY = "fc_invoice_current";
 export const PREV_INVOICE_CACHE_KEY = "fc_invoice_prev";
+
+// Legends cache key
+export const LEGENDS_CACHE_KEY = "fc_legends";
