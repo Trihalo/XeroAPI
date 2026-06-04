@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
 import json
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Dict, Optional, List
 from zoneinfo import ZoneInfo
 from calendar import monthrange
@@ -47,6 +47,26 @@ def _rfc3339(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _timed_block(event_date: date, cal_tz: str) -> tuple[dict, dict]:
+    tz = ZoneInfo(cal_tz)
+    start_local = datetime.combine(event_date, time(8, 0), tzinfo=tz)
+    end_local = start_local + timedelta(minutes=30)
+    return (
+        {"dateTime": start_local.isoformat(), "timeZone": cal_tz},
+        {"dateTime": end_local.isoformat(), "timeZone": cal_tz},
+    )
+
+
+def _body_event_date(body: dict) -> Optional[str]:
+    s = body.get("start", {})
+    if "date" in s:
+        return s["date"]
+    dt = s.get("dateTime")
+    if dt:
+        return dt.split("T")[0]
+    return None
+
+
 def _ms_to_local_date(ms: int, cal_tz: str) -> date:
     tz = ZoneInfo(cal_tz)
     dt = datetime.fromtimestamp(int(ms) / 1000, tz=timezone.utc).astimezone(tz)
@@ -89,7 +109,7 @@ def build_event_body(payload: dict, cal_tz: str = "Australia/Sydney") -> dict:
     start_utc = datetime.fromtimestamp(date_begin_ms / 1000, tz=timezone.utc)
     local_tz = ZoneInfo(cal_tz)
     start_date = start_utc.astimezone(local_tz).date()
-    end_date = start_date + timedelta(days=1)
+    start_block, end_block = _timed_block(start_date, cal_tz)
 
     summary = f"Placement {placement_id}: {candidate}'s First Day at {client}"
 
@@ -119,8 +139,8 @@ def build_event_body(payload: dict, cal_tz: str = "Australia/Sydney") -> dict:
     body = {
         "summary": summary,
         "description": description,
-        "start": {"date": start_date.isoformat()},
-        "end": {"date": end_date.isoformat()},
+        "start": start_block,
+        "end": end_block,
         "reminders": {"useDefault": False, "overrides": []},
         "extendedProperties": {
             "private": {"placementId": placement_id, "source": "bullhorn", "kind": "primary"}
@@ -171,11 +191,12 @@ def _all_day_body_from_date(
     ]
     description = "\n".join(description_lines)
 
+    start_block, end_block = _timed_block(event_date, cal_tz)
     body = {
         "summary": summary,
         "description": description,
-        "start": {"date": event_date.isoformat()},
-        "end": {"date": (event_date + timedelta(days=1)).isoformat()},
+        "start": start_block,
+        "end": end_block,
         "reminders": {"useDefault": False, "overrides": []},
         "extendedProperties": {
             "private": {"placementId": placement_id, "source": "bullhorn", "kind": "followup"}
@@ -195,7 +216,7 @@ def _find_existing_event(
     svc = _calendar_service()
     placement_id = body.get("extendedProperties", {}).get("private", {}).get("placementId")
     summary = body.get("summary", "")
-    start_str = body.get("start", {}).get("date")
+    start_str = _body_event_date(body)
     if not start_str:
         return None
 
@@ -257,7 +278,7 @@ def upsert_followup_event(payload: dict) -> Dict:
     body = build_event_body(payload, cal_tz=cal_tz)
 
     # Check if the event is in the past
-    start_str = body.get("start", {}).get("date")
+    start_str = _body_event_date(body)
     if start_str:
         event_date = date.fromisoformat(start_str)
         if event_date < _today_local(cal_tz):
@@ -376,7 +397,7 @@ def upsert_batch_followups(payload: dict) -> Dict:
         if existing:
             results.append({
                 "summary": body.get("summary"),
-                "date": body.get("start", {}).get("date"),
+                "date": _body_event_date(body),
                 "ok": True,
                 "skipped": True,
                 "reason": "duplicate-detected",
@@ -389,7 +410,7 @@ def upsert_batch_followups(payload: dict) -> Dict:
             created = svc.events().insert(calendarId=cal_id, body=body, sendUpdates="all").execute()
             results.append({
                 "summary": body.get("summary"),
-                "date": body.get("start", {}).get("date"),
+                "date": _body_event_date(body),
                 "ok": True,
                 "skipped": False,
                 "eventId": created.get("id"),
@@ -398,7 +419,7 @@ def upsert_batch_followups(payload: dict) -> Dict:
         except HttpError as e:
             results.append({
                 "summary": body.get("summary"),
-                "date": body.get("start", {}).get("date"),
+                "date": _body_event_date(body),
                 "ok": False,
                 "error": getattr(e, "content", b"").decode(errors="ignore"),
             })
