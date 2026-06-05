@@ -236,6 +236,34 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
     return results
 
 
+def processCreditNoteJournals(bills, accessToken, xeroTenantId):
+    """Credit Note Journals (Journal-CN-*): set BAS Excluded, approve."""
+    results = []
+    for bill in bills:
+        if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
+            continue
+        inv_number = bill.get("InvoiceNumber", "")
+        if not inv_number.startswith("Journal-CN-"):
+            continue
+
+        bill["Status"] = "AUTHORISED"
+        for line in bill.get("LineItems", []):
+            line["TaxType"] = "BASEXCLUDED"
+            line.pop("TaxAmount", None)
+
+        time.sleep(1)
+        print(f"Approving credit note journal: {inv_number}")
+        response = xeroAPIUpdateBill(bill, accessToken, xeroTenantId)
+        if response:
+            print(f"Credit note journal {inv_number} approved successfully.")
+            results.append((inv_number, "✅ Approved"))
+        else:
+            print(f"Credit note journal {inv_number} approval failed.")
+            results.append((inv_number, "❌ Failed"))
+        print("--------------------------------------------------")
+    return results
+
+
 def processSunRoadBills(bills, accessToken, xeroTenantId):
     """Stock Journals with 'Sun Road Food & Beverage - CDS' in reference: set BAS Excluded, approve."""
     results = []
@@ -296,7 +324,7 @@ def processPOBills(bills, accessToken, xeroTenantId):
     return results
 
 
-def write_github_summary(invoice_results, sa_results, recost_results, sun_road_results, po_results):
+def write_github_summary(invoice_results, sa_results, recost_results, cn_results, sun_road_results, po_results):
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_file:
         return
@@ -328,6 +356,11 @@ def write_github_summary(invoice_results, sa_results, recost_results, sun_road_r
         f.write(section(
             "Recost Journals",
             recost_results,
+            ["Journal", "Result"],
+        ))
+        f.write(section(
+            "Credit Note Journals",
+            cn_results,
             ["Journal", "Result"],
         ))
         f.write(section(
@@ -388,10 +421,11 @@ def main():
 
     sa_results = processStockAdjustmentJournals(draftBills, accessToken, xeroTenantId)
     recost_results = processRecostJournals(draftBills, accessToken, xeroTenantId)
+    cn_results = processCreditNoteJournals(draftBills, accessToken, xeroTenantId)
     sun_road_results = processSunRoadBills(draftBills, accessToken, xeroTenantId)
     po_results = processPOBills(draftBills, accessToken, xeroTenantId)
 
-    write_github_summary(invoice_results, sa_results, recost_results, sun_road_results, po_results)
+    write_github_summary(invoice_results, sa_results, recost_results, cn_results, sun_road_results, po_results)
 
 if __name__ == "__main__":
     main()
