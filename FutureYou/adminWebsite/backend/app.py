@@ -280,7 +280,7 @@ def fc_login():
             "username": username,
             "role": user.get("role"),
             "name": user.get("name"),
-            "exp": datetime.now(timezone.utc) + timedelta(hours=2),
+            "exp": datetime.now(timezone.utc) + timedelta(hours=8),
         }
         token = jwt.encode(payload, FORECAST_SECRET_KEY, algorithm="HS256")
         return jsonify({

@@ -17,8 +17,8 @@ async function apiFetch(url: string, options?: RequestInit): Promise<Response> {
   const res = await fetch(url, options);
   if (res.status === 401) {
     FC_AUTH.clear();
-    if (typeof window !== "undefined" && window.location.pathname !== "/forecasting") {
-      window.location.href = "/forecasting";
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
     }
   }
   return res;

@@ -37,6 +37,15 @@ function canAccess(role: string, pathname: string): boolean {
   });
 }
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.exp ? Date.now() / 1000 > payload.exp : false;
+  } catch {
+    return true;
+  }
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +62,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = FC_AUTH.getToken();
-    if (!token) {
+    if (!token || isTokenExpired(token)) {
+      FC_AUTH.clear();
       setAuthState("unauthenticated");
       return;
     }
