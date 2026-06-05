@@ -237,18 +237,24 @@ def processRecostJournals(bills, accessToken, xeroTenantId):
 
 
 def processCreditNoteJournals(bills, accessToken, xeroTenantId):
-    """Credit Note Journals (Journal-CN-*): set BAS Excluded, approve."""
+    """Credit Note Journals (Journal-CN-*): set BAS Excluded, approve.
+    If contact is Marketing, remap account 5000 → 5465 (marketing free stock)."""
     results = []
     for bill in bills:
-        if bill.get("Contact", {}).get("Name", "") != "Stock Journal":
+        contact_name = bill.get("Contact", {}).get("Name", "")
+        if contact_name not in ("Stock Journal", "Marketing"):
             continue
         inv_number = bill.get("InvoiceNumber", "")
         if not inv_number.startswith("Journal-CN-"):
             continue
 
+        is_marketing = contact_name == "Marketing"
+
         bill["Status"] = "AUTHORISED"
         for line in bill.get("LineItems", []):
             line["TaxType"] = "BASEXCLUDED"
+            if is_marketing and line.get("AccountCode") == "5000":
+                line["AccountCode"] = "5465"
             line.pop("TaxAmount", None)
 
         time.sleep(1)
