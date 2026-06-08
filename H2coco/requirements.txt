@@ -8,3 +8,4 @@ google-auth
 pandas-gbq
 rapidfuzz
 gspread
+pytz
