@@ -3,6 +3,9 @@ name: Scheduled FutureYou Reports
 on:
   workflow_dispatch:
     inputs:
+      triggered_by_name:
+        description: "Dashboard user who triggered this"
+        required: false
       name:
         description: "User's name"
         required: true

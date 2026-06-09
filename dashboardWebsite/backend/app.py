@@ -130,7 +130,12 @@ def trigger_github_action(workflow_id: str):
         "Trigger | '%s' failed (HTTP %d): %s",
         workflow_id, response.status_code, response.text[:300],
     )
-    return jsonify({"success": False, "error": response.json()}), response.status_code
+    try:
+        err_body = response.json()
+        err_msg = err_body.get("message", f"GitHub API returned {response.status_code}")
+    except Exception:
+        err_msg = response.text[:300] or f"GitHub API returned {response.status_code}"
+    return jsonify({"success": False, "error": err_msg}), response.status_code
 
 # ---------------------------------------------------------------------------
 # Routes
