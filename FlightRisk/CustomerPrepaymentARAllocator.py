@@ -6,7 +6,7 @@ import csv
 import argparse
 import time
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from helpers.fetchInvoicesForClient import fetchInvoicesForClient
@@ -137,15 +137,22 @@ def write_github_summary(allocated, unapplied, dry_run=False):
         return
 
     mode = " (DRY RUN)" if dry_run else ""
+    run_date = datetime.now(timezone.utc).strftime("%d %b %Y %H:%M UTC")
+    total_allocated = sum(float(r[2]) for r in allocated) if allocated else 0
+
     with open(summary_file, "a") as f:
         f.write(f"## Customer Prepayment AR Allocator{mode}\n\n")
+        f.write(f"**Run:** {run_date}\n\n")
 
-        f.write(f"### ✅ Allocated: {len(allocated)}\n\n")
+        f.write(f"### ✅ Allocated: {len(allocated)}")
         if allocated:
-            f.write("| Sales Order | Amount Allocated | Payment Date |\n")
-            f.write("|---|---|---|\n")
+            f.write(f" — Total: ${total_allocated:,.2f}")
+        f.write("\n\n")
+        if allocated:
+            f.write("| Sales Order | Amount Allocated | Payment Date | Status |\n")
+            f.write("|---|---|---|---|\n")
             for row in allocated:
-                f.write(f"| {row[0]} | ${float(row[2]):,.2f} | {row[3]} |\n")
+                f.write(f"| {row[0]} | ${float(row[2]):,.2f} | {row[3]} | {row[4]} |\n")
         else:
             f.write("_No payments allocated._\n")
 

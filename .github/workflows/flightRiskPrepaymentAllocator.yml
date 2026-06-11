@@ -1,14 +1,18 @@
 name: FlightRisk Customer Prepayment AR Allocator
 
 on:
+  schedule:
+    - cron: "0 19 * * *"  # Daily at 7 AM AEST
   workflow_dispatch:
     inputs:
       name:
         description: "Recipient name (for the results email)"
-        required: true
+        required: false
+        default: ""
       email:
         description: "Recipient email address"
-        required: true
+        required: false
+        default: ""
       dry_run:
         description: "Dry run (preview only, no payments allocated)"
         type: boolean
@@ -43,11 +47,15 @@ jobs:
           XERO_REFRESH_TOKEN_FLIGHT_RISK: ${{ vars.XERO_REFRESH_TOKEN_FLIGHT_RISK }}
           EMAIL_SENDER_GMAIL: ${{ secrets.EMAIL_SENDER_GMAIL }}
           EMAIL_PASSWORD_GMAIL: ${{ secrets.EMAIL_PASSWORD_GMAIL }}
+          INPUT_NAME: ${{ inputs.name }}
+          INPUT_EMAIL: ${{ inputs.email }}
+          INPUT_DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          ARGS="--output-dir output"
-          ARGS="$ARGS --name '${{ inputs.name }}' --email '${{ inputs.email }}'"
-          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
-          python CustomerPrepaymentARAllocator.py $ARGS
+          ARGS=(--output-dir output)
+          [ -n "$INPUT_NAME" ]          && ARGS+=(--name "$INPUT_NAME")
+          [ -n "$INPUT_EMAIL" ]         && ARGS+=(--email "$INPUT_EMAIL")
+          [ "$INPUT_DRY_RUN" = "true" ] && ARGS+=(--dry-run)
+          python CustomerPrepaymentARAllocator.py "${ARGS[@]}"
           cp "$GITHUB_STEP_SUMMARY" "$GITHUB_WORKSPACE/_job_summary.md" 2>/dev/null || true
 
       - name: Send job summary to dashboard
