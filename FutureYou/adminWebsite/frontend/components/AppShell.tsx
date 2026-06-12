@@ -158,6 +158,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Label htmlFor="shell-username" className="text-navy text-sm font-semibold">
                   Username
                 </Label>
+                <p className="text-xs text-dark-grey">Make sure your name is written in full lower case</p>
                 <Input
                   id="shell-username"
                   autoComplete="username"

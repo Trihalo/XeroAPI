@@ -46,7 +46,8 @@
       "Bash(python add_admin_user.py)",
       "Bash(FUTUREYOU_FIRESTOREACCESS=/Users/leo/Github/futureyou-458212-caf9d90323a7.json python3 add_admin_user.py)",
       "Bash(FUTUREYOU_FIRESTOREACCESS=/Users/leo/Github/XeroAPI/FutureYou/forecastingWebsite/backend/firestore-access.json python3 add_admin_user.py)",
-      "WebFetch(domain:developer.xero.com)"
+      "WebFetch(domain:developer.xero.com)",
+      "Bash(grep -E \"\\\\.\\(jsx?|tsx?\\)$\")"
     ]
   }
 }
