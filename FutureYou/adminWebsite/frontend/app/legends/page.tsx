@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fcFetchLegends, fcGetRecruiters, type LegendsMonthRow, type LegendsResponse } from "@/lib/forecasting-api";
-import { getCached, setCache, LEGENDS_CACHE_KEY } from "@/lib/forecasting-cache";
+import { getCached, setCache, LEGENDS_CACHE_KEY, FC_AUTH } from "@/lib/forecasting-cache";
 import calendar, { getCurrentMonthInfo } from "@/lib/calendar";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -1706,6 +1706,11 @@ export default function LegendsPage() {
   const [detailName, setDetailName] = useState<string | null>(null);
   const [activeRecruiterNames, setActiveRecruiterNames] = useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [lastModified, setLastModified] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLastModified(FC_AUTH.getLastModified());
+  }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 640);
@@ -1874,6 +1879,12 @@ export default function LegendsPage() {
         <>
           <KpiStrip rows={rows} numAreas={numAreas} deltaMode={deltaMode} periodMode={periodMode} />
 
+          {lastModified && (
+            <div style={{ fontSize: 12, color: "#6b6c6e" }}>
+              Database last refreshed at: <b>{lastModified}</b>
+            </div>
+          )}
+
           {/* Controls bar */}
           <div
             style={{
@@ -1888,14 +1899,14 @@ export default function LegendsPage() {
               gap: isMobile ? 10 : 14,
             }}
           >
-            {/* Scrollable button row on mobile */}
+            {/* Scrollable button row on mobile, wrapping on desktop */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: isMobile ? 6 : 14,
+                flexWrap: isMobile ? undefined : "wrap",
+                gap: isMobile ? 6 : 10,
                 overflowX: isMobile ? "auto" : undefined,
-                flexShrink: 0,
                 paddingBottom: isMobile ? 2 : 0,
               }}
             >
@@ -1916,13 +1927,8 @@ export default function LegendsPage() {
               </div>
 
               {periodMode === "YTD" && (
-                <>
-                  <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
-                  <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
-                </>
+                <YTDDatePicker ytd={ytd} setYtd={setYtd} todayYTD={TODAY_YTD} />
               )}
-
-              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
 
               {/* Compare */}
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -1937,8 +1943,6 @@ export default function LegendsPage() {
                 </div>
               </div>
 
-              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
-
               {/* Group */}
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                 {!isMobile && (
@@ -1951,8 +1955,6 @@ export default function LegendsPage() {
                   <TabBtn active={viewMode === "Area"} onClick={() => setViewMode("Area")}>Area</TabBtn>
                 </div>
               </div>
-
-              <div style={{ width: 1, background: "#e5e7eb", alignSelf: "stretch", flexShrink: 0 }} />
 
               {/* Sort */}
               <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
@@ -1968,8 +1970,6 @@ export default function LegendsPage() {
                   <TabBtn active={sortKey === "name"} onClick={() => setSortKey("name")}>A–Z</TabBtn>
                 </div>
               </div>
-
-              {!isMobile && <div style={{ flex: 1 }} />}
             </div>
 
             {/* Search — inline on desktop, full-width below on mobile */}
